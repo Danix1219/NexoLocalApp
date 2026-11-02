@@ -1,0 +1,104 @@
+# 019-GUARDADOS-INDICADORES — Guardados, recomendaciones y actividad
+
+Versión: 0.4.0 | Fecha: 2026-11-02 | Rama prevista: `019-guardados-indicadores`
+
+## 1. Contexto
+
+Constitución: [rectora](../../constitution.md), §§1–8/11. Desglose de funciones existentes, sin app creada. [Acuerdo](../../../docs_nexo/SDD_ALINEACION.md) y [fuentes](../../../docs_nexo/SDD_COBERTURA_Y_BRECHAS.md). Contraparte: [spec](../../../API_NexoLocal/specs/nv-18/spec.md).
+
+## 2. Objetivo
+
+Presentar guardados/reacciones y métricas propias sin duplicar al sincronizar.
+
+## 3. Alcance / Fuera de alcance
+
+Dependencias: 004/006/008 y 016-sincronizacion-local; nv-18. Fuera: bases remotas directas, superficies internas/admin, código ahora y pantallas inventadas por endpoint.
+
+## 4. Requisitos (FR-xxx / NFR-xxx trazables a test y código)
+
+- FR-001: Presentar guardados/reacciones y métricas propias sin duplicar al sincronizar.
+- FR-002: Aplicar la regla: Datos particionados; recurso retirado no se muestra como vigente; clic no es trabajo.
+- FR-003: Integrar y recuperar sin cambiar propiedad de datos.
+- FR-090: Refinar historias con fuente, actor, precondición, contrato/revisión y exclusiones.
+- FR-100: Resolver el escenario: Guardar/quitar repetido deja estado canónico; cambio de cuenta no muestra lista ni métricas ajenas.
+- NFR-001: Aislamiento por identidad/recurso/estado y datos mínimos según constitución.
+- NFR-002: Evidencia documental, doble e integración real diferenciadas; revisión humana pendiente.
+- NFR-003: Errores, reintentos y compatibilidad definidos antes de implementar.
+- NFR-090: Sin proveedor/costo/stack/firma supuestos como ratificados.
+- NFR-100: Este desglose no añade servicios, endpoints o pantallas por sí mismo.
+
+### Historias de consumo por intención
+
+- FR-236: Consumir EP-036 para recomendar trabajo o perfil, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+- FR-237: Consumir EP-037 para retirar recomendación, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+- FR-238: Consumir EP-038 para consultar prestadores, trabajos o solicitudes guardados, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+- FR-239: Consumir EP-039 para guardar objetivo, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+- FR-240: Consumir EP-040 para quitar guardado, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+- FR-245: Consumir EP-045 para registrar vista, compartir o intención de contacto, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+- FR-246: Consumir EP-046 para consultar actividad de su perfil, desde la intención autorizada de esta capacidad; no inventar otra pantalla o ruta. Previsto en línea base; contrato formal y aceptación pendientes.
+
+### Funcionalidades y obligaciones con dueño explícito
+
+- FR-520: M20 Guardados: Actor Cuenta: Listas de prestadores, trabajos y solicitudes; retirar y abrir detalle.
+
+## 5. Contratos (rutas, config, env)
+
+[Consumo](../../docs/endpoints-ui.md), [autoridad API](../../../API_NexoLocal/docs/contracts/README.md). Enlazar revisión por historia; no copiar payloads. [Modelo local](../../docs/modelo-datos.md): cuenta aislada y token fuera de SQLite. Datos particionados; recurso retirado no se muestra como vigente; clic no es trabajo.
+
+## 6. Criterios de aceptación verificables
+
+- [ ] AC-001: Guardar/quitar repetido deja estado canónico; cambio de cuenta no muestra lista ni métricas ajenas.
+- [ ] AC-002: Actor sin permiso no ejecuta ni recibe campos privados; permitido obtiene solo resultado del contrato.
+- [ ] AC-003: Fallo/reintento/dependencia caída conserva consistencia y no confirma éxito ficticio.
+- [ ] AC-090: Cada historia identifica entrada/salida, precondición, revisión de contrato y evidencia esperada.
+- [ ] AC-100: Datos particionados; recurso retirado no se muestra como vigente; clic no es trabajo. Verificar caso positivo, negativo y recuperación pertinente con evidencia real cuando haya producto.
+
+- [ ] AC-236 → FR-236/NFR-001/NFR-003: EP-036: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Una reacción por cuenta/objetivo; tipo validado; no contador libre La UI refleja la regla del servidor, no la sustituye.
+- [ ] AC-237 → FR-237/NFR-001/NFR-003: EP-037: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Idempotente; recalcular agregados por evento La UI refleja la regla del servidor, no la sustituye.
+- [ ] AC-238 → FR-238/NFR-001/NFR-003: EP-038: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Autorización al hidratar cada recurso; mostrar retirado cuando aplique La UI refleja la regla del servidor, no la sustituye.
+- [ ] AC-239 → FR-239/NFR-001/NFR-003: EP-039: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Restricción única; verificar visibilidad del objetivo La UI refleja la regla del servidor, no la sustituye.
+- [ ] AC-240 → FR-240/NFR-001/NFR-003: EP-040: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Idempotente y sincronizable offline La UI refleja la regla del servidor, no la sustituye.
+- [ ] AC-245 → FR-245/NFR-001/NFR-003: EP-045: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Minimizar datos; idempotente; no equiparar clic con servicio realizado La UI refleja la regla del servidor, no la sustituye.
+- [ ] AC-246 → FR-246/NFR-001/NFR-003: EP-046: la intención muestra pendiente/confirmado o resultado/vacío según método, valida permiso/estado por respuesta API y presenta error recuperable; Sin identidad de visitantes ni datos privados La UI refleja la regla del servidor, no la sustituye.
+
+- [ ] AC-520 → FR-520/NFR-002/NFR-003: Sincronización idempotente por usuario. Verificar estados carga/vacío/error/red y permisos/accesibilidad aplicables sin simular aceptación remota.
+
+## 7. Riesgos y deudas documentadas
+
+D01–D08 pertinentes pendientes; bibliotecas/proveedor y Android real no validados. Guardar/quitar repetido deja estado canónico; cambio de cuenta no muestra lista ni métricas ajenas.
+
+## Aprobación y Control de Cambios
+
+Estado: Borrador documental; sin implementación ni evidencia de producto.
+Revisores: por asignar. Fecha: pendiente.
+
+La traza acredita asignación documental, no pruebas ejecutadas. Las operaciones internas/admin y opcionales mantienen límites expresos.
+
+## Integración y límites del desglose
+
+Las historias de EP tienen un único dueño primario en el inventario y mapa bilateral; los requisitos agregados previos de fases origen verifican integración con sus subcapacidades. No son una segunda implementación. Una dependencia de cierre de experiencia integrada no impide construir el subset anterior que sí tiene contratos/entradas. Las condiciones bloqueantes específicas se resuelven antes de Ready de cada historia.
+
+## Trazabilidad del incremento
+
+| Requisito local | Tareas definidas | Criterios vinculados |
+|---|---|---|
+| FR-001 | T-001, T-002, T-010 | AC-001, AC-002, AC-003, AC-090 |
+| FR-002 | T-001, T-002, T-011 | AC-001, AC-002, AC-003, AC-090 |
+| FR-003 | T-001, T-002, T-012 | AC-001, AC-002, AC-003, AC-090 |
+| FR-090 | T-006, T-007 | AC-090 |
+| FR-100 | T-020, T-021 | AC-100 |
+| NFR-001 | T-010, T-011, T-004, T-236, T-237, T-238, T-239, T-240, T-245, T-246 | AC-001, AC-002, AC-100, AC-236, AC-237, AC-238, AC-239, AC-240, AC-245, AC-246 |
+| NFR-002 | T-001, T-007, T-005, T-520 | AC-001, AC-002, AC-003, AC-090, AC-100, AC-520 |
+| NFR-003 | T-002, T-012, T-003, T-005, T-236, T-237, T-238, T-239, T-240, T-245, T-246, T-520 | AC-001, AC-002, AC-003, AC-090, AC-100, AC-236, AC-237, AC-238, AC-239, AC-240, AC-245, AC-246, AC-520 |
+| NFR-090 | T-006, T-007 | AC-090 |
+| NFR-100 | T-020, T-021, T-004 | AC-002, AC-100 |
+| FR-236 | T-236 | AC-236 |
+| FR-237 | T-237 | AC-237 |
+| FR-238 | T-238 | AC-238 |
+| FR-239 | T-239 | AC-239 |
+| FR-240 | T-240 | AC-240 |
+| FR-245 | T-245 | AC-245 |
+| FR-246 | T-246 | AC-246 |
+| FR-520 | T-520 | AC-520 |
+
+Cobertura de diseño, no ejecución aprobada. Contratos formales, decisiones y evidencia real siguen pendientes.

@@ -1,0 +1,30 @@
+# Checklist — 019-guardados-indicadores
+
+## DoD
+- [ ] Requisitos/tareas/AC y contratos conciliados con constitución.
+- [ ] Guardar/quitar repetido deja estado canónico; cambio de cuenta no muestra lista ni métricas ajenas.
+- [ ] Evidencia distingue documental/doble/real; Memoria/checklist PR actualizados sin secretos.
+
+## Aprobación
+- [ ] Revisor humano por asignar; fecha pendiente.
+- [ ] Sin aceptación productiva por lint.
+
+## Criterios por operación
+
+- [ ] EP-036 / AC-236: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+- [ ] EP-037 / AC-237: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+- [ ] EP-038 / AC-238: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+- [ ] EP-039 / AC-239: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+- [ ] EP-040 / AC-240: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+- [ ] EP-045 / AC-245: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+- [ ] EP-046 / AC-246: Previsto en línea base; contrato formal y aceptación pendientes. Evidencia positiva/negativa/fallo y revisión de contrato enlazadas; no marcar si solo está el catálogo.
+
+## Funciones/obligaciones de fuente
+
+- [ ] M20 Guardados / AC-520: fuente y criterio conciliados; evidencia apropiada o pendiente explícito, sin datos inventados.
+
+## Integridad de alcance 0.4.0
+
+- [ ] Operaciones, funciones y obligaciones de esta spec tienen FR/tarea/AC y contrato/consumo correspondiente.
+- [ ] No se implementan de nuevo operaciones delegadas a otra spec ni se invocan internas/admin desde Flutter.
+- [ ] Estado opcional/complemento/pendiente no se convierte en cumplimiento obligatorio o aprobado por existir en catálogo.
