@@ -1,24 +1,24 @@
 {
-  "revision": "SDD-0.4.0",
+  "revision": "SDD-publicacion-2026-11-03",
   "repoFolder": "App_NexoLocal",
   "allowedRoots": [
     "API_NexoLocal",
     "docs_nexo",
     "requerimientos_nexolocal"
   ],
-  "archiveSha256": "73bc3d9594a062b3039ba28b241f02e85a6b2c5cde049098dae0aa94f1f1f100",
+  "archiveSha256": "a2f472221326e0e6da0ffcec1a6d42bda907825cd9733573d61fc3fb33910e0a",
   "files": [
     {
-      "path": "API_NexoLocal/docs/contracts/README.md",
-      "sha256": "f19b79f7932f24f670e895733e35a4607f5af40cd826b6d9b8b9b465589b4278"
-    },
-    {
       "path": "API_NexoLocal/docs/contracts/fichas-operaciones.md",
-      "sha256": "7e5ad3c3dd58543ade898f1b4de6e529f954c921c9a767160f86b80cbfb0d979"
+      "sha256": "89c0da44a15faed26f7933603fedb6f58a5fb0d4d30f684a85250cfb4358954e"
     },
     {
       "path": "API_NexoLocal/docs/contracts/inventario.json",
       "sha256": "1e5e4a1c1b3d390fc021a6e813d253572de6eee88b2c44015a592d00632e7725"
+    },
+    {
+      "path": "API_NexoLocal/docs/contracts/README.md",
+      "sha256": "f19b79f7932f24f670e895733e35a4607f5af40cd826b6d9b8b9b465589b4278"
     },
     {
       "path": "API_NexoLocal/docs/endpoints.md",
@@ -26,95 +26,95 @@
     },
     {
       "path": "API_NexoLocal/specs/nv-01/spec.md",
-      "sha256": "5b7c0a829b6c36fde67212f421e9f35baa6ce7267cc811828d76efb3b4e11a0c"
+      "sha256": "cfa5c9b255b34ef0a8cec8b07e36c5c01a4217ee40eb2de6e0a5668a5f7a037c"
     },
     {
       "path": "API_NexoLocal/specs/nv-04/spec.md",
-      "sha256": "5cc15d0922f66a241782394c9568e0b310d57f3a162e26f35ce7f94bff392587"
+      "sha256": "7dc721ee872bbec0d732af16ef1a1c58be208bad1568d67598dcbbf9d8300b21"
     },
     {
       "path": "API_NexoLocal/specs/nv-05/spec.md",
-      "sha256": "3a58f347da7b6ec62701f63106fdea224fd482abf71b7119d164ac6f8685d3e2"
+      "sha256": "c9968ce13c424e1300e0c572bda898f7f90a9977f9b8a489a5a954d11d977bb7"
     },
     {
       "path": "API_NexoLocal/specs/nv-06/spec.md",
-      "sha256": "c941e8c5152ac380e63a459344974c8d2a21a7ce5c489264c82b3d3cb4311e72"
+      "sha256": "af490770da2278dd73121efc3d2e30421b4a01637ae6febeaee66d5066697420"
     },
     {
       "path": "API_NexoLocal/specs/nv-07/spec.md",
-      "sha256": "6db06d9768178496653a087d7f673fcc6c1a10d49223d7eb1967726ac1221583"
+      "sha256": "78e9737f0889e9c757d853a9af84c8432ef818b09462d51d252592aba5acfe1f"
     },
     {
       "path": "API_NexoLocal/specs/nv-08/spec.md",
-      "sha256": "e5404a7a461de7ac6728ee8695bf66838ca672e1e43da08465341291cad035d9"
+      "sha256": "c79110d973431e87e58a0e54343bf61f0a036ad597b5cc47fa975b998aa5c928"
     },
     {
       "path": "API_NexoLocal/specs/nv-09/spec.md",
-      "sha256": "a1b74ac91d04ba5de151b9b289f13dd4e2a7192a1718ce21cbdfb0893f6f98cf"
+      "sha256": "98d3defc531d5971a685bef4ce360acf7284a0879ee0dec745c0ab59480c8130"
     },
     {
       "path": "API_NexoLocal/specs/nv-10/spec.md",
-      "sha256": "1214687073dc07406d1042c7dd5a1b0ac27e212cbcc1077ad507a6f89943e9d5"
+      "sha256": "02eab710189cb452f9a4bfbd115ba43cb7e7a4c933d0f3e4e1af8c01aa8923f2"
     },
     {
       "path": "API_NexoLocal/specs/nv-11/spec.md",
-      "sha256": "d2d5320934722273a00f2e3f49ec19aa7d008f1f473f0e99979c7892ef4cb3aa"
+      "sha256": "3c043824348e48c9c84ad6ebda62b457804f6d16ba0dba60d90e01702984f657"
     },
     {
       "path": "API_NexoLocal/specs/nv-12/spec.md",
-      "sha256": "967579558efd69627dda6b91ff029e8af11bb86da787cfa62fb14ebbf141e933"
+      "sha256": "a32d59844c572fd24ee03ed8f183df3952b8f7cdd573438769a4244b7980da69"
     },
     {
       "path": "API_NexoLocal/specs/nv-13/spec.md",
-      "sha256": "d36b4caa352c6f5a48758954dd5d47735f4def523ff7ebf4bd7d0a0118bdb629"
+      "sha256": "bfa18324ad86d4cff01649920bb3bbf3d4860166ea16feb67d0bbf0c47054818"
     },
     {
       "path": "API_NexoLocal/specs/nv-14/spec.md",
-      "sha256": "c71d0c643472dab81ba6df1d1ce81999fcf88da331ecea591ec37a70ed39843f"
+      "sha256": "7d1238223d3cf25779b59339f46ab555b7bcd6697f3eefcbe20c781907705993"
     },
     {
       "path": "API_NexoLocal/specs/nv-15/spec.md",
-      "sha256": "77156185d0e8a4e76f0fc3e496e7b122cb7e8c965fcd9960cd14dcf14649db94"
+      "sha256": "791ab28d32c7146fc195fe802467bb9d5d85262c0796444d3ca4b95095fbe072"
     },
     {
       "path": "API_NexoLocal/specs/nv-16/spec.md",
-      "sha256": "26659cbd042f816e0fe5e0208b833dc64bc59b56b4b177b79220b2aee6d549ad"
+      "sha256": "b2d22b31862cad06e294beaea5377c33322ed29920f1025b99cea113a1b72897"
     },
     {
       "path": "API_NexoLocal/specs/nv-17/spec.md",
-      "sha256": "d5534b11f0d9ca939b3bfc792ad88f5ff1714b078385df0caba1f51e6793e0fa"
+      "sha256": "95f54784728c8b2467f12916d5231128d2bf45cf9b418b8c739184993454c51b"
     },
     {
       "path": "API_NexoLocal/specs/nv-18/spec.md",
-      "sha256": "e5ed77b818f5e2e828599cb9fea5a00748b897b7978dbc788aa9b7f69ab86ce1"
+      "sha256": "cd9f21ff925df0f7b15f476943789aee5dcd5cf20e855f2cfdfa12830d63d6a4"
     },
     {
       "path": "API_NexoLocal/specs/nv-19/spec.md",
-      "sha256": "f68f9f5efe7c5ecc9057c3d1c782a86c5aea3f792ceab4882d392232eb5bb2c9"
+      "sha256": "9875d060b945277afff2cc4fc392b5882469ab5f9981b88884545508f83f1284"
     },
     {
       "path": "API_NexoLocal/specs/nv-20/spec.md",
-      "sha256": "8a5e9e97b59fa0d94c34c9741963a3fa00315efb83675b4423a5b7d03025ed70"
+      "sha256": "90fffbd02c0c19e359eaf79ca3a773b5816c9183e860c16229f695b4bdcdeac6"
     },
     {
       "path": "API_NexoLocal/specs/nv-21/spec.md",
-      "sha256": "63a405c55be31902e02f6659edb3e5127651f401374404c8a1f8cf297bba651e"
+      "sha256": "db3f2226e2ff28df1b95d8e358f5f500ee6e0a9b5904c97ab6fac04ef8206197"
     },
     {
       "path": "API_NexoLocal/specs/nv-23/spec.md",
-      "sha256": "9f731b4b7c09344afe951494493b7d4091ce24e8072f71c166d9b698405121b2"
+      "sha256": "b629ef372d4f373033eaa544c5985bbb40ccd1ef8f08fb1c99eac8725ea12ca5"
     },
     {
       "path": "API_NexoLocal/specs/nv-24/spec.md",
-      "sha256": "259249e92de914b28e4205528fa2f6da8de860994f3deb5f6e4d6b23e252ec88"
+      "sha256": "40ace8753db5347bd9335ca51e2f22d626cdecc406bbdd859f68bab9bcde9d35"
     },
     {
       "path": "API_NexoLocal/specs/nv-25/spec.md",
-      "sha256": "9ee1ee24b215177730afae870bc695a474ee855753ab37facc18a0f047b06c42"
+      "sha256": "982820dec87ef2a8ffb75080dd996891015c46269ca19956d84fde0275a8fb6a"
     },
     {
       "path": "docs_nexo/INICIO_DESARROLLO_Y_REPOS.md",
-      "sha256": "c477411d4ee17805b6dfd409fce91ec364d48a86c78c98100a57a9d418a3c1eb"
+      "sha256": "b6a3a9ea360dce044aa99913371c39eeee922892115d4385edb042e95c8d14c3"
     },
     {
       "path": "docs_nexo/Nexo_Local_Requerimientos_y_Arquitectura.md",
@@ -122,7 +122,7 @@
     },
     {
       "path": "docs_nexo/SDD_ALINEACION.md",
-      "sha256": "22be32c885afc29a68b095713c2fc93eccaafa7b10467e6e71f59ae3d50d764d"
+      "sha256": "27ed96a9d72925106632584ecccd49f16fcca611df5b849f83d7ab6a123d66b4"
     },
     {
       "path": "docs_nexo/SDD_COBERTURA_FUNCIONAL.md",
@@ -130,7 +130,7 @@
     },
     {
       "path": "docs_nexo/SDD_COBERTURA_Y_BRECHAS.md",
-      "sha256": "ce66caa007343b9ffc1972102cb5f6ae198caaa34a32df293e3a1b750e39db93"
+      "sha256": "089aab913780eef38fdc7eee5a5d510c1b4be1a879518e0236e6547aefc95c71"
     },
     {
       "path": "docs_nexo/SDD_HERRAMIENTAS_IA.md",
@@ -142,23 +142,24 @@
     },
     {
       "path": "docs_nexo/SDD_VERSIONES.md",
-      "sha256": "1a4ffeec48d9b6462b787d7f776068302a196f74c5216aeddca118af56e75935"
+      "sha256": "578f168a234d931600dbfb1d9129d641bd64d438f1b313ddbf08b16f365afcfa"
     },
     {
       "path": "requerimientos_nexolocal/docs/REFERENCIA_PROFESOR.md",
       "sha256": "5e532a6c9d604794bc84ee0e5291e40f6533fed3994af1268f6fa307ebaf746d"
     },
     {
-      "path": "requerimientos_nexolocal/sdd/architecture/README.md",
-      "sha256": "cc88b49524d45795b49e4a269add4c7bca84d305d2a8a72528df4ca3e9bb65c6"
-    },
-    {
       "path": "requerimientos_nexolocal/sdd/architecture/estados-y-permisos.md",
       "sha256": "6f2ae289bedca7cdc633eda761b6685bdb6d83049a9fb3f67441fc1a81b92f0c"
+    },
+    {
+      "path": "requerimientos_nexolocal/sdd/architecture/README.md",
+      "sha256": "cc88b49524d45795b49e4a269add4c7bca84d305d2a8a72528df4ca3e9bb65c6"
     },
     {
       "path": "requerimientos_nexolocal/sdd/governance/decisiones.md",
       "sha256": "42d70614a55dc4489dacbbebe9b3fac74419f53d14cf736acbb31d3c466abc31"
     }
-  ]
+  ],
+  "snapshotNote": "Refresh of existing public documentary references only; no newly exported PDFs/workbooks or bulk counterpart copy."
 }

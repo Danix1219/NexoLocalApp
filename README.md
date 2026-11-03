@@ -12,7 +12,7 @@ Patrón de referencia: WebSDD. Flujo: `specs/NNN-slug/spec.md → plan.md → ta
 
 ## Carpetas presentes
 
-`specs/`: qué hacer, cómo, tareas y comprobación. `docs/`: referencias vivas. `scripts/check_sdd.ps1`: validación documental. `AGENTS.md` y `CLAUDE.md`: entradas de Codex y Claude Code; `.opencode/README.md`: aviso histórico, sin OpenCode activo. `specs/templates/`: plantillas del formato de WebSDD.
+`specs/`: qué hacer, cómo, tareas y comprobación. `docs/`: referencias vivas. `scripts/check_sdd.ps1`: validación documental. [AGENTS.md](AGENTS.md): entrada y procedimiento comun para Codex; [CLAUDE.md](CLAUDE.md): entrada de Claude Code, que remite a las mismas reglas. `specs/templates/`: plantillas del formato de WebSDD.
 
 ## Validación disponible ahora
 
@@ -39,3 +39,7 @@ Leer [mapa de estructura](docs/estructura-sdd.md) y [trazabilidad de la constitu
 ## Cobertura vigente 0.4.0
 
 El desglose vigente contiene 25 specs en este contexto. Consultar [cobertura local](docs/cobertura-funcional.md) y [operaciones/funciones bilaterales](../docs_nexo/SDD_COBERTURA_FUNCIONAL.md). Cada EP propio y cada función/obligación de fuente tiene FR/tarea/AC, no solo mención en índice. Las asignaciones de fases de versiones anteriores quedan como historia; el inventario API y el índice actual son autoridad vigente.
+
+## Herramientas IA del proyecto
+
+Usamos Codex y Claude Code con una unica autoridad de reglas: AGENTS, constitucion, Memoria y spec objetivo. Ver [guia local de herramientas](docs/herramientas-ia.md). No hay configuracion de otra herramienta en este repositorio.
