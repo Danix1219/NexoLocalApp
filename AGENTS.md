@@ -21,7 +21,7 @@ API posee contratos y rutas; app registra consumo/pantallas y enlaza la autorida
 Cubrir H01-H12 pertinentes, aislamiento, consentimiento, estados y reintentos. Distinguir dobles unitarios de integración real. La moderación o SMS simulados no aprueban aceptación productiva.
 
 ## 7. Roles con IA
-Herramientas del equipo: Codex y Claude Code. Ver [procedimiento compartido](../docs_nexo/SDD_HERRAMIENTAS_IA.md) y [acuerdo de alineación](../docs_nexo/SDD_ALINEACION.md). `.opencode/README.md` es solo referencia histórica. Roles documentados no activan herramientas ni subagentes. Ejecutar secuencialmente salvo autorización explícita para delegar. Mínimo privilegio y revisión humana.
+Herramientas del equipo: Codex y Claude Code. Ver [procedimiento compartido](../docs_nexo/SDD_HERRAMIENTAS_IA.md) y [acuerdo de alineación](../docs_nexo/SDD_ALINEACION.md). Roles documentados no activan herramientas ni subagentes. Ejecutar secuencialmente salvo autorización explícita para delegar. Mínimo privilegio y revisión humana.
 
 ## 8. Fuentes y coordinación
 Leer [fuentes y brechas](../docs_nexo/SDD_COBERTURA_Y_BRECHAS.md) y la spec de la contraparte cuando cambie una frontera. Conservar contratos en API y consumo/pantallas en app. Resolver decisiones bloqueantes antes de Ready. Consultar [skills recomendadas](../docs_nexo/SDD_SKILLS.md) sin instalarlas ni ampliar permisos automáticamente.
@@ -32,3 +32,7 @@ Leer [estructura SDD](docs/estructura-sdd.md) y [trazabilidad constitucional](do
 ## Flujo Git del equipo (acuerdo 2026-11-02)
 
 Aplicar [flujo Git](docs/flujo-git.md): ramas por tarea desde develop, PR a develop, candidato release/* y PR de release a main; reintegrar main a develop. main permanece principal. CI y PR obligatorios; revision independiente exigible al incorporar revisor real. No declarar Ready o aceptacion por publicar o fusionar documentacion.
+
+## Trazabilidad de cambios Jira/Confluence (2026-11-02)
+
+Aplicar [convencion de cambios](docs/trazabilidad-jira-confluence.md): rama de trabajo con clave Jira y PR con titulo/clave coincidentes, enlace al ticket y enlace obligatorio a la pagina Confluence del cambio. API y app conservan su autoridad SDD; Confluence no reemplaza contratos versionados. No inventar tickets, enlaces ni firmas; activar el check requerido solo con configuracion real y ejecucion verificada.

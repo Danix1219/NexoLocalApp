@@ -78,3 +78,23 @@ Estado: el usuario aclara que incorporara equipo y acuerda feature/*→develop�
 Decisiones: main principal; ramas por tarea/spec, candidato por entrega, estabilizacion fix→release y reintegracion main/release→develop. Checks SDD / docs y Git / flow, PR y conversaciones resueltas; merge commit en promociones, sin force-push/bypass. Dependabot a develop; borrado automatico deshabilitado para no perder ramas antes de reintegrar.
 Deuda: solo Danix1219 figura hoy como colaborador; al aceptar el primer revisor Write, subir aprobaciones de 0 a 1 en los tres rulesets de ambos repositorios antes del trabajo de equipo. CD/CI de producto y Ready permanecen pendientes.
 A evitar: PR feature/develop directo a main, funcionalidades nuevas en release, olvidar reintegracion, borrar develop o presentar la fase transitoria como revision independiente. El acuerdo anterior de trabajo individual queda sustituido por este flujo de equipo.
+
+## Preparacion Jira/Confluence (2026-11-02)
+Estado: plantillas PR, convencion tipo/CLAVE-JIRA-descripcion, validador de metadatos y pruebas preparados en ambos repositorios en rama temporal local. Datos Jira/Confluence reales solicitados y aun pendientes; sin publicar ni activar reglas remotas nuevas. Resultado de validacion local se registra en docs_nexo/TRAZABILIDAD_JIRA_CONFLUENCE.md.
+Decisiones: enlace Jira y pagina Confluence obligatorios tambien para bots/promociones/reintegraciones; titulo, clave principal y rama de trabajo coinciden. Workflow usa codigo de main de confianza y no consulta servicios ni ejecuta codigo del PR. No instalar ni afirmar integracion Jira automatica.
+Deuda: clave/proyecto Jira, bases HTTPS, tarea/pagina reales para este cambio; renombrar rama temporal con tarea real, publicar por flujo aprobado, verificar check real y anadirlo a los seis rulesets. CI documental y aceptacion de producto siguen siendo distintos.
+A evitar: enlazar portadas como documentacion, aceptar enlaces solo ocultos/comentarios, inventar tickets o publicar/activar un gate sin configuracion real.
+
+## Limpieza de herramientas IA (2026-11-03)
+Estado: retirada .opencode de la app por encargo explicito; referencias activas README/AGENTS/CLAUDE/mapa/constitucion/spec 001 alineadas con Codex y Claude Code. Guia docs/herramientas-ia.md.
+Decisiones: AGENTS es entrada/procedimiento comun; CLAUDE remite a esa autoridad. Conservar flujo Flutter, autoridad de contratos API y ejecucion secuencial; sin perfiles ajenos ni configuraciones ficticias. Inventarios historicos y snapshots mantienen su revision.
+Deuda: verificar carga efectiva y skills al utilizarlos; Jira/Confluence y publicacion siguen pospuestos.
+A evitar: reglas divergentes, atribuir instalaciones o agentes a un README, copiar estructura .NET al movil o reescribir evidencia historica.
+
+Verificacion: scripts/check_sdd.ps1 exit 0, SDD-OK 25 specs; git diff --check correcto y carpeta retirada. Solo cambios locales, sin publicacion ni codigo Flutter.
+
+## Preparación de publicación autorizada (2026-11-03)
+Estado: el usuario encarga subir todos los cambios a sus repositorios; el móvil conserva solo cambios documentales/gobierno/IA, sin producto Flutter. Se prepara rama provisional chore/publicacion-alineacion-app; no se publica directamente en ramas compartidas ni se fusiona PR sin Jira/Confluence reales.
+Decisiones: conservar actualización de checkout ya fusionada en origin/develop. CI documental se ejecutará también en ramas de trabajo; guard de manifiesto Flutter permanece, sin CI de producto ficticio. Referencias compartidas se actualizan como snapshot revisable con hashes; no trasladar solución .NET al móvil.
+Deuda: confirmar push y CI remoto después de publicar; Jira/Confluence, revisión humana y Ready siguen pendientes. El cambio autoriza publicación en rama, no inventar tickets ni activar reglas remotas nuevas.
+A evitar: subir secretos/cachés, mezclar repositorios, declarar aceptación funcional por publicar documentación o sobrescribir el avance remoto del equipo.

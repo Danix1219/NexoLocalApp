@@ -13,7 +13,7 @@ Revisión 0.3.0, 2026-11-02. Estado: diseño pendiente de revisión humana. La c
 | docs/ | Diseño vivo del propietario e índices | Enlazar contrato/consumo, datos, gates y runbook; no duplicar payloads |
 | scripts/check_sdd.ps1 | Comprobación documental existente | Ejecutar desde la raíz; PASS no acredita seguridad ni producto |
 | .github/ | Plantilla PR documental | Su presencia no prueba Git remoto/CI/PR publicado |
-| .opencode/README.md | Aviso histórico | No herramienta activa ni instrucciones de agentes ejecutables |
+| docs/herramientas-ia.md | Guia local para Codex y Claude Code | Enlaza las entradas y el procedimiento comun, sin duplicar reglas |
 
 Constitución: [fuente única](../constitution.md). Plantillas: `specs/templates/`; el formato móvil conserva tasks.md y checklist.md.
 
