@@ -11,3 +11,5 @@ El flujo vigente del equipo es feature/* → develop → release/* → main, con
 Backend futuro: restore/build/test/contrato/integración y seguridad según proyectos reales. App futura: SDK/analyze/unit/widget/integration/dispositivo y seguridad. CD requiere cuentas/entornos/proveedores; no hay deploy ficticio.
 
 Plan de preparación técnica y decisiones previas: [inicio y repositorios](../../docs_nexo/INICIO_DESARROLLO_Y_REPOS.md). Esta referencia puede estar congelada en el contexto CI de la revisión correspondiente.
+
+Control Jira/Confluence preparado: [guia de trazabilidad](../docs/trazabilidad-jira-confluence.md). El workflow PR / traceability y sus pruebas validan metadatos/URLs, no contenido remoto ni producto. change-policy.json permanece sin sitios/claves reales y falla explicitamente. Aun no se publica ni se activa como requerido; los JSON ruleset son propuestas hasta completar datos y verificar CI real.
