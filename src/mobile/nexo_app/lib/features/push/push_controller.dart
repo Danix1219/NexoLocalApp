@@ -35,6 +35,11 @@ class PushController extends Notifier<PushState> {
   /// Aviso tocado antes de que se restaurara la sesión.
   String? _pending;
 
+  /// Último token ya dado de alta en el backend para esta sesión: al abrir la
+  /// app, `_init` y el oyente de sesión llegan los dos aquí y no se registra
+  /// dos veces. Se olvida al cerrar sesión para que la cuenta nueva sí registre.
+  String? _registeredToken;
+
   PushGateway get _gw => ref.read(pushGatewayProvider);
   TokenStorage get _storage => ref.read(tokenStorageProvider);
 
@@ -47,7 +52,11 @@ class PushController extends Notifier<PushState> {
     });
     // Al iniciar sesión (o restaurarla) se registra el teléfono.
     ref.listen<bool>(sessionProvider.select((s) => s.isSignedIn), (prev, now) {
-      if (!now || prev == true) return;
+      if (!now) {
+        _registeredToken = null;
+        return;
+      }
+      if (prev == true) return;
       if (state.enabled) unawaited(_register());
       final p = _pending;
       if (p != null) {
@@ -107,6 +116,7 @@ class PushController extends Notifier<PushState> {
 
   /// Desactivar avisos o cerrar sesión: baja en el backend y token borrado.
   Future<void> disable() async {
+    _registeredToken = null;
     final id = await _storage.readDeviceId();
     if (id != null && id.isNotEmpty) {
       try {
@@ -128,10 +138,14 @@ class PushController extends Notifier<PushState> {
     if (!ref.read(sessionProvider).isSignedIn) return;
     try {
       final t = token ?? await _gw.token();
-      if (t == null || t.isEmpty) return;
+      if (t == null || t.isEmpty || t == _registeredToken) return;
+      // Se marca antes de la red: al abrir la app, `_init` y el oyente de
+      // sesión entran aquí a la vez y las dos esperarían el mismo alta.
+      _registeredToken = t;
       final id = await ref.read(apiProvider).registerDevice(fcmToken: t, appVersion: Env.appVersion);
       await _storage.writeDeviceId(id);
     } catch (e) {
+      _registeredToken = null; // falló el alta: el próximo intento vuelve a probar
       // Nunca se registra el token en el log.
       if (kDebugMode) debugPrint('[PUSH] registro pendiente: ${e.runtimeType}');
     }

@@ -95,6 +95,7 @@ void main() {
   test('modo live muestra el error y modo fake nunca llama a la red', () async {
     final live = build(all(GroupMode.live));
     await expectLater(live.feed(at: centro), throwsA(isA<ApiException>()));
+    a.calls.clear(); // el bloque live de arriba ya registró su llamada
     final fake = build(all(GroupMode.fake));
     await fake.feed(at: centro);
     expect(a.calls, isEmpty);
