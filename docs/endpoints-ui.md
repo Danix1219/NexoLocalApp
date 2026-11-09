@@ -115,6 +115,16 @@ Autoridad de contrato: [inventario API](../../API_NexoLocal/docs/contracts/inven
 
 016 usa EP-038/039/040 para sincronización; la intención de guardados tiene dueño 019. 006/007/009 reutilizan catálogo de 018. Perfil/pedido/chat integran contacto de 025; no copian autorización. 012 enlaza retiro de dispositivos con 022. EP-073, producido por S01, se consume en 011. EP-088/100/101 son exclusivamente entre servicios.
 
-Selección local, mostrar/ocultar contraseña, navegación, Semantics, permisos Android y abrir compartir/copia/ruta no requieren endpoint adicional; la autorización del recurso se revalida por operaciones existentes cuando corresponda. ML de imagen propuesto es local en 013; GenAI remoto usa EP-082.
+Selección local, mostrar/ocultar contraseña, navegación, Semantics, permisos Android y abrir compartir/copia/ruta no requieren endpoint adicional; la autorización del recurso se revalida por operaciones existentes cuando corresponda. ML de imagen es local en el teléfono (ML Kit, [spec 049](../specs/049-ia-generativa-y-ml/spec.md)); GenAI remoto usa EP-082 como `POST /v1/assist/draft`.
 
 056/057/098 son opcionales; 024/095/097 son complementos de diseño con alcance/UX por ratificar. No se crea pantalla para cada uno ni se considera aceptado por figurar en catálogo. Cada EP consumido tiene FR-200+n/T-200+n/AC-200+n en su spec primaria. [Mapa bilateral completo](../../docs_nexo/SDD_COBERTURA_FUNCIONAL.md).
+
+## Consumo agregado en 0.3.0 (2026-11-08)
+
+| Método | Ruta | Grupo | Pantalla | Spec |
+|---|---|---|---|---|
+| POST | `/v1/assist/draft` (EP-082, por formalizar) | `asistente` | Publicar → «Ayúdame a redactar» | [049](../specs/049-ia-generativa-y-ml/spec.md) |
+| POST | `/v1/identity/devices` | `dispositivos` | Permiso de avisos, inicio de sesión, rotación del token | [050](../specs/050-notificaciones-push/spec.md) |
+| DELETE | `/v1/identity/devices/{id}` | `dispositivos` | Cuenta → apagar avisos; cerrar sesión | [050](../specs/050-notificaciones-push/spec.md) |
+
+El inventario de la API lista EP-083/084 como `PUT/DELETE /me/devices/{id}`; la app sigue el contrato detallado compartido por el backend (`/v1/identity/devices`). Si el backend publica la otra forma, solo cambia `HttpNexoApi.registerDevice/removeDevice`.

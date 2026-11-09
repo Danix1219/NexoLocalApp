@@ -1,0 +1,15 @@
+# Copia como terraform.tfvars (no se sube). Los checks vienen de checks.auto.tfvars.json.
+owner                = "Danix1219"
+repository           = "NexoLocalApp"
+required_approvals   = 0
+production_reviewers = ["Danix1219"]
+api_base_url         = "https://nexolocal-back-a5g4ceagb9fufjb7.northcentralus-01.azurewebsites.net"
+api_mode             = "auto"
+landing_url          = "https://TU-LANDING.netlify.app"
+play_status          = "draft"
+
+# Secretos: mejor por variables de entorno, p. ej.
+#   $env:TF_VAR_android_keystore_base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-keystore.jks"))
+#   $env:TF_VAR_play_service_account_json = Get-Content play.json -Raw
+#   $env:TF_VAR_google_services_json = Get-Content android/app/google-services.json -Raw
+manage_secrets = false

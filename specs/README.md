@@ -1,4 +1,4 @@
-# Índice de incrementos SDD — 0.4.0
+# Índice de incrementos SDD — 0.6.0
 
 Estado de todos: Borrador documental. Las primeras fases conservan gobierno/fundamento y coordinan subcapacidades; no se implementa todo un dominio de una vez. [Cobertura local](../docs/cobertura-funcional.md) y [mapa bilateral](../../docs_nexo/SDD_COBERTURA_FUNCIONAL.md).
 
@@ -29,9 +29,44 @@ Estado de todos: Borrador documental. Las primeras fases conservan gobierno/fund
 | [023-privacidad-permisos-enlaces](023-privacidad-permisos-enlaces/spec.md) | Privacidad, permisos y enlaces | [plan](023-privacidad-permisos-enlaces/plan.md), [tareas](023-privacidad-permisos-enlaces/tasks.md), [gates](023-privacidad-permisos-enlaces/checklist.md) |
 | [024-landing-evaluacion](024-landing-evaluacion/spec.md) | Landing y evaluación | [plan](024-landing-evaluacion/plan.md), [tareas](024-landing-evaluacion/tasks.md), [gates](024-landing-evaluacion/checklist.md) |
 | [025-contacto-consentimiento](025-contacto-consentimiento/spec.md) | Contacto y consentimiento | [plan](025-contacto-consentimiento/plan.md), [tareas](025-contacto-consentimiento/tasks.md), [gates](025-contacto-consentimiento/checklist.md) |
+| [026-shell-navegacion-visitante](026-shell-navegacion-visitante/spec.md) | Barra inferior, navegación y modo visitante | [plan](026-shell-navegacion-visitante/plan.md), [tareas](026-shell-navegacion-visitante/tasks.md), [gates](026-shell-navegacion-visitante/checklist.md) |
+| [027-inicio-cliente](027-inicio-cliente/spec.md) | Inicio del cliente: Para ti, Mis solicitudes y Mis servicios | [plan](027-inicio-cliente/plan.md), [tareas](027-inicio-cliente/tasks.md), [gates](027-inicio-cliente/checklist.md) |
+| [028-inicio-prestador](028-inicio-prestador/spec.md) | Inicio del prestador: Comunidad, Oportunidades y pedidos por responder | [plan](028-inicio-prestador/plan.md), [tareas](028-inicio-prestador/tasks.md), [gates](028-inicio-prestador/checklist.md) |
+| [029-buscar-prestadores](029-buscar-prestadores/spec.md) | Buscar prestadores: texto, sugerencias, filtros, lista y mapa | [plan](029-buscar-prestadores/plan.md), [tareas](029-buscar-prestadores/tasks.md), [gates](029-buscar-prestadores/checklist.md) |
+| [030-ubicacion-mapa-radio](030-ubicacion-mapa-radio/spec.md) | Ubicación de búsqueda y zona: selector de mapa, radio y GPS | [plan](030-ubicacion-mapa-radio/plan.md), [tareas](030-ubicacion-mapa-radio/tasks.md), [gates](030-ubicacion-mapa-radio/checklist.md) |
+| [031-perfil-prestador](031-perfil-prestador/spec.md) | Perfil público del prestador: Trabajos, Información y Opiniones | [plan](031-perfil-prestador/plan.md), [tareas](031-perfil-prestador/tasks.md), [gates](031-perfil-prestador/checklist.md) |
+| [032-mi-perfil-edicion](032-mi-perfil-edicion/spec.md) | Mi perfil de prestador: completitud y edición por sección | [plan](032-mi-perfil-edicion/plan.md), [tareas](032-mi-perfil-edicion/tasks.md), [gates](032-mi-perfil-edicion/checklist.md) |
+| [033-comparar-prestadores](033-comparar-prestadores/spec.md) | Comparar dos prestadores lado a lado | [plan](033-comparar-prestadores/plan.md), [tareas](033-comparar-prestadores/tasks.md), [gates](033-comparar-prestadores/checklist.md) |
+| [034-contacto-reportes-senales](034-contacto-reportes-senales/spec.md) | Contactar, ver número, reportar y señales de confianza | [plan](034-contacto-reportes-senales/plan.md), [tareas](034-contacto-reportes-senales/tasks.md), [gates](034-contacto-reportes-senales/checklist.md) |
+| [035-publicar-solicitud](035-publicar-solicitud/spec.md) | Publicar «Busco un servicio» | [plan](035-publicar-solicitud/plan.md), [tareas](035-publicar-solicitud/tasks.md), [gates](035-publicar-solicitud/checklist.md) |
+| [036-publicar-trabajo](036-publicar-trabajo/spec.md) | Publicar un trabajo realizado (prestador) | [plan](036-publicar-trabajo/plan.md), [tareas](036-publicar-trabajo/tasks.md), [gates](036-publicar-trabajo/checklist.md) |
+| [037-experiencia-calificacion](037-experiencia-calificacion/spec.md) | Mi experiencia y calificación de un servicio resuelto | [plan](037-experiencia-calificacion/plan.md), [tareas](037-experiencia-calificacion/tasks.md), [gates](037-experiencia-calificacion/checklist.md) |
+| [038-interes-e-interesados](038-interes-e-interesados/spec.md) | «Me interesa», lista de interesados y cierre de solicitud | [plan](038-interes-e-interesados/plan.md), [tareas](038-interes-e-interesados/tasks.md), [gates](038-interes-e-interesados/checklist.md) |
+| [039-pedido-servicio](039-pedido-servicio/spec.md) | Pedido de servicio: pedir, aceptar, rechazar, cancelar, resolver y domicilio | [plan](039-pedido-servicio/plan.md), [tareas](039-pedido-servicio/tasks.md), [gates](039-pedido-servicio/checklist.md) |
+| [040-mensajeria-chat](040-mensajeria-chat/spec.md) | Mensajes: bandeja y chat | [plan](040-mensajeria-chat/plan.md), [tareas](040-mensajeria-chat/tasks.md), [gates](040-mensajeria-chat/checklist.md) |
+| [041-cuenta-modo-celular-baja](041-cuenta-modo-celular-baja/spec.md) | Cuenta: modo cliente/prestador, celular, privacidad, salir y eliminar | [plan](041-cuenta-modo-celular-baja/plan.md), [tareas](041-cuenta-modo-celular-baja/tasks.md), [gates](041-cuenta-modo-celular-baja/checklist.md) |
+| [042-guardados-recomendaciones](042-guardados-recomendaciones/spec.md) | Guardados y recomendaciones | [plan](042-guardados-recomendaciones/plan.md), [tareas](042-guardados-recomendaciones/tasks.md), [gates](042-guardados-recomendaciones/checklist.md) |
+| [043-notificaciones-bandeja](043-notificaciones-bandeja/spec.md) | Notificaciones dentro de la app | [plan](043-notificaciones-bandeja/plan.md), [tareas](043-notificaciones-bandeja/tasks.md), [gates](043-notificaciones-bandeja/checklist.md) |
+| [044-alta-prestador](044-alta-prestador/spec.md) | Registro de prestador: tipo, datos, servicios, zona y listo | [plan](044-alta-prestador/plan.md), [tareas](044-alta-prestador/tasks.md), [gates](044-alta-prestador/checklist.md) |
+| [045-resiliencia-consumo-api](045-resiliencia-consumo-api/spec.md) | Resiliencia del consumo: endpoints ausentes o sin señal sin error en pantalla | [plan](045-resiliencia-consumo-api/plan.md), [tareas](045-resiliencia-consumo-api/tasks.md), [gates](045-resiliencia-consumo-api/checklist.md) |
+| [046-pruebas-tres-capas-seguridad](046-pruebas-tres-capas-seguridad/spec.md) | Pruebas en tres capas: unidad, integración y seguridad | [plan](046-pruebas-tres-capas-seguridad/plan.md), [tareas](046-pruebas-tres-capas-seguridad/tasks.md), [gates](046-pruebas-tres-capas-seguridad/checklist.md) |
+| [047-ci-cd-github-terraform](047-ci-cd-github-terraform/spec.md) | CI/CD en GitHub Actions con grafo por prueba y Terraform | [plan](047-ci-cd-github-terraform/plan.md), [tareas](047-ci-cd-github-terraform/tasks.md), [gates](047-ci-cd-github-terraform/checklist.md) |
+| [048-publicacion-play-store](048-publicacion-play-store/spec.md) | Firma y publicación en Google Play | [plan](048-publicacion-play-store/plan.md), [tareas](048-publicacion-play-store/tasks.md), [gates](048-publicacion-play-store/checklist.md) |
+| [049-ia-generativa-y-ml](049-ia-generativa-y-ml/spec.md) | IA generativa (borrador editable) y ML en el teléfono (categoría por foto) | [plan](049-ia-generativa-y-ml/plan.md), [tareas](049-ia-generativa-y-ml/tasks.md), [gates](049-ia-generativa-y-ml/checklist.md) |
+| [050-notificaciones-push](050-notificaciones-push/spec.md) | Notificaciones push de los procesos principales | [plan](050-notificaciones-push/plan.md), [tareas](050-notificaciones-push/tasks.md), [gates](050-notificaciones-push/checklist.md) |
+| [051-cache-sqlite-sincronizacion](051-cache-sqlite-sincronizacion/spec.md) | Caché local SQLite por cuenta y sincronización al volver la señal | [plan](051-cache-sqlite-sincronizacion/plan.md), [tareas](051-cache-sqlite-sincronizacion/tasks.md), [gates](051-cache-sqlite-sincronizacion/checklist.md) |
+| [052-privacidad-landing-produccion](052-privacidad-landing-produccion/spec.md) | Aviso de privacidad en la landing, moderación, permisos Android y versionamiento para producción | [plan](052-privacidad-landing-produccion/plan.md), [tareas](052-privacidad-landing-produccion/tasks.md), [gates](052-privacidad-landing-produccion/checklist.md) |
 
 ## Dependencias por historia y por cierre
 
 Fundamentos preceden identidad mínima. Catálogo público puede prepararse antes del perfil completo; administración requiere identidad. Publicación de trabajo precede integración con guardados/experiencias. Experiencia declarada no espera pedido; la vinculada sí espera done/eligibilidad. Solicitud precede interés/candidato. Pedido directo precede entrada por chat; contacto privado y preferencias se cierran al integrar su capacidad. Eventos/push/borrado crecen con cada productor/propietario habilitado.
 
 Las dependencias de cierre integrado no se usan para impedir un subset anterior ya definido: las specs y planes delimitan precondiciones de la historia. Primer subset identidad mantiene EP-001/002/003/004/005/007/008; otras operaciones tienen historia separada. S08/shortlist son opcionales. La entrega global exige todas las capacidades obligatorias, no solo la primera vertical. No prometer Ready por este índice.
+
+## Pantallas, funciones y entrega (0.5.0)
+
+Las specs 026–044 describen cada pantalla o función de la app implementada; 045 la resiliencia de consumo; 046 las pruebas en tres capas; 047 el CI/CD con Terraform; 048 la publicación en Play Store. Todas siguen en Borrador documental: el código existe, la evidencia de ejecución en CI y la revisión humana están pendientes. Ver [pantallas y pruebas](../docs/pantallas-y-pruebas.md).
+
+## Requisitos del profesor para producción (0.6.0)
+
+049 IA generativa y ML, 050 notificaciones push, 051 caché SQLite y sincronización, 052 privacidad en la landing, moderación, permisos y versionamiento. Ver [cumplimiento de requisitos](../docs/cumplimiento-requisitos.md). Siguen en Borrador documental hasta tener la ejecución del pipeline y la revisión en dispositivo.

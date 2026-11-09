@@ -43,3 +43,17 @@ El desglose vigente contiene 25 specs en este contexto. Consultar [cobertura loc
 ## Herramientas IA del proyecto
 
 Usamos Codex y Claude Code con una unica autoridad de reglas: AGENTS, constitucion, Memoria y spec objetivo. Ver [guia local de herramientas](docs/herramientas-ia.md). No hay configuracion de otra herramienta en este repositorio.
+
+## Implementación 0.5.0 (2026-11-08)
+
+- App: [src/mobile/nexo_app](src/mobile/nexo_app/README.md).
+- Specs por pantalla y función: 026–048 en el [índice](specs/README.md).
+- Pruebas y pantallas: [pantallas y pruebas](docs/pantallas-y-pruebas.md).
+- Pipeline (grafo de jobs): [pipeline](docs/pipeline.md). Infraestructura de GitHub: [infra/github](infra/github/README.md).
+- Publicación: [Play Store](docs/play-store.md).
+
+El validador documental sigue disponible; además, `app-ci.yml` ejecuta formato, análisis, cada prueba por separado, herramientas de seguridad, cobertura y build. Nada de esto está verificado hasta que GitHub Actions lo ejecute.
+
+## Producción 0.3.0 (2026-11-08)
+
+Cumplimiento de los requisitos del profesor: [cumplimiento](docs/cumplimiento-requisitos.md). Versiones: [matriz](docs/versionamiento.md). Android listo para producción: `python3 tools/android/preparar_android.py src/mobile/nexo_app`.
