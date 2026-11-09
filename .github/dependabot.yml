@@ -6,3 +6,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+  # App Flutter (spec 046): avisos semanales de paquetes con versiones nuevas o vulnerables.
+  - package-ecosystem: pub
+    directory: /src/mobile/nexo_app
+    target-branch: develop
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

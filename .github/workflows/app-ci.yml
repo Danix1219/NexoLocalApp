@@ -1,0 +1,1291 @@
+# GENERADO por tools/ci/generar_pipeline.py (spec 047). No editar a mano.
+# Cada archivo de prueba es un job: el grafo muestra cada prueba por separado.
+name: App CI/CD
+on:
+  push:
+    branches: [develop, main, 'release/**', 'feature/**', 'fix/**']
+  pull_request:
+    branches: [develop, main, 'release/**']
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: 'Publicar en Play Store (pista según la rama)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: app-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  APP_DIR: src/mobile/nexo_app
+jobs:
+  pipeline:
+    name: "Pipeline · al día con las pruebas"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Cada archivo de prueba tiene su job
+        run: python3 tools/ci/generar_pipeline.py --check
+  preparar:
+    name: "Preparar · Flutter y dependencias"
+    needs: [pipeline]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: Versiones
+        run: flutter --version && dart --version
+  formato:
+    name: "Calidad · formato"
+    needs: [preparar]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: Calidad · formato
+        run: dart format --output=none --set-exit-if-changed lib test
+  analisis:
+    name: "Calidad · análisis estático"
+    needs: [preparar]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: Calidad · análisis estático
+        run: flutter analyze --no-fatal-infos
+  unidad-almacen-local:
+    name: "Unidad · almacen-local"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/almacen_local_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-almacen-local.lcov --reporter=expanded test/unit/almacen_local_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-almacen-local
+          path: ${{ env.APP_DIR }}/coverage/unidad-almacen-local.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-api-modes:
+    name: "Unidad · api-modes"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/api_modes_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-api-modes.lcov --reporter=expanded test/unit/api_modes_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-api-modes
+          path: ${{ env.APP_DIR }}/coverage/unidad-api-modes.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-asistente-y-dispositivos-fake:
+    name: "Unidad · asistente-y-dispositivos-fake"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/asistente_y_dispositivos_fake_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-asistente-y-dispositivos-fake.lcov --reporter=expanded test/unit/asistente_y_dispositivos_fake_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-asistente-y-dispositivos-fake
+          path: ${{ env.APP_DIR }}/coverage/unidad-asistente-y-dispositivos-fake.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-auth-parsing:
+    name: "Unidad · auth-parsing"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/auth_parsing_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-auth-parsing.lcov --reporter=expanded test/unit/auth_parsing_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-auth-parsing
+          path: ${{ env.APP_DIR }}/coverage/unidad-auth-parsing.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-fake-account:
+    name: "Unidad · fake-account"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/fake_account_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-fake-account.lcov --reporter=expanded test/unit/fake_account_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-fake-account
+          path: ${{ env.APP_DIR }}/coverage/unidad-fake-account.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-fake-discovery:
+    name: "Unidad · fake-discovery"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/fake_discovery_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-fake-discovery.lcov --reporter=expanded test/unit/fake_discovery_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-fake-discovery
+          path: ${{ env.APP_DIR }}/coverage/unidad-fake-discovery.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-fake-messages:
+    name: "Unidad · fake-messages"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/fake_messages_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-fake-messages.lcov --reporter=expanded test/unit/fake_messages_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-fake-messages
+          path: ${{ env.APP_DIR }}/coverage/unidad-fake-messages.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-fake-orders:
+    name: "Unidad · fake-orders"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/fake_orders_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-fake-orders.lcov --reporter=expanded test/unit/fake_orders_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-fake-orders
+          path: ${{ env.APP_DIR }}/coverage/unidad-fake-orders.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-fake-requests:
+    name: "Unidad · fake-requests"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/fake_requests_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-fake-requests.lcov --reporter=expanded test/unit/fake_requests_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-fake-requests
+          path: ${{ env.APP_DIR }}/coverage/unidad-fake-requests.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-filters:
+    name: "Unidad · filters"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/filters_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-filters.lcov --reporter=expanded test/unit/filters_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-filters
+          path: ${{ env.APP_DIR }}/coverage/unidad-filters.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-ml-categoria:
+    name: "Unidad · ml-categoria"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/ml_categoria_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-ml-categoria.lcov --reporter=expanded test/unit/ml_categoria_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-ml-categoria
+          path: ${{ env.APP_DIR }}/coverage/unidad-ml-categoria.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-models:
+    name: "Unidad · models"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/models_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-models.lcov --reporter=expanded test/unit/models_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-models
+          path: ${{ env.APP_DIR }}/coverage/unidad-models.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-publish-rules:
+    name: "Unidad · publish-rules"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/publish_rules_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-publish-rules.lcov --reporter=expanded test/unit/publish_rules_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-publish-rules
+          path: ${{ env.APP_DIR }}/coverage/unidad-publish-rules.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-push-mensajes:
+    name: "Unidad · push-mensajes"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/push_mensajes_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-push-mensajes.lcov --reporter=expanded test/unit/push_mensajes_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-push-mensajes
+          path: ${{ env.APP_DIR }}/coverage/unidad-push-mensajes.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  unidad-validation:
+    name: "Unidad · validation"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/validation_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-validation.lcov --reporter=expanded test/unit/validation_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-validation
+          path: ${{ env.APP_DIR }}/coverage/unidad-validation.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-cache-sin-conexion:
+    name: "Integración · cache-sin-conexion"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/cache_sin_conexion_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-cache-sin-conexion.lcov --reporter=expanded test/integration/cache_sin_conexion_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-cache-sin-conexion
+          path: ${{ env.APP_DIR }}/coverage/integracion-cache-sin-conexion.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-asistente-dispositivos:
+    name: "Integración · http-asistente-dispositivos"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_asistente_dispositivos_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-asistente-dispositivos.lcov --reporter=expanded test/integration/http_asistente_dispositivos_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-asistente-dispositivos
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-asistente-dispositivos.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-cuenta:
+    name: "Integración · http-cuenta"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_cuenta_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-cuenta.lcov --reporter=expanded test/integration/http_cuenta_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-cuenta
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-cuenta.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-descubrimiento:
+    name: "Integración · http-descubrimiento"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_descubrimiento_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-descubrimiento.lcov --reporter=expanded test/integration/http_descubrimiento_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-descubrimiento
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-descubrimiento.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-guardados-contacto:
+    name: "Integración · http-guardados-contacto"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_guardados_contacto_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-guardados-contacto.lcov --reporter=expanded test/integration/http_guardados_contacto_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-guardados-contacto
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-guardados-contacto.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-imagenes:
+    name: "Integración · http-imagenes"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_imagenes_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-imagenes.lcov --reporter=expanded test/integration/http_imagenes_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-imagenes
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-imagenes.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-mensajes:
+    name: "Integración · http-mensajes"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_mensajes_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-mensajes.lcov --reporter=expanded test/integration/http_mensajes_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-mensajes
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-mensajes.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-pedidos:
+    name: "Integración · http-pedidos"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_pedidos_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-pedidos.lcov --reporter=expanded test/integration/http_pedidos_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-pedidos
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-pedidos.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-perfil:
+    name: "Integración · http-perfil"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_perfil_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-perfil.lcov --reporter=expanded test/integration/http_perfil_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-perfil
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-perfil.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-http-solicitudes-interes:
+    name: "Integración · http-solicitudes-interes"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/http_solicitudes_interes_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-http-solicitudes-interes.lcov --reporter=expanded test/integration/http_solicitudes_interes_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-http-solicitudes-interes
+          path: ${{ env.APP_DIR }}/coverage/integracion-http-solicitudes-interes.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-push-controlador:
+    name: "Integración · push-controlador"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/push_controlador_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-push-controlador.lcov --reporter=expanded test/integration/push_controlador_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-push-controlador
+          path: ${{ env.APP_DIR }}/coverage/integracion-push-controlador.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-resiliencia:
+    name: "Integración · resiliencia"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/resiliencia_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-resiliencia.lcov --reporter=expanded test/integration/resiliencia_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-resiliencia
+          path: ${{ env.APP_DIR }}/coverage/integracion-resiliencia.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-sesion:
+    name: "Integración · sesion"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/sesion_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-sesion.lcov --reporter=expanded test/integration/sesion_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-sesion
+          path: ${{ env.APP_DIR }}/coverage/integracion-sesion.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  integracion-sincronizacion:
+    name: "Integración · sincronizacion"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/integration/sincronizacion_test.dart
+        run: flutter test --coverage --coverage-path=coverage/integracion-sincronizacion.lcov --reporter=expanded test/integration/sincronizacion_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-integracion-sincronizacion
+          path: ${{ env.APP_DIR }}/coverage/integracion-sincronizacion.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-cabeceras-y-subidas:
+    name: "Seguridad · cabeceras-y-subidas"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/cabeceras_y_subidas_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-cabeceras-y-subidas.lcov --reporter=expanded test/security/cabeceras_y_subidas_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-cabeceras-y-subidas
+          path: ${{ env.APP_DIR }}/coverage/seguridad-cabeceras-y-subidas.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-cache-local-seguro:
+    name: "Seguridad · cache-local-seguro"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/cache_local_seguro_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-cache-local-seguro.lcov --reporter=expanded test/security/cache_local_seguro_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-cache-local-seguro
+          path: ${{ env.APP_DIR }}/coverage/seguridad-cache-local-seguro.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-enlaces-profundos:
+    name: "Seguridad · enlaces-profundos"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/enlaces_profundos_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-enlaces-profundos.lcov --reporter=expanded test/security/enlaces_profundos_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-enlaces-profundos
+          path: ${{ env.APP_DIR }}/coverage/seguridad-enlaces-profundos.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-ia-sin-datos-personales:
+    name: "Seguridad · ia-sin-datos-personales"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/ia_sin_datos_personales_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-ia-sin-datos-personales.lcov --reporter=expanded test/security/ia_sin_datos_personales_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-ia-sin-datos-personales
+          path: ${{ env.APP_DIR }}/coverage/seguridad-ia-sin-datos-personales.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-privacidad:
+    name: "Seguridad · privacidad"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/privacidad_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-privacidad.lcov --reporter=expanded test/security/privacidad_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-privacidad
+          path: ${{ env.APP_DIR }}/coverage/seguridad-privacidad.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-push-seguro:
+    name: "Seguridad · push-seguro"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/push_seguro_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-push-seguro.lcov --reporter=expanded test/security/push_seguro_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-push-seguro
+          path: ${{ env.APP_DIR }}/coverage/seguridad-push-seguro.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-registros-sin-datos-sensibles:
+    name: "Seguridad · registros-sin-datos-sensibles"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/registros_sin_datos_sensibles_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-registros-sin-datos-sensibles.lcov --reporter=expanded test/security/registros_sin_datos_sensibles_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-registros-sin-datos-sensibles
+          path: ${{ env.APP_DIR }}/coverage/seguridad-registros-sin-datos-sensibles.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-secretos-en-codigo:
+    name: "Seguridad · secretos-en-codigo"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/secretos_en_codigo_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-secretos-en-codigo.lcov --reporter=expanded test/security/secretos_en_codigo_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-secretos-en-codigo
+          path: ${{ env.APP_DIR }}/coverage/seguridad-secretos-en-codigo.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-transporte:
+    name: "Seguridad · transporte"
+    needs: [analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/security/transporte_test.dart
+        run: flutter test --coverage --coverage-path=coverage/seguridad-transporte.lcov --reporter=expanded test/security/transporte_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-seguridad-transporte
+          path: ${{ env.APP_DIR }}/coverage/seguridad-transporte.lcov
+          if-no-files-found: ignore
+          retention-days: 7
+  seguridad-secretos:
+    name: "Seguridad · secretos en el historial (gitleaks)"
+    needs: [pipeline]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Descargar el código con historial
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  seguridad-dependencias:
+    name: "Seguridad · vulnerabilidades en dependencias (OSV)"
+    needs: [preparar]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: osv-scanner sobre pubspec.lock
+        uses: google/osv-scanner-action/osv-scanner-action@e69cc6c86b31f1e7e23935bbe7031b50e51082de # v2.0.2
+        with:
+          scan-args: |-
+            --lockfile=src/mobile/nexo_app/pubspec.lock
+  seguridad-manifest:
+    name: "Seguridad · AndroidManifest y build"
+    needs: [pipeline]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Revisar permisos, respaldo y tráfico en claro
+        run: python3 tools/ci/revisar_android.py src/mobile/nexo_app
+  seguridad-workflows:
+    name: "Seguridad · workflows (actionlint y permisos)"
+    needs: [pipeline]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: actionlint v1.7.7
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
+          "$(go env GOPATH)/bin/actionlint" -color
+      - name: Acciones fijadas por SHA y permisos mínimos
+        run: python3 tools/ci/revisar_workflows.py
+  seguridad-revision-dependencias:
+    name: "Seguridad · revisión de dependencias del PR"
+    needs: [pipeline]
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/dependency-review-action@da24556b548a50705dd671f47852072ea4c105d9 # v4.7.1
+        with:
+          fail-on-severity: high
+  version:
+    name: "Versión · matriz y SemVer"
+    needs: [pipeline]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app_version: ${{ steps.v.outputs.app_version }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Versión del pubspec en docs/versionamiento.md y rama release
+        id: v
+        run: python3 tools/ci/versionamiento.py
+  cobertura:
+    name: "Calidad · cobertura combinada"
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation, integracion-cache-sin-conexion, integracion-http-asistente-dispositivos, integracion-http-cuenta, integracion-http-descubrimiento, integracion-http-guardados-contacto, integracion-http-imagenes, integracion-http-mensajes, integracion-http-pedidos, integracion-http-perfil, integracion-http-solicitudes-interes, integracion-push-controlador, integracion-resiliencia, integracion-sesion, integracion-sincronizacion, seguridad-cabeceras-y-subidas, seguridad-cache-local-seguro, seguridad-enlaces-profundos, seguridad-ia-sin-datos-personales, seguridad-privacidad, seguridad-push-seguro, seguridad-registros-sin-datos-sensibles, seguridad-secretos-en-codigo, seguridad-transporte]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Juntar la cobertura de cada prueba
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: cov-*
+          path: cobertura
+          merge-multiple: true
+      - name: Umbral de la constitución (§8)
+        run: python3 tools/ci/cobertura.py cobertura --min ${{ vars.MIN_COVERAGE || '45' }} | tee -a "$GITHUB_STEP_SUMMARY"
+  apk:
+    name: "Construir · APK de prueba"
+    needs: [cobertura, version, seguridad-secretos, seguridad-dependencias, seguridad-manifest, seguridad-workflows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: Java 17
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: APK debug en modo auto (backend o datos de ejemplo)
+        run: >-
+          flutter build apk --debug
+          --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}
+          --dart-define=LANDING_URL=${{ vars.LANDING_URL }}
+          --dart-define=APP_VERSION=${{ needs.version.outputs.app_version }}
+      - name: Guardar APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: apk-debug
+          path: ${{ env.APP_DIR }}/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+  ci-verde:
+    name: "CI · todo verde"
+    needs: [pipeline, preparar, formato, analisis, version, unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation, integracion-cache-sin-conexion, integracion-http-asistente-dispositivos, integracion-http-cuenta, integracion-http-descubrimiento, integracion-http-guardados-contacto, integracion-http-imagenes, integracion-http-mensajes, integracion-http-pedidos, integracion-http-perfil, integracion-http-solicitudes-interes, integracion-push-controlador, integracion-resiliencia, integracion-sesion, integracion-sincronizacion, seguridad-cabeceras-y-subidas, seguridad-cache-local-seguro, seguridad-enlaces-profundos, seguridad-ia-sin-datos-personales, seguridad-privacidad, seguridad-push-seguro, seguridad-registros-sin-datos-sensibles, seguridad-secretos-en-codigo, seguridad-transporte, seguridad-secretos, seguridad-dependencias, seguridad-manifest, seguridad-workflows, seguridad-revision-dependencias, cobertura, apk]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Ninguna prueba falló ni se canceló
+        env:
+          RESULTADOS: ${{ toJSON(needs) }}
+        run: python3 tools/ci/compuerta.py
+  aab:
+    name: "Construir · AAB firmado"
+    needs: [ci-verde, version]
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) && (github.event_name == 'push' || inputs.publicar)
+    environment: firma
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: Java 17
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: La URL del backend de release es HTTPS
+        env:
+          URL: ${{ vars.API_BASE_URL }}
+        run: |
+          case "$URL" in https://*) echo "OK $URL";; *) echo "::error::API_BASE_URL debe ser https://"; exit 1;; esac
+      - name: Aviso de privacidad en la landing (HTTPS)
+        env:
+          URL: ${{ vars.LANDING_URL }}
+        run: |
+          case "$URL" in https://*) echo "OK $URL";; *) echo "::error::Define LANDING_URL (https) para el aviso de privacidad"; exit 1;; esac
+      - name: Firebase para push (google-services.json desde secretos)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          ANDROID_PACKAGE_NAME: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.nexo_app' }}
+        run: python3 ../../../tools/ci/preparar_firebase.py android
+      - name: Firma de subida (keystore desde secretos)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: python3 ../../../tools/ci/preparar_firma.py android
+      - name: AAB release
+        run: >-
+          flutter build appbundle --release
+          --build-number=$(( ${{ github.run_number }} + ${{ vars.BUILD_NUMBER_OFFSET || 100 }} ))
+          --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}
+          --dart-define=API_MODE=${{ vars.API_MODE || 'auto' }}
+          --dart-define=LANDING_URL=${{ vars.LANDING_URL }}
+          --dart-define=APP_VERSION=${{ needs.version.outputs.app_version }}
+          --obfuscate --split-debug-info=build/simbolos
+      - name: Borrar la llave del runner
+        if: always()
+        run: rm -f android/key.properties android/app/upload-keystore.jks android/app/google-services.json
+      - name: Guardar AAB y símbolos
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: aab-release
+          path: |
+            ${{ env.APP_DIR }}/build/app/outputs/bundle/release/app-release.aab
+            ${{ env.APP_DIR }}/build/simbolos
+          retention-days: 30
+  play-interna:
+    name: "Play Store · pruebas internas"
+    needs: [aab]
+    if: startsWith(github.ref, 'refs/heads/release/')
+    environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar AAB
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: aab-release
+          path: salida
+      - name: Subir a la pista internal
+        uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.nexo_app' }}
+          releaseFiles: salida/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: ${{ vars.PLAY_STATUS || 'draft' }}
+  play-produccion:
+    name: "Play Store · producción"
+    needs: [aab]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar AAB
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: aab-release
+          path: salida
+      - name: Subir a la pista production
+        uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.nexo_app' }}
+          releaseFiles: salida/app/outputs/bundle/release/app-release.aab
+          track: production
+          status: ${{ vars.PLAY_STATUS || 'draft' }}

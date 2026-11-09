@@ -1,0 +1,38 @@
+# Spec 047: la configuración de GitHub como código se valida en cada cambio.
+# El apply se hace desde la máquina del responsable (infra/github/README.md).
+name: Infra (Terraform)
+on:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/infra.yml']
+  push:
+    branches: [develop, main]
+    paths: ['infra/**', '.github/workflows/infra.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  terraform:
+    name: Infra · terraform fmt y validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/github
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.9.8
+      - name: Formato
+        run: terraform fmt -check -recursive -diff
+      - name: Inicializar sin estado remoto
+        run: terraform init -backend=false -input=false
+      - name: Validar
+        run: terraform validate -no-color
+      - name: Los checks exigidos coinciden con el pipeline
+        working-directory: .
+        run: python3 tools/ci/generar_pipeline.py --check
