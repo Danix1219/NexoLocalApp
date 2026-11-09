@@ -106,6 +106,26 @@ val keystoreProperties = Properties().apply {
                'signingConfig = if (keystoreProperties.isNotEmpty()) signingConfigs.getByName("release") '
                'else signingConfigs.getByName("debug")', g)
 
+# R8 (release): al excluir firebase-iid, ML Kit se queda con una referencia
+# colgando a FirebaseInstanceId. Solo la usa el camino de modelos alojados en
+# Firebase, que esta app no utiliza (usa el modelo base incluido).
+pr = android / "app/proguard-rules.pro"
+if not pr.exists():
+    pr.write_text(
+        "# Modelos de ML Kit alojados en Firebase: no se usan (modelo base incluido).\n"
+        "-dontwarn com.google.firebase.iid.FirebaseInstanceId\n",
+        encoding="utf-8",
+    )
+    cambios.append(str(pr))
+
+if "proguard-rules.pro" not in g:
+    g = re.sub(
+        r"(\n        release \{\n)",
+        r'\1            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")\n',
+        g,
+        count=1,
+    )
+
 if "firebase-iid" not in g:
     # ML Kit (com.google.mlkit:linkfirebase) arrastra firebase-iid 20.1.5, cuyas
     # clases ya vienen en firebase-messaging 24.x: sin esto, el release falla en
