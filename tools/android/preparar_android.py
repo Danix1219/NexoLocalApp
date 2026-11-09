@@ -106,6 +106,16 @@ val keystoreProperties = Properties().apply {
                'signingConfig = if (keystoreProperties.isNotEmpty()) signingConfigs.getByName("release") '
                'else signingConfigs.getByName("debug")', g)
 
+if "firebase-iid" not in g:
+    # ML Kit (com.google.mlkit:linkfirebase) arrastra firebase-iid 20.1.5, cuyas
+    # clases ya vienen en firebase-messaging 24.x: sin esto, el release falla en
+    # :app:checkReleaseDuplicateClasses (verificado, specs 049/050).
+    g += """
+configurations.all {
+    exclude(group = "com.google.firebase", module = "firebase-iid")
+}
+"""
+
 if "google-services" not in g:
     g += """
 // Push (spec 050): solo si existe google-services.json (lo escribe el CI desde
