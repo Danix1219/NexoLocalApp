@@ -1,5 +1,5 @@
 {
-  "jira_project_keys": [],
-  "jira_base_url": null,
-  "confluence_base_url": null
+  "jira_project_keys": ["NEX"],
+  "jira_base_url": "https://nexolocal-dev1.atlassian.net",
+  "confluence_base_url": "https://nexolocal-dev1.atlassian.net/wiki"
 }
