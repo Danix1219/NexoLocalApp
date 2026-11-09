@@ -58,8 +58,7 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
     super.dispose();
   }
 
-  bool get _valid =>
-      personNameOk(_name.text) && pwOk(_p1.text) && _p1.text == _p2.text && _terms;
+  bool get _valid => personNameOk(_name.text) && pwOk(_p1.text) && _p1.text == _p2.text && _terms;
 
   Future<void> _submit() async {
     final flow = ref.read(signupFlowProvider);
@@ -75,11 +74,11 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
             idempotencyKey: flow.idempotencyKey,
           );
       final name = a.name.isEmpty ? _name.text.trim() : a.name;
-      ref.read(signupFlowProvider.notifier).accountCreated(
-          CreatedAccount(name: name, nextStep: a.nextStep, tokens: a.tokens));
+      ref
+          .read(signupFlowProvider.notifier)
+          .accountCreated(CreatedAccount(name: name, nextStep: a.nextStep, tokens: a.tokens));
       // El registro no devuelve sesión (contrato): se inicia con lo recién creado.
-      final tokens = a.tokens ??
-          await ref.read(authRepositoryProvider).login(flow.email, _p1.text);
+      final tokens = a.tokens ?? await ref.read(authRepositoryProvider).login(flow.email, _p1.text);
       // Al iniciar sesión, el router lleva de aquí a "Tu cuenta está lista".
       await ref.read(sessionProvider.notifier).signIn(tokens, name: name);
     } on ApiException catch (e) {
@@ -116,8 +115,7 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('¿Dónde buscas servicios?',
-                style: NexoText.body(14, weight: FontWeight.w700)),
+            Text('¿Dónde buscas servicios?', style: NexoText.body(14, weight: FontWeight.w700)),
             const SizedBox(height: 7),
             const _DefaultLocation(),
           ],
@@ -150,8 +148,7 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
               spacing: 16,
               children: [
                 NexoLink('Leer Términos', onTap: () => showTermsSheet(context)),
-                NexoLink('Leer Aviso de privacidad',
-                    onTap: () => showPrivacySheet(context)),
+                NexoLink('Leer Aviso de privacidad', onTap: () => showPrivacySheet(context)),
               ],
             ),
           ],
@@ -226,8 +223,7 @@ class _DefaultLocation extends StatelessWidget {
                 ),
                 const Align(
                   alignment: Alignment(0, -.15),
-                  child: NexoIcon('pin',
-                      size: 38, color: Colors.white, fillColor: NexoColors.accent),
+                  child: NexoIcon('pin', size: 38, color: Colors.white, fillColor: NexoColors.accent),
                 ),
                 Positioned(
                   left: 0,

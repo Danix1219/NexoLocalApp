@@ -16,7 +16,8 @@ void main() {
 
   test('borrador: manda kind, categoryId, userText y lengthLimit con Bearer', () async {
     a.on('POST', '/v1/assist/draft', {'draft': 'Necesito revisar una fuga.', 'modelVersion': 'nexo-gen-1'});
-    final d = await api.assistDraft(kind: 'request', category: 'plomeria', userText: 'fuga en el baño', lengthLimit: 600);
+    final d =
+        await api.assistDraft(kind: 'request', category: 'plomeria', userText: 'fuga en el baño', lengthLimit: 600);
     expect(d.text, 'Necesito revisar una fuga.');
     expect(d.modelVersion, 'nexo-gen-1');
     final r = a.last('POST', '/v1/assist/draft');
@@ -48,7 +49,8 @@ void main() {
   test('registrar teléfono: fcmToken, platform android y appVersion', () async {
     a.on('POST', '/v1/identity/devices', {'deviceId': 'dev_1', 'lastSeenAt': '2026-11-08T16:30:00Z'}, status: 201);
     expect(await api.registerDevice(fcmToken: 'tok-123', appVersion: '0.3.0'), 'dev_1');
-    expect(a.last('POST', '/v1/identity/devices').body, {'fcmToken': 'tok-123', 'platform': 'android', 'appVersion': '0.3.0'});
+    expect(a.last('POST', '/v1/identity/devices').body,
+        {'fcmToken': 'tok-123', 'platform': 'android', 'appVersion': '0.3.0'});
   });
 
   test('quitar teléfono: DELETE /v1/identity/devices/{id} → 204', () async {

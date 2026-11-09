@@ -69,7 +69,11 @@ void main() {
     await s.becomeProvider();
     s.mode = 'client';
     final o = await s.api.createOrder(
-        providerId: 'p6', category: 'cerrajeria', description: 'Cambiar chapa de la puerta', attention: 'home', idempotencyKey: 'k3');
+        providerId: 'p6',
+        category: 'cerrajeria',
+        description: 'Cambiar chapa de la puerta',
+        attention: 'home',
+        idempotencyKey: 'k3');
     await expectLater(
       s.api.review(orderId: o.id, stars: 5, text: '', recommend: true),
       throwsA(isA<ApiException>().having((e) => e.code, 'code', 'review.order_not_resolved')),

@@ -46,7 +46,8 @@ class FilterButton extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 decoration: BoxDecoration(color: NexoColors.brand, borderRadius: BorderRadius.circular(99)),
                 child: Center(
-                  child: Text('$count', style: NexoText.body(11, weight: FontWeight.w800, color: Colors.white, height: 1)),
+                  child:
+                      Text('$count', style: NexoText.body(11, weight: FontWeight.w800, color: Colors.white, height: 1)),
                 ),
               ),
             ),
@@ -93,11 +94,18 @@ class _SearchFiltersState extends ConsumerState<_SearchFilters> {
         ]),
         _label('Disponibilidad y precio'),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          ToggleChip(label: 'Abierto ahora', selected: f.open, onTap: () => setState(() => f = f.copyWith(open: !f.open))),
-          ToggleChip(label: 'Visita sin costo', selected: f.free, onTap: () => setState(() => f = f.copyWith(free: !f.free))),
           ToggleChip(
-              label: 'Con precios publicados', selected: f.prices, onTap: () => setState(() => f = f.copyWith(prices: !f.prices))),
-          ToggleChip(label: 'Atiende urgencias', selected: f.urgent, onTap: () => setState(() => f = f.copyWith(urgent: !f.urgent))),
+              label: 'Abierto ahora', selected: f.open, onTap: () => setState(() => f = f.copyWith(open: !f.open))),
+          ToggleChip(
+              label: 'Visita sin costo', selected: f.free, onTap: () => setState(() => f = f.copyWith(free: !f.free))),
+          ToggleChip(
+              label: 'Con precios publicados',
+              selected: f.prices,
+              onTap: () => setState(() => f = f.copyWith(prices: !f.prices))),
+          ToggleChip(
+              label: 'Atiende urgencias',
+              selected: f.urgent,
+              onTap: () => setState(() => f = f.copyWith(urgent: !f.urgent))),
         ]),
         _label('¿Dónde te atienden?'),
         Wrap(spacing: 8, runSpacing: 8, children: [
@@ -195,7 +203,9 @@ class _OppFiltersState extends ConsumerState<_OppFilters> {
         Row(children: [
           Expanded(
             child: NexoButton(
-                label: 'Quitar filtros', variant: NexoButtonVariant.ghost, onPressed: () => setState(() => f = OppFilters(q: f.q))),
+                label: 'Quitar filtros',
+                variant: NexoButtonVariant.ghost,
+                onPressed: () => setState(() => f = OppFilters(q: f.q))),
           ),
           const SizedBox(width: 8),
           Expanded(

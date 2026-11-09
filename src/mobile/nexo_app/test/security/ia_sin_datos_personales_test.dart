@@ -38,8 +38,10 @@ void main() {
   });
 
   test('moderación y asistente caído tienen mensaje claro', () {
-    expect(assistErrorMessage(const ApiException(code: 'content.inappropriate', status: 403)), contains('reglas de la comunidad'));
-    expect(assistErrorMessage(const ApiException(code: 'assist.unavailable', status: 503)), contains('escribir tu texto'));
+    expect(assistErrorMessage(const ApiException(code: 'content.inappropriate', status: 403)),
+        contains('reglas de la comunidad'));
+    expect(
+        assistErrorMessage(const ApiException(code: 'assist.unavailable', status: 503)), contains('escribir tu texto'));
     expect(assistErrorMessage(const ApiException(code: 'network')), contains('escribir tu texto'));
     expect(assistErrorMessage(const ApiException(code: 'x', status: 429)), contains('muchas veces'));
   });

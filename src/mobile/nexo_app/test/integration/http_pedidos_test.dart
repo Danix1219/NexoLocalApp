@@ -38,7 +38,12 @@ void main() {
   test('pedido desde solicitud usa origin=post', () async {
     a.on('POST', '/v1/engagement/orders', Fx.order(role: 'client'), status: 201);
     await api.createOrder(
-        providerId: 'prv_1', requestId: 'req_1', category: 'plomeria', description: 'x' * 12, attention: 'shop', idempotencyKey: 'k');
+        providerId: 'prv_1',
+        requestId: 'req_1',
+        category: 'plomeria',
+        description: 'x' * 12,
+        attention: 'shop',
+        idempotencyKey: 'k');
     expect((a.last('POST', '/v1/engagement/orders').body as Map)['origin'], 'post');
   });
 
@@ -72,7 +77,9 @@ void main() {
     a.on('POST', '/v1/engagement/orders/ord_1/accept', problem('order.version_conflict', 412), status: 412);
     await expectLater(
       api.acceptOrder(pend),
-      throwsA(isA<ApiException>().having((e) => e.status, 'status', 412).having((e) => e.code, 'code', 'order.version_conflict')),
+      throwsA(isA<ApiException>()
+          .having((e) => e.status, 'status', 412)
+          .having((e) => e.code, 'code', 'order.version_conflict')),
     );
   });
 
@@ -101,7 +108,14 @@ void main() {
     a.on('POST', '/v1/engagement/reviews', {'reviewId': 'rev_1'}, status: 201);
     a.on('GET', '/v1/engagement/providers/prv_1/reviews', {
       ...Fx.page([
-        {'reviewId': 'rev_1', 'stars': 5, 'text': 'Excelente', 'recommend': true, 'author': {'displayName': 'Laura G.'}, 'ago': 'ayer'},
+        {
+          'reviewId': 'rev_1',
+          'stars': 5,
+          'text': 'Excelente',
+          'recommend': true,
+          'author': {'displayName': 'Laura G.'},
+          'ago': 'ayer'
+        },
       ]),
       'summary': {'avg': 4.8, 'count': 12, 'recommendCount': 11},
     });

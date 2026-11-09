@@ -159,14 +159,18 @@ Future<void> showNotifications(BuildContext context, WidgetRef ref) async {
     return;
   }
   final router = GoRouter.of(context);
-  await showNexoSheet<void>(context, builder: (ctx) => _NotifList(onOpen: (link) {
-        Navigator.of(ctx).pop();
-        final path = Routes.fromDeepLink(link);
-        if (path != null) router.push(path);
-      }));
+  await showNexoSheet<void>(context,
+      builder: (ctx) => _NotifList(onOpen: (link) {
+            Navigator.of(ctx).pop();
+            final path = Routes.fromDeepLink(link);
+            if (path != null) router.push(path);
+          }));
   // Al cerrar, todo queda leído.
   final list = ref.read(notificationsProvider).asData?.value.$1 ?? const <NotificationItem>[];
-  final ids = [for (final n in list) if (!n.read) n.id];
+  final ids = [
+    for (final n in list)
+      if (!n.read) n.id
+  ];
   if (ids.isNotEmpty) {
     try {
       await ref.read(apiProvider).markNotificationsRead(ids);
@@ -219,7 +223,8 @@ class _NotifList extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(n.title, style: NexoText.body(14.5, weight: n.read ? FontWeight.w600 : FontWeight.w800)),
+                              Text(n.title,
+                                  style: NexoText.body(14.5, weight: n.read ? FontWeight.w600 : FontWeight.w800)),
                               if (n.body.isNotEmpty)
                                 Text(n.body, style: NexoText.body(13, color: NexoColors.muted, height: 1.35)),
                               const SizedBox(height: 3),

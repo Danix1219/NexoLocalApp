@@ -47,11 +47,12 @@ class MockAdapter implements HttpClientAdapter {
   /// Vuelve la señal.
   void online() => isOffline = false;
 
-  Recorded last(String method, String path) =>
-      calls.lastWhere((c) => c.method == method && c.path == path, orElse: () => throw StateError('No hubo $method $path'));
+  Recorded last(String method, String path) => calls.lastWhere((c) => c.method == method && c.path == path,
+      orElse: () => throw StateError('No hubo $method $path'));
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+  Future<ResponseBody> fetch(
+      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
     calls.add(Recorded(options));
     if (isOffline) {
       throw DioException(

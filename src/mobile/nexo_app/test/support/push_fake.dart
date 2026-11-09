@@ -26,6 +26,7 @@ class FakePushGateway implements PushGateway {
   Future<void> deleteToken() async {
     deletes++;
   }
+
   @override
   Stream<String> get onTokenRefresh => refresh.stream;
   @override

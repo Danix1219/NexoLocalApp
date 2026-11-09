@@ -16,7 +16,10 @@ void main() {
   });
 
   test('feed paginado por cursor', () async {
-    a.on('GET', '/v1/discovery/feed', {...Fx.page([Fx.work()], next: 'c2'), 'zoneLabel': 'Centro'});
+    a.on('GET', '/v1/discovery/feed', {
+      ...Fx.page([Fx.work()], next: 'c2'),
+      'zoneLabel': 'Centro'
+    });
     final f = await api.feed(at: at);
     expect(f.zoneLabel, 'Centro');
     expect(f.page.items.single.id, 'wrk_1');
@@ -28,7 +31,11 @@ void main() {
   });
 
   test('búsqueda manda solo los filtros activos', () async {
-    a.on('GET', '/v1/discovery/search/providers', {...Fx.page([Fx.provider()]), 'total': 1, 'outOfZone': false});
+    a.on('GET', '/v1/discovery/search/providers', {
+      ...Fx.page([Fx.provider()]),
+      'total': 1,
+      'outOfZone': false
+    });
     final r = await api.searchProviders(
       const SearchFilters(q: ' fuga ', cat: 'plomeria', open: true, sort: 'near'),
       at: at,
@@ -61,13 +68,26 @@ void main() {
         {'kind': 'category', 'slug': 'plomeria', 'label': 'Plomería'},
       ],
     });
-    a.on('GET', '/v1/discovery/categories', Fx.page([
-      {'slug': 'plomeria', 'name': 'Plomería', 'icon': 'drop', 'gradient': {'from': '#46A3F0', 'to': '#2B72D1'}},
-    ]));
+    a.on(
+        'GET',
+        '/v1/discovery/categories',
+        Fx.page([
+          {
+            'slug': 'plomeria',
+            'name': 'Plomería',
+            'icon': 'drop',
+            'gradient': {'from': '#46A3F0', 'to': '#2B72D1'}
+          },
+        ]));
     a.on('GET', '/v1/discovery/map/nearby', {
       'summary': {'text': '3 prestadores'},
       'points': [
-        {'id': 'prv_1', 'point': {'lat': 20.05, 'lng': -99.34}, 'state': 'open', 'title': 'Hernández'},
+        {
+          'id': 'prv_1',
+          'point': {'lat': 20.05, 'lng': -99.34},
+          'state': 'open',
+          'title': 'Hernández'
+        },
       ],
     });
     expect((await api.suggest('plo', at: at)).single.slug, 'plomeria');
@@ -79,9 +99,14 @@ void main() {
   });
 
   test('PUT /v1/discovery/me/location', () async {
-    a.on('PUT', '/v1/discovery/me/location', {'zoneLabel': 'Jardines', 'radiusKm': 5, 'summary': {'text': '8 prestadores'}});
+    a.on('PUT', '/v1/discovery/me/location', {
+      'zoneLabel': 'Jardines',
+      'radiusKm': 5,
+      'summary': {'text': '8 prestadores'}
+    });
     final r = await api.setLocation(at, radiusKm: 5, source: 'gps');
     expect(r.zoneLabel, 'Jardines');
-    expect(a.last('PUT', '/v1/discovery/me/location').body, {'lat': 20.05, 'lng': -99.34, 'radiusKm': 5, 'source': 'gps'});
+    expect(
+        a.last('PUT', '/v1/discovery/me/location').body, {'lat': 20.05, 'lng': -99.34, 'radiusKm': 5, 'source': 'gps'});
   });
 }

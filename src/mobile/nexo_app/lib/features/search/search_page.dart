@@ -117,7 +117,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               style: NexoText.body(15.5),
               decoration: nexoInputDecoration(hint: hint).copyWith(
                 prefixIcon: const Padding(
-                    padding: EdgeInsets.only(left: 12, right: 8), child: NexoIcon('search', size: 20, color: NexoColors.muted)),
+                    padding: EdgeInsets.only(left: 12, right: 8),
+                    child: NexoIcon('search', size: 20, color: NexoColors.muted)),
                 prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                 suffixIcon: _q.text.isEmpty
                     ? null
@@ -205,7 +206,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (r.notice != null)
-                  Padding(padding: const EdgeInsets.fromLTRB(12, 12, 12, 0), child: Notice(r.notice!, tone: BadgeTone.warn, icon: 'pin')),
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      child: Notice(r.notice!, tone: BadgeTone.warn, icon: 'pin')),
                 Sect('${r.items.length} ${plural(r.items.length, 'prestador', 'prestadores')}',
                     trailing: f.expanded ? 'Zona ampliada' : 'Atienden ${loc.zoneLabel}'),
                 for (final p in r.items) ProviderRow(p: p),
@@ -238,13 +241,15 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       children: [
         ScreenTitleBar('Buscar solicitudes',
             border: false,
-            trailing: p == null
-                ? null
-                : NBadge('${p.zoneLabel} · ${p.radiusKm} km', icon: 'pin', tone: BadgeTone.brand)),
+            trailing:
+                p == null ? null : NBadge('${p.zoneLabel} · ${p.radiusKm} km', icon: 'pin', tone: BadgeTone.brand)),
         _field('Fuga, boiler, pintar, chapa…', f.count, () => showOppFiltersSheet(context, ref)),
         _mapToggle(),
         if (_map && me != null)
-          _NearbyMap(kind: 'requests', center: me.location ?? me.profile.zonePoint ?? ref.read(searchLocationProvider).point, radiusKm: p!.radiusKm == 0 ? 5 : p.radiusKm)
+          _NearbyMap(
+              kind: 'requests',
+              center: me.location ?? me.profile.zonePoint ?? ref.read(searchLocationProvider).point,
+              radiusKm: p!.radiusKm == 0 ? 5 : p.radiusKm)
         else
           asyncView(res, (list) {
             if (list.isEmpty) {
@@ -321,7 +326,8 @@ class _ActiveChips extends ConsumerWidget {
       if (f.free) ('Visita sin costo', () => n.set(f.copyWith(free: false))),
       if (f.prices) ('Con precios', () => n.set(f.copyWith(prices: false))),
       if (f.urgent) ('Urgencias', () => n.set(f.copyWith(urgent: false))),
-      if (f.attention != null) (f.attention == 'home' ? 'A domicilio' : 'En su local', () => n.set(f.copyWith(attention: null))),
+      if (f.attention != null)
+        (f.attention == 'home' ? 'A domicilio' : 'En su local', () => n.set(f.copyWith(attention: null))),
       if (f.sort == 'near') ('Más cerca', () => n.set(f.copyWith(sort: 'relevance'))),
       if (f.sort == 'recs') ('Más recomendados', () => n.set(f.copyWith(sort: 'relevance'))),
     ];
@@ -377,7 +383,8 @@ class _CatRing extends StatelessWidget {
                 padding: const EdgeInsets.all(3),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: SweepGradient(colors: [NexoColors.accent, NexoColors.accent2, NexoColors.brand, NexoColors.accent]),
+                  gradient: SweepGradient(
+                      colors: [NexoColors.accent, NexoColors.accent2, NexoColors.brand, NexoColors.accent]),
                 ),
                 child: Container(
                   decoration: BoxDecoration(
@@ -391,9 +398,7 @@ class _CatRing extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(c.name.replaceAll(' servicios', ''),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: NexoText.body(12, weight: FontWeight.w600)),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: NexoText.body(12, weight: FontWeight.w600)),
             ],
           ),
         ),
@@ -433,9 +438,10 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
       future: _f,
       builder: (context, snap) {
         if (snap.hasError) {
-          return ErrorView(snap.error!, onRetry: () => setState(() {
-                _f = _load();
-              }));
+          return ErrorView(snap.error!,
+              onRetry: () => setState(() {
+                    _f = _load();
+                  }));
         }
         if (!snap.hasData) return const LoadingView();
         final m = snap.data!;

@@ -22,7 +22,8 @@ void main() {
   });
 
   test('filtro "en su local" excluye a quien solo va a domicilio', () async {
-    final r = await s.api.searchProviders(const SearchFilters(cat: 'cerrajeria', attention: 'shop'), at: centro, radiusKm: 10);
+    final r = await s.api
+        .searchProviders(const SearchFilters(cat: 'cerrajeria', attention: 'shop'), at: centro, radiusKm: 10);
     expect(r.items, isNotEmpty);
     expect(r.items.any((p) => p.attention == 'home'), isFalse);
   });

@@ -126,9 +126,7 @@ class _CodePageState extends ConsumerState<CodePage> {
     setState(() => _resending = true);
     try {
       final repo = ref.read(authRepositoryProvider);
-      final d = _signup
-          ? await repo.sendSignupCode(email)
-          : await repo.requestPasswordReset(email);
+      final d = _signup ? await repo.sendSignupCode(email) : await repo.requestPasswordReset(email);
       ref.read(flowFor(widget.purpose).notifier).codeSent(email, d);
       _code.clear();
       _tick();

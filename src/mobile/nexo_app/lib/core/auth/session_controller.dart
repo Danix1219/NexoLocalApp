@@ -73,8 +73,7 @@ class SessionController extends Notifier<SessionState> {
         state = const SessionState.signedOut();
         return;
       }
-      state = SessionState.fromTokens(t,
-          name: await _storage.readName(), modeOverride: await _storage.readMode());
+      state = SessionState.fromTokens(t, name: await _storage.readName(), modeOverride: await _storage.readMode());
     } catch (_) {
       state = const SessionState.signedOut();
     }
@@ -136,5 +135,4 @@ class SessionController extends Notifier<SessionState> {
   }
 }
 
-final sessionProvider =
-    NotifierProvider<SessionController, SessionState>(SessionController.new);
+final sessionProvider = NotifierProvider<SessionController, SessionState>(SessionController.new);

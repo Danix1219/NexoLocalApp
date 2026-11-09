@@ -60,8 +60,7 @@ class _ForgotPageState extends ConsumerState<ForgotPage> {
     return ObScaffold(
       icon: 'key',
       title: 'Recupera tu contraseña',
-      subtitle:
-          'Escribe el correo con el que creaste tu cuenta y te enviaremos un código.',
+      subtitle: 'Escribe el correo con el que creaste tu cuenta y te enviaremos un código.',
       content: [
         NexoField(
           label: 'Correo electrónico',

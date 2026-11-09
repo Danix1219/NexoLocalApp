@@ -4,11 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Spec 046 · Constitución §6: sin secretos ni URLs inseguras en el código.
 void main() {
-  final files = Directory('lib')
-      .listSync(recursive: true)
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.dart'))
-      .toList();
+  final files =
+      Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart')).toList();
 
   test('hay código que revisar', () => expect(files, isNotEmpty));
 

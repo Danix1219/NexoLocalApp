@@ -147,8 +147,8 @@ class FakeNexoApi implements NexoApi {
     const r = 6371.0;
     double rad(double d) => d * math.pi / 180;
     final dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
-    final h = math.pow(math.sin(dLat / 2), 2) +
-        math.cos(rad(a.lat)) * math.cos(rad(b.lat)) * math.pow(math.sin(dLng / 2), 2);
+    final h =
+        math.pow(math.sin(dLat / 2), 2) + math.cos(rad(a.lat)) * math.cos(rad(b.lat)) * math.pow(math.sin(dLng / 2), 2);
     return 2 * r * math.asin(math.sqrt(h.toDouble()));
   }
 
@@ -193,10 +193,17 @@ class FakeNexoApi implements NexoApi {
     return const OpenStatus(false, 'Cerrado');
   }
 
-  String _attText(FProv p) =>
-      p.attention == 'shop' ? 'En su local' : p.attention == 'both' ? 'Local y a domicilio' : 'Va a domicilio';
+  String _attText(FProv p) => p.attention == 'shop'
+      ? 'En su local'
+      : p.attention == 'both'
+          ? 'Local y a domicilio'
+          : 'Va a domicilio';
 
-  String _upd(int d) => d == 0 ? 'Actualizado hoy' : d == 1 ? 'Actualizado ayer' : 'Actualizado hace $d días';
+  String _upd(int d) => d == 0
+      ? 'Actualizado hoy'
+      : d == 1
+          ? 'Actualizado ayer'
+          : 'Actualizado hace $d días';
 
   Rating _rating(String pid) {
     final ex = _exps.where((e) => e.p == pid).toList();
@@ -208,21 +215,25 @@ class FakeNexoApi implements NexoApi {
   FProv _prov(String id) {
     if (id == 'me' && _me != null) return _me!;
     return _provs.firstWhere((p) => p.id == id,
-        orElse: () => throw const ApiException(code: 'provider.not_found', status: 404, detail: 'Este perfil ya no existe.'));
+        orElse: () =>
+            throw const ApiException(code: 'provider.not_found', status: 404, detail: 'Este perfil ya no existe.'));
   }
 
   ProviderProfile _profile(FProv p, {GeoPoint? at}) {
     final d = _dist(p.loc, at ?? _loc);
     final st = _status(p);
-    final priced = p.prices.where((x) => x.pesos != null).toList()
-      ..sort((a, b) => a.pesos!.compareTo(b.pesos!));
+    final priced = p.prices.where((x) => x.pesos != null).toList()..sort((a, b) => a.pesos!.compareTo(b.pesos!));
     final min = priced.isEmpty ? null : priced.first;
     final badges = <ProviderBadge>[
       if (p.ok) const ProviderBadge('phoneVerified', 'Teléfono confirmado', level: 'verified'),
       if (p.isNew) const ProviderBadge('isNew', 'Perfil nuevo'),
       if (p.upd >= 7) const ProviderBadge('stale', 'Sin actualizar'),
     ];
-    final visitMode = p.visit == null ? 'hidden' : p.visit == 0 ? 'free' : 'paid';
+    final visitMode = p.visit == null
+        ? 'hidden'
+        : p.visit == 0
+            ? 'free'
+            : 'paid';
     return ProviderProfile(
       id: p.id,
       name: p.name,
@@ -257,7 +268,11 @@ class FakeNexoApi implements NexoApi {
       minPriceCents: min == null ? null : min.pesos! * 100,
       prices: [
         for (final x in p.prices)
-          PriceItem(service: x.service, fromCents: x.pesos == null ? null : x.pesos! * 100, unit: x.pesos == null ? 'quote' : 'from', suffix: x.suffix)
+          PriceItem(
+              service: x.service,
+              fromCents: x.pesos == null ? null : x.pesos! * 100,
+              unit: x.pesos == null ? 'quote' : 'from',
+              suffix: x.suffix)
       ],
       payment: p.pay,
       responseTime: p.resp,
@@ -312,7 +327,8 @@ class FakeNexoApi implements NexoApi {
       summary = {
             'pending': 'Pedido enviado · esperando respuesta',
             'accepted': 'Pedido aceptado',
-            'resolved': order.myStars != null ? 'Servicio resuelto · lo calificaste' : 'Servicio resuelto · ¿cómo te fue?',
+            'resolved':
+                order.myStars != null ? 'Servicio resuelto · lo calificaste' : 'Servicio resuelto · ¿cómo te fue?',
           }[order.status] ??
           'Pedido ${order.status}';
     } else if (ints.isEmpty) {
@@ -334,7 +350,8 @@ class FakeNexoApi implements NexoApi {
       status: r.closed ? 'closed' : 'open',
       interestCount: ints.length,
       interestedPreview: [
-        for (final p in ints.take(4)) ProviderMini(id: p.id, name: p.name, photoUrl: p.photoUrl, kind: p.kind, phoneVerified: p.ok)
+        for (final p in ints.take(4))
+          ProviderMini(id: p.id, name: p.name, photoUrl: p.photoUrl, kind: p.kind, phoneVerified: p.ok)
       ],
       interestedMoreCount: math.max(0, ints.length - 4),
       summaryText: summary,
@@ -372,7 +389,11 @@ class FakeNexoApi implements NexoApi {
       if (o.status == 'pending' && o.mine) 'cancel',
       if (o.status == 'accepted') 'cancel',
       if (o.status == 'accepted' && !o.mine) 'resolve',
-      if (o.status != 'resolved' && o.status != 'cancelled' && o.status != 'rejected' && o.mine && o.attention != 'shop')
+      if (o.status != 'resolved' &&
+          o.status != 'cancelled' &&
+          o.status != 'rejected' &&
+          o.mine &&
+          o.attention != 'shop')
         'updateAddress',
       if (o.status == 'accepted' || o.mine) 'copyPhone',
     ];
@@ -387,8 +408,15 @@ class FakeNexoApi implements NexoApi {
       statusText: statusText,
       role: role,
       counterpart: o.mine
-          ? Counterpart(id: p.id, displayName: p.name, photoUrl: p.photoUrl, kind: 'provider', canCopyPhone: true, providerId: p.id)
-          : Counterpart(id: 'c-${o.id}', displayName: o.clientName, kind: 'client', canCopyPhone: o.status == 'accepted'),
+          ? Counterpart(
+              id: p.id,
+              displayName: p.name,
+              photoUrl: p.photoUrl,
+              kind: 'provider',
+              canCopyPhone: true,
+              providerId: p.id)
+          : Counterpart(
+              id: 'c-${o.id}', displayName: o.clientName, kind: 'client', canCopyPhone: o.status == 'accepted'),
       category: o.cat,
       description: o.desc,
       attention: o.attention,
@@ -412,19 +440,25 @@ class FakeNexoApi implements NexoApi {
   }
 
   _FOrder _ord(String id) => _orders.firstWhere((o) => o.id == id,
-      orElse: () => throw const ApiException(code: 'order.not_found', status: 404, detail: 'Este pedido ya no existe.'));
+      orElse: () =>
+          throw const ApiException(code: 'order.not_found', status: 404, detail: 'Este pedido ya no existe.'));
 
   void _checkVersion(_FOrder o, Order seen) {
     if (o.version != seen.version) {
       throw const ApiException(
-          code: 'order.version_conflict', status: 412, detail: 'El pedido cambió. Revisa su estado antes de continuar.');
+          code: 'order.version_conflict',
+          status: 412,
+          detail: 'El pedido cambió. Revisa su estado antes de continuar.');
     }
   }
 
   _FConv _convFor({required String providerId, required bool asClient, required String clientName, String? requestId}) {
-    final c = _convs.where((c) => c.providerId == providerId && c.asClient == asClient && c.clientName == clientName).firstOrNull;
+    final c = _convs
+        .where((c) => c.providerId == providerId && c.asClient == asClient && c.clientName == clientName)
+        .firstOrNull;
     if (c != null) return c;
-    final n = _FConv(_id('cv'), providerId: providerId, clientName: clientName, asClient: asClient, requestId: requestId);
+    final n =
+        _FConv(_id('cv'), providerId: providerId, clientName: clientName, asClient: asClient, requestId: requestId);
     _convs.insert(0, n);
     return n;
   }
@@ -467,25 +501,32 @@ class FakeNexoApi implements NexoApi {
     final now = DateTime.now();
     final c1 = _convFor(providerId: 'p2', asClient: true, clientName: 'Tú', requestId: 'ra2');
     c1.msgs.addAll([
-      _FMsg(_id('m'), 'text', 'Hola, vi tu solicitud del contacto. Puedo ir hoy a las 5.', false, now.subtract(const Duration(days: 3, hours: 2))),
-      _FMsg(_id('m'), 'text', 'Perfecto, te espero. Es en Morelos 15.', true, now.subtract(const Duration(days: 3, hours: 1))),
+      _FMsg(_id('m'), 'text', 'Hola, vi tu solicitud del contacto. Puedo ir hoy a las 5.', false,
+          now.subtract(const Duration(days: 3, hours: 2))),
+      _FMsg(_id('m'), 'text', 'Perfecto, te espero. Es en Morelos 15.', true,
+          now.subtract(const Duration(days: 3, hours: 1))),
       _FMsg(_id('m'), 'system', 'Electro Servicios Ruiz aceptó tu pedido · Precio acordado \$350', false,
-          now.subtract(const Duration(days: 3)), systemType: 'orderAccepted', orderId: 'ma2'),
+          now.subtract(const Duration(days: 3)),
+          systemType: 'orderAccepted', orderId: 'ma2'),
       _FMsg(_id('m'), 'system', 'Electro Servicios Ruiz marcó el servicio como resuelto', false,
-          now.subtract(const Duration(days: 2)), systemType: 'orderResolved', orderId: 'ma2'),
-      _FMsg(_id('m'), 'text', 'Listo, quedó el contacto nuevo. Cualquier cosa me avisas.', false, now.subtract(const Duration(days: 2))),
+          now.subtract(const Duration(days: 2)),
+          systemType: 'orderResolved', orderId: 'ma2'),
+      _FMsg(_id('m'), 'text', 'Listo, quedó el contacto nuevo. Cualquier cosa me avisas.', false,
+          now.subtract(const Duration(days: 2))),
     ]);
     final c2 = _convFor(providerId: 'p1', asClient: true, clientName: 'Tú', requestId: 'ra1');
     c2.msgs.addAll([
-      _FMsg(_id('m'), 'text', 'Hola, me interesa tu solicitud de la válvula del calentador. ¿Es de paso o de depósito?', false,
-          now.subtract(const Duration(minutes: 35))),
+      _FMsg(_id('m'), 'text', 'Hola, me interesa tu solicitud de la válvula del calentador. ¿Es de paso o de depósito?',
+          false, now.subtract(const Duration(minutes: 35))),
     ]);
     c2.unread = 1;
 
     _notify('2 prestadores interesados', 'En «Fuga en la válvula del calentador». Ya puedes comparar y elegir.',
-        'nexolocal://requests/ra1/interested', 'Ver y elegir', icon: 'thumb');
-    _notify('¿Cómo te fue con Electro Servicios Ruiz?', 'Marcó tu servicio como resuelto. Califícalo para ayudar a otros.',
-        'nexolocal://orders/ma2', 'Calificar', icon: 'star');
+        'nexolocal://requests/ra1/interested', 'Ver y elegir',
+        icon: 'thumb');
+    _notify('¿Cómo te fue con Electro Servicios Ruiz?',
+        'Marcó tu servicio como resuelto. Califícalo para ayudar a otros.', 'nexolocal://orders/ma2', 'Calificar',
+        icon: 'star');
   }
 
   /// Al crear el perfil de prestador llega un pedido de ejemplo (`m1`).
@@ -508,9 +549,11 @@ class FakeNexoApi implements NexoApi {
     m1.timeline.add(const TimelineEvent('created', 'client', 'Te hizo el pedido desde tu perfil'));
     _orders.add(m1);
     final c = _convFor(providerId: 'me', asClient: false, clientName: 'Laura Gómez');
-    c.msgs.add(_FMsg(_id('m'), 'text', 'Hola, ¿podrías venir hoy en la tarde? Te hice el pedido.', false, DateTime.now()));
+    c.msgs.add(
+        _FMsg(_id('m'), 'text', 'Hola, ¿podrías venir hoy en la tarde? Te hice el pedido.', false, DateTime.now()));
     c.unread = 1;
-    _notify('Laura Gómez te hizo un pedido', 'Revisa los detalles y acéptalo o recházalo.', 'nexolocal://orders/m1', 'Ver pedido',
+    _notify('Laura Gómez te hizo un pedido', 'Revisa los detalles y acéptalo o recházalo.', 'nexolocal://orders/m1',
+        'Ver pedido',
         icon: 'check');
   }
 
@@ -557,7 +600,8 @@ class FakeNexoApi implements NexoApi {
   Future<AuthTokens?> switchMode(String mode) async {
     await _lag();
     if (mode == 'provider' && _me == null) {
-      throw const ApiException(code: 'mode.provider_profile_required', status: 409, detail: 'Primero crea tu perfil de prestador.');
+      throw const ApiException(
+          code: 'mode.provider_profile_required', status: 409, detail: 'Primero crea tu perfil de prestador.');
     }
     return null; // la sesión guarda el modo localmente
   }
@@ -698,7 +742,9 @@ class FakeNexoApi implements NexoApi {
           if (days is List) {
             p.schedule = [
               for (final d in days)
-                d is Map ? [int.parse('${d['open']}'.split(':').first), int.parse('${d['close']}'.split(':').first)] : null
+                d is Map
+                    ? [int.parse('${d['open']}'.split(':').first), int.parse('${d['close']}'.split(':').first)]
+                    : null
             ];
           }
           p.urgent = s['urgent'] == true;
@@ -707,22 +753,38 @@ class FakeNexoApi implements NexoApi {
         final v = body['visit'];
         if (v is Map) {
           final mode = '${v['mode']}';
-          p.visit = mode == 'hidden' ? null : mode == 'free' ? 0 : ((v['amountCents'] as num?)?.toInt() ?? 0) ~/ 100;
+          p.visit = mode == 'hidden'
+              ? null
+              : mode == 'free'
+                  ? 0
+                  : ((v['amountCents'] as num?)?.toInt() ?? 0) ~/ 100;
         }
         final pr = body['prices'];
         if (pr is List) {
           p.prices = [
             for (final x in pr.whereType<Map>())
-              FPrice('${x['service']}', x['fromCents'] == null ? null : (x['fromCents'] as num).toInt() ~/ 100, suffix: '${x['suffix'] ?? ''}')
+              FPrice('${x['service']}', x['fromCents'] == null ? null : (x['fromCents'] as num).toInt() ~/ 100,
+                  suffix: '${x['suffix'] ?? ''}')
           ];
         }
       case 'terms':
         if (body['payment'] is List) {
-          const names = {'cash': 'Efectivo', 'transfer': 'Transferencia', 'card': 'Tarjeta', 'deposit': 'Depósito', 'other': 'Otro'};
+          const names = {
+            'cash': 'Efectivo',
+            'transfer': 'Transferencia',
+            'card': 'Tarjeta',
+            'deposit': 'Depósito',
+            'other': 'Otro'
+          };
           p.pay = (body['payment'] as List).map((e) => names['$e'] ?? '$e').toList();
         }
         if (body['responseTime'] is String) {
-          const names = {'sameDay': 'Mismo día', 'h24': 'Menos de 1 día', 'h48': 'Menos de 2 días', 'week': 'Esta semana'};
+          const names = {
+            'sameDay': 'Mismo día',
+            'h24': 'Menos de 1 día',
+            'h48': 'Menos de 2 días',
+            'week': 'Esta semana'
+          };
           p.resp = names[body['responseTime']] ?? '${body['responseTime']}';
         }
         if (body.containsKey('warranty')) p.warr = body['warranty'] as String?;
@@ -751,20 +813,30 @@ class FakeNexoApi implements NexoApi {
     }
 
     return CompareResult(
-      [for (final p in pf) ProviderMini(id: p.id, name: p.name, photoUrl: p.photoUrl, kind: p.kind, phoneVerified: p.phoneVerified)],
+      [
+        for (final p in pf)
+          ProviderMini(id: p.id, name: p.name, photoUrl: p.photoUrl, kind: p.kind, phoneVerified: p.phoneVerified)
+      ],
       [
         CompareRow('attention', 'Atención', [for (final p in pf) p.attentionText], null),
-        CompareRow('status', 'Ahora', [for (final p in pf) p.status.short], pf.where((p) => p.status.open).length == 1 ? pf.indexWhere((p) => p.status.open) : null),
-        CompareRow('distance', 'Distancia', [for (final p in pf) p.distanceText], bestMin([for (final p in pf) p.distanceKm])),
-        CompareRow('minPrice', 'Desde', [for (final p in pf) p.minPriceText ?? 'No publicó'], bestMin([for (final p in pf) p.minPriceCents])),
+        CompareRow('status', 'Ahora', [for (final p in pf) p.status.short],
+            pf.where((p) => p.status.open).length == 1 ? pf.indexWhere((p) => p.status.open) : null),
+        CompareRow(
+            'distance', 'Distancia', [for (final p in pf) p.distanceText], bestMin([for (final p in pf) p.distanceKm])),
+        CompareRow('minPrice', 'Desde', [for (final p in pf) p.minPriceText ?? 'No publicó'],
+            bestMin([for (final p in pf) p.minPriceCents])),
         CompareRow('visit', 'Visita', [for (final p in pf) p.visitText ?? 'No publicó'], null),
-        CompareRow('rating', 'Calificación', [for (final p in pf) p.rating.count == 0 ? 'Sin calificaciones' : '★ ${p.rating.avg} (${p.rating.count})'],
+        CompareRow(
+            'rating',
+            'Calificación',
+            [for (final p in pf) p.rating.count == 0 ? 'Sin calificaciones' : '★ ${p.rating.avg} (${p.rating.count})'],
             bestMax([for (final p in pf) p.rating.avg])),
         CompareRow('recs', 'Recomiendan', [for (final p in pf) '${p.recs}'], bestMax([for (final p in pf) p.recs])),
         CompareRow('response', 'Responde en', [for (final p in pf) p.responseTime ?? 'No publicó'], null),
         CompareRow('warranty', 'Garantía', [for (final p in pf) p.warranty ?? 'No publicó'], null),
         CompareRow('phone', 'Teléfono confirmado', [for (final p in pf) p.phoneVerified ? 'Sí' : 'No'], null),
-        CompareRow('updated', 'Actualizado', [for (final p in pf) p.updatedText.replaceFirst('Actualizado ', '')], null),
+        CompareRow(
+            'updated', 'Actualizado', [for (final p in pf) p.updatedText.replaceFirst('Actualizado ', '')], null),
       ],
     );
   }
@@ -806,7 +878,12 @@ class FakeNexoApi implements NexoApi {
       return MapNearby(
         points: [
           for (final r in rs)
-            MapPoint(id: r.id, point: r.loc, state: r.urg, title: r.title, subtitle: '${fcat(r.cat).name} · ${_urgText[r.urg]}')
+            MapPoint(
+                id: r.id,
+                point: r.loc,
+                state: r.urg,
+                title: r.title,
+                subtitle: '${fcat(r.cat).name} · ${_urgText[r.urg]}')
         ],
         summary: '${rs.length} ${rs.length == 1 ? 'solicitud' : 'solicitudes'} en tu radio',
       );
@@ -815,7 +892,12 @@ class FakeNexoApi implements NexoApi {
     return MapNearby(
       points: [
         for (final p in ps)
-          MapPoint(id: p.id, point: p.loc, state: _status(p).open ? 'open' : 'closed', title: p.name, subtitle: fcat(p.cats.first).name)
+          MapPoint(
+              id: p.id,
+              point: p.loc,
+              state: _status(p).open ? 'open' : 'closed',
+              title: p.name,
+              subtitle: fcat(p.cats.first).name)
       ],
       summary: '${ps.length} ${ps.length == 1 ? 'prestador atiende' : 'prestadores atienden'} esta zona',
     );
@@ -886,7 +968,19 @@ class FakeNexoApi implements NexoApi {
         if (norm(s).contains(n)) out.add(Suggestion('specialty', c.id, s));
       }
     }
-    for (final w in ['fuga', 'boiler', 'calentador', 'chapa', 'llave', 'closet', 'pintar', 'corto', 'apagador', 'poda', 'tinaco']) {
+    for (final w in [
+      'fuga',
+      'boiler',
+      'calentador',
+      'chapa',
+      'llave',
+      'closet',
+      'pintar',
+      'corto',
+      'apagador',
+      'poda',
+      'tinaco'
+    ]) {
       if (w.startsWith(n)) out.add(Suggestion('term', '', w));
     }
     return out.take(8).toList();
@@ -913,7 +1007,9 @@ class FakeNexoApi implements NexoApi {
   }) async {
     await _lag(500);
     final me = _me;
-    if (me == null) throw const ApiException(code: 'provider.required', status: 403, detail: 'Crea tu perfil de prestador para publicar.');
+    if (me == null)
+      throw const ApiException(
+          code: 'provider.required', status: 403, detail: 'Crea tu perfil de prestador para publicar.');
     final w = FWork(_id('w'), 'me', category, zoneOf(location ?? me.loc), title, text, 'ahora', 0, tag,
         imageUploadIds.isEmpty ? demoImgs(category, 1) : List.of(imageUploadIds));
     _works.insert(0, w);
@@ -976,16 +1072,18 @@ class FakeNexoApi implements NexoApi {
     // Prototipo: hasta 3 prestadores de la zona se interesan unos segundos después.
     if (ctx.simulateCounterpart) {
       Timer(const Duration(seconds: 4), () {
-      if (r.closed || r.pick != null) return;
-      final c = _provs.where((p) => p.cats.contains(r.cat) && _serves(p, r.loc)).take(3).toList();
-      if (c.isEmpty) return;
-      for (final p in c) {
-        if (!r.interested.contains(p.id)) r.interested.add(p.id);
-      }
-      _notify('${c.length} ${c.length == 1 ? 'prestador se interesó' : 'prestadores se interesaron'}', 'En «${r.title}».',
-          'nexolocal://requests/${r.id}/interested', 'Ver y elegir', icon: 'thumb');
-      ctx.notify('${c.length} ${c.length == 1 ? 'prestador se interesó' : 'prestadores se interesaron'} en tu solicitud');
-    });
+        if (r.closed || r.pick != null) return;
+        final c = _provs.where((p) => p.cats.contains(r.cat) && _serves(p, r.loc)).take(3).toList();
+        if (c.isEmpty) return;
+        for (final p in c) {
+          if (!r.interested.contains(p.id)) r.interested.add(p.id);
+        }
+        _notify('${c.length} ${c.length == 1 ? 'prestador se interesó' : 'prestadores se interesaron'}',
+            'En «${r.title}».', 'nexolocal://requests/${r.id}/interested', 'Ver y elegir',
+            icon: 'thumb');
+        ctx.notify(
+            '${c.length} ${c.length == 1 ? 'prestador se interesó' : 'prestadores se interesaron'} en tu solicitud');
+      });
     }
     return _request(r);
   }
@@ -1034,7 +1132,8 @@ class FakeNexoApi implements NexoApi {
   @override
   Future<void> setInterest(String requestId, bool on, {String? note}) async {
     await _lag(200);
-    if (_me == null) throw const ApiException(code: 'provider.required', status: 403, detail: 'Crea tu perfil de prestador.');
+    if (_me == null)
+      throw const ApiException(code: 'provider.required', status: 403, detail: 'Crea tu perfil de prestador.');
     final r = _reqs.firstWhere((x) => x.id == requestId);
     if (on) {
       _myInterest.add(requestId);
@@ -1049,7 +1148,8 @@ class FakeNexoApi implements NexoApi {
   Future<InterestedPage> interested(String requestId, {String sort = 'rate'}) async {
     await _lag();
     final r = _reqs.firstWhere((x) => x.id == requestId,
-        orElse: () => throw const ApiException(code: 'request.not_found', status: 404, detail: 'Esta solicitud ya no existe.'));
+        orElse: () =>
+            throw const ApiException(code: 'request.not_found', status: 404, detail: 'Esta solicitud ya no existe.'));
     final items = r.interested.where((id) => id != 'me').map((id) {
       final p = _prov(id);
       final o = _orders.where((o) => o.mine && o.providerId == id && o.requestId == requestId).firstOrNull;
@@ -1090,9 +1190,12 @@ class FakeNexoApi implements NexoApi {
     required String idempotencyKey,
   }) async {
     await _lag(500);
-    final dup = _orders.where((o) => o.mine && o.providerId == providerId && (o.status == 'pending' || o.status == 'accepted')).firstOrNull;
+    final dup = _orders
+        .where((o) => o.mine && o.providerId == providerId && (o.status == 'pending' || o.status == 'accepted'))
+        .firstOrNull;
     if (dup != null) {
-      throw const ApiException(code: 'order.already_active', status: 409, detail: 'Ya tienes un pedido activo con este prestador.');
+      throw const ApiException(
+          code: 'order.already_active', status: 409, detail: 'Ya tienes un pedido activo con este prestador.');
     }
     final p = _prov(providerId);
     final o = _FOrder(
@@ -1111,7 +1214,8 @@ class FakeNexoApi implements NexoApi {
       requestId: requestId,
       ago: 'ahora',
     );
-    o.timeline.add(TimelineEvent('created', 'client', requestId == null ? 'Le hiciste el pedido desde su perfil' : 'Le hiciste el pedido desde tu solicitud'));
+    o.timeline.add(TimelineEvent('created', 'client',
+        requestId == null ? 'Le hiciste el pedido desde su perfil' : 'Le hiciste el pedido desde tu solicitud'));
     _orders.insert(0, o);
     if (requestId != null) {
       final r = _reqs.where((x) => x.id == requestId).firstOrNull;
@@ -1121,17 +1225,18 @@ class FakeNexoApi implements NexoApi {
     // Prototipo: el prestador acepta unos segundos después.
     if (ctx.simulateCounterpart) {
       Timer(const Duration(seconds: 6), () {
-      if (o.status != 'pending') return;
-      o.status = 'accepted';
-      o.version++;
-      o.timeline.add(const TimelineEvent('accepted', 'provider', 'Aceptó el pedido'));
-      final r = requestId == null ? null : _reqs.where((x) => x.id == requestId).firstOrNull;
-      if (r != null) r.pick = providerId;
-      _sys(o, '${p.name} aceptó tu pedido', 'orderAccepted');
-      _notify('${p.name} aceptó tu pedido', 'Ya puedes ver los detalles y escribirle.', 'nexolocal://orders/${o.id}', 'Ver pedido',
-          icon: 'check');
-      ctx.notify('${p.name} aceptó tu pedido');
-    });
+        if (o.status != 'pending') return;
+        o.status = 'accepted';
+        o.version++;
+        o.timeline.add(const TimelineEvent('accepted', 'provider', 'Aceptó el pedido'));
+        final r = requestId == null ? null : _reqs.where((x) => x.id == requestId).firstOrNull;
+        if (r != null) r.pick = providerId;
+        _sys(o, '${p.name} aceptó tu pedido', 'orderAccepted');
+        _notify('${p.name} aceptó tu pedido', 'Ya puedes ver los detalles y escribirle.', 'nexolocal://orders/${o.id}',
+            'Ver pedido',
+            icon: 'check');
+        ctx.notify('${p.name} aceptó tu pedido');
+      });
     }
     return _order(o);
   }
@@ -1147,7 +1252,8 @@ class FakeNexoApi implements NexoApi {
             ? all.where((o) => o.status == 'pending' || o.status == 'accepted').toList()
             : all.where((o) => o.status == status).toList();
     int n(String s) => all.where((o) => o.status == s).length;
-    return OrdersPage(filtered.map(_order).toList(), pending: n('pending'), accepted: n('accepted'), resolved: n('resolved'));
+    return OrdersPage(filtered.map(_order).toList(),
+        pending: n('pending'), accepted: n('accepted'), resolved: n('resolved'));
   }
 
   @override
@@ -1166,8 +1272,10 @@ class FakeNexoApi implements NexoApi {
       ..priceCents = amountCents
       ..includes = includes
       ..version += 1;
-    o.timeline.add(TimelineEvent('accepted', 'provider', amountCents == null ? 'Aceptaste el pedido' : 'Aceptaste · ${formatMoney(amountCents)}'));
-    _sys(o, 'Aceptaste el pedido${amountCents == null ? '' : ' · Precio acordado ${formatMoney(amountCents)}'}', 'orderAccepted');
+    o.timeline.add(TimelineEvent('accepted', 'provider',
+        amountCents == null ? 'Aceptaste el pedido' : 'Aceptaste · ${formatMoney(amountCents)}'));
+    _sys(o, 'Aceptaste el pedido${amountCents == null ? '' : ' · Precio acordado ${formatMoney(amountCents)}'}',
+        'orderAccepted');
     return _order(o);
   }
 
@@ -1235,17 +1343,21 @@ class FakeNexoApi implements NexoApi {
 
   // ============================================================= opiniones
   @override
-  Future<void> review({required String orderId, required int stars, required String text, required bool recommend}) async {
+  Future<void> review(
+      {required String orderId, required int stars, required String text, required bool recommend}) async {
     await _lag();
     final o = _ord(orderId);
     if (o.status != 'resolved') {
-      throw const ApiException(code: 'review.order_not_resolved', status: 409, detail: 'Solo puedes calificar un servicio resuelto.');
+      throw const ApiException(
+          code: 'review.order_not_resolved', status: 409, detail: 'Solo puedes calificar un servicio resuelto.');
     }
-    if (o.myStars != null) throw const ApiException(code: 'review.already_exists', status: 409, detail: 'Ya calificaste este servicio.');
+    if (o.myStars != null)
+      throw const ApiException(code: 'review.already_exists', status: 409, detail: 'Ya calificaste este servicio.');
     o.myStars = stars;
     final p = _prov(o.providerId);
     if (recommend) p.recs++;
-    _exps.insert(0, FExp(p.id, _myName.split(' ').first, text.isEmpty ? 'Sin comentario.' : text, recommend, stars, 'ahora'));
+    _exps.insert(
+        0, FExp(p.id, _myName.split(' ').first, text.isEmpty ? 'Sin comentario.' : text, recommend, stars, 'ahora'));
   }
 
   @override
@@ -1259,7 +1371,13 @@ class FakeNexoApi implements NexoApi {
       recommendCount: ex.where((e) => e.rec).length,
       items: [
         for (var i = 0; i < ex.length; i++)
-          Review(id: '$providerId-$i', stars: ex[i].stars, text: ex[i].text, recommend: ex[i].rec, author: ex[i].user, ago: ex[i].ago)
+          Review(
+              id: '$providerId-$i',
+              stars: ex[i].stars,
+              text: ex[i].text,
+              recommend: ex[i].rec,
+              author: ex[i].user,
+              ago: ex[i].ago)
       ],
     );
   }
@@ -1275,7 +1393,8 @@ class FakeNexoApi implements NexoApi {
 
   ActiveOrder? _activeOrder(_FConv c) {
     final o = _orders
-        .where((o) => o.providerId == c.providerId && o.mine == c.asClient && o.clientName == (c.asClient ? 'Tú' : c.clientName))
+        .where((o) =>
+            o.providerId == c.providerId && o.mine == c.asClient && o.clientName == (c.asClient ? 'Tú' : c.clientName))
         .firstOrNull;
     if (o == null) return null;
     return ActiveOrder(o.id, o.status, _order(o).statusText);
@@ -1340,7 +1459,8 @@ class FakeNexoApi implements NexoApi {
   }
 
   _FConv _conv(String id) => _convs.firstWhere((c) => c.id == id,
-      orElse: () => throw const ApiException(code: 'conversation.not_found', status: 404, detail: 'Esta conversación ya no existe.'));
+      orElse: () => throw const ApiException(
+          code: 'conversation.not_found', status: 404, detail: 'Esta conversación ya no existe.'));
 
   @override
   Future<ChatThread> messages(String conversationId, {String? before}) async {
@@ -1376,8 +1496,11 @@ class FakeNexoApi implements NexoApi {
   Future<Message> sendMessage(String conversationId, {String? text, String? imageUploadId}) async {
     await _lag(150);
     final c = _conv(conversationId);
-    if (c.blocked) throw const ApiException(code: 'conversation.blocked', status: 403, detail: 'Desbloquea la conversación para escribir.');
-    final m = _FMsg(_id('m'), imageUploadId != null ? 'image' : 'text', text ?? '', true, DateTime.now(), imageUrl: imageUploadId);
+    if (c.blocked)
+      throw const ApiException(
+          code: 'conversation.blocked', status: 403, detail: 'Desbloquea la conversación para escribir.');
+    final m = _FMsg(_id('m'), imageUploadId != null ? 'image' : 'text', text ?? '', true, DateTime.now(),
+        imageUrl: imageUploadId);
     c.msgs.add(m);
     if (ctx.simulateCounterpart && c.replies < fakeReplies.length) {
       final reply = c.asClient ? fakeReplies[c.replies] : 'Gracias, aquí te espero.';
@@ -1442,7 +1565,8 @@ class FakeNexoApi implements NexoApi {
 
   // ===================================================== contacto/reportes
   @override
-  Future<PhoneReveal> revealPhone({required String targetId, required String targetType, required String context}) async {
+  Future<PhoneReveal> revealPhone(
+      {required String targetId, required String targetType, required String context}) async {
     await _lag();
     if (targetType == 'provider') {
       final p = _prov(targetId);
@@ -1451,13 +1575,16 @@ class FakeNexoApi implements NexoApi {
     }
     if (targetType == 'order') {
       final o = _ord(targetId);
-      return o.mine ? PhoneReveal(_prov(o.providerId).phone, _prov(o.providerId).name) : PhoneReveal('771 555 0221', o.clientName);
+      return o.mine
+          ? PhoneReveal(_prov(o.providerId).phone, _prov(o.providerId).name)
+          : PhoneReveal('771 555 0221', o.clientName);
     }
     return const PhoneReveal('771 555 0200', '');
   }
 
   @override
-  Future<String> report({required String targetType, required String targetId, required String category, required String reason}) async {
+  Future<String> report(
+      {required String targetType, required String targetId, required String category, required String reason}) async {
     await _lag(400);
     return 'Recibimos tu reporte. Lo revisará una persona del equipo.';
   }
@@ -1471,7 +1598,14 @@ class FakeNexoApi implements NexoApi {
       [
         for (final n in list)
           NotificationItem(
-              id: n.id, title: n.title, body: n.body, deepLink: n.deepLink, actionLabel: n.action, icon: n.icon, read: n.read, ago: n.ago)
+              id: n.id,
+              title: n.title,
+              body: n.body,
+              deepLink: n.deepLink,
+              actionLabel: n.action,
+              icon: n.icon,
+              read: n.read,
+              ago: n.ago)
       ],
       _notifs.where((n) => !n.read).length
     );

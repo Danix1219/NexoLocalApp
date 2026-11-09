@@ -50,7 +50,9 @@ class _PublishPageState extends ConsumerState<PublishPage> {
     final s = ref.watch(sessionProvider);
     if (s.isGuest) {
       return const GateScreen(
-          title: 'Publicar', icon: 'plus', text: 'Necesitas una cuenta para publicar lo que buscas o los trabajos que realizas.');
+          title: 'Publicar',
+          icon: 'plus',
+          text: 'Necesitas una cuenta para publicar lo que buscas o los trabajos que realizas.');
     }
     if (s.isProviderMode) {
       final mp = ref.watch(myProviderProvider);
@@ -77,7 +79,8 @@ class _CompTop extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScreenTitleBar(
       'Publicar',
-      trailing: NexoButton(label: 'Publicar', small: true, block: false, loading: loading, onPressed: enabled ? onPublish : null),
+      trailing: NexoButton(
+          label: 'Publicar', small: true, block: false, loading: loading, onPressed: enabled ? onPublish : null),
     );
   }
 }
@@ -117,7 +120,8 @@ class _CompUser extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: NexoText.body(15, weight: FontWeight.w800)),
-                if (pills != null) ...[const SizedBox(height: 6), pills!] else Text(sub, style: NexoText.body(12.5, color: NexoColors.muted)),
+                if (pills != null) ...[const SizedBox(height: 6), pills!] else
+                  Text(sub, style: NexoText.body(12.5, color: NexoColors.muted)),
               ],
             ),
           ),
@@ -154,7 +158,8 @@ class _ORow extends StatelessWidget {
               child: Text(value,
                   textAlign: TextAlign.right,
                   overflow: TextOverflow.ellipsis,
-                  style: NexoText.body(14, weight: FontWeight.w700, color: empty ? NexoColors.accent : NexoColors.brandDeep)),
+                  style: NexoText.body(14,
+                      weight: FontWeight.w700, color: empty ? NexoColors.accent : NexoColors.brandDeep)),
             ),
             const SizedBox(width: 4),
             const NexoIcon('chevron', size: 16, color: NexoColors.muted),
@@ -341,7 +346,8 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
                   }
                 },
                 icon: const NexoIcon('camera', size: 18, color: NexoColors.brand),
-                label: Text('Agregar una foto (opcional)', style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
+                label: Text('Agregar una foto (opcional)',
+                    style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
               ),
             ),
           if (_guess != null && _cat == null)
@@ -416,8 +422,14 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
                 label: 'Te contactan por',
                 value: _contact == 'chat' ? 'Solo chat' : 'Chat y llamada',
                 onTap: () async {
-                  final c = await _choose<String>(context, '¿Cómo quieres que te contacten?',
-                      const [('chat', 'Solo chat (tu número no se muestra)', 'chat'), ('chatCall', 'Chat y llamada', 'phone')], _contact);
+                  final c = await _choose<String>(
+                      context,
+                      '¿Cómo quieres que te contacten?',
+                      const [
+                        ('chat', 'Solo chat (tu número no se muestra)', 'chat'),
+                        ('chatCall', 'Chat y llamada', 'phone')
+                      ],
+                      _contact);
                   if (c != null) setState(() => _contact = c);
                 },
               ),
@@ -496,14 +508,17 @@ class _ExperienceComposerState extends ConsumerState<_ExperienceComposer> {
           const EmptyState(
             icon: 'thumb',
             title: 'Aún no tienes servicios por calificar',
-            text: 'Cuando un prestador marque como resuelto un servicio que le pediste, podrás contar aquí cómo te fue.',
+            text:
+                'Cuando un prestador marque como resuelto un servicio que le pediste, podrás contar aquí cómo te fue.',
           )
         else ...[
           _composeBox(children: [
             _CompUser(name: s.name ?? 'Tú', sub: 'Se publica en el perfil del prestador'),
             _bigText(
                 _text,
-                _order == null ? '¿Cómo te fue con el servicio?' : '¿Cómo te fue con ${_order!.counterpart.displayName}?',
+                _order == null
+                    ? '¿Cómo te fue con el servicio?'
+                    : '¿Cómo te fue con ${_order!.counterpart.displayName}?',
                 280,
                 () => setState(() {})),
           ]),
@@ -527,7 +542,10 @@ class _ExperienceComposerState extends ConsumerState<_ExperienceComposer> {
                     final o = await _choose<Order>(
                       context,
                       '¿A quién calificas?',
-                      [for (final o in pending) (o, '${o.counterpart.displayName} · ${catInfo(o.category).name}', catInfo(o.category).icon)],
+                      [
+                        for (final o in pending)
+                          (o, '${o.counterpart.displayName} · ${catInfo(o.category).name}', catInfo(o.category).icon)
+                      ],
                       _order,
                     );
                     if (o != null) setState(() => _order = o);
@@ -652,7 +670,11 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
             sub: p.zoneLabel,
             pills: Wrap(spacing: 6, runSpacing: 6, children: [
               for (final c in p.categories)
-                ToggleChip(label: catInfo(c).name, icon: catInfo(c).icon, selected: _cat == c, onTap: () => setState(() => _cat = c)),
+                ToggleChip(
+                    label: catInfo(c).name,
+                    icon: catInfo(c).icon,
+                    selected: _cat == c,
+                    onTap: () => setState(() => _cat = c)),
               NBadge(p.zoneLabel, icon: 'pin', tone: BadgeTone.brand),
             ]),
           ),
@@ -674,7 +696,11 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
                         right: 4,
                         top: 4,
                         child: NexoIconButton(
-                            icon: 'close', label: 'Quitar foto ${i + 1}', size: 28, circle: true, onTap: () => setState(() => _imgs.removeAt(i))),
+                            icon: 'close',
+                            label: 'Quitar foto ${i + 1}',
+                            size: 28,
+                            circle: true,
+                            onTap: () => setState(() => _imgs.removeAt(i))),
                       ),
                     ]),
                   ),
@@ -689,7 +715,8 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
               hintText: 'Etiqueta (opcional): Antes y después, Reparación…',
               hintStyle: NexoText.body(14, color: NexoColors.muted),
               border: InputBorder.none,
-              prefixIcon: const Padding(padding: EdgeInsets.only(right: 6), child: NexoIcon('flag', size: 17, color: NexoColors.muted)),
+              prefixIcon: const Padding(
+                  padding: EdgeInsets.only(right: 6), child: NexoIcon('flag', size: 17, color: NexoColors.muted)),
               prefixIconConstraints: const BoxConstraints(minWidth: 26),
             ),
           ),
@@ -704,7 +731,8 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
                     if (add.isNotEmpty && mounted) setState(() => _imgs.addAll(add));
                   },
                   icon: const NexoIcon('camera', size: 18, color: NexoColors.brand),
-                  label: Text('Agregar fotos', style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
+                  label:
+                      Text('Agregar fotos', style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
                 )
               else
                 const NBadge('6 fotos', icon: 'check', tone: BadgeTone.ok),
@@ -712,7 +740,8 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
               Flexible(
                 child: Text(_hint(len),
                     textAlign: TextAlign.right,
-                    style: NexoText.body(12.5, weight: FontWeight.w600, color: len >= 20 ? NexoColors.ok : NexoColors.muted)),
+                    style: NexoText.body(12.5,
+                        weight: FontWeight.w600, color: len >= 20 ? NexoColors.ok : NexoColors.muted)),
               ),
             ]),
           ),

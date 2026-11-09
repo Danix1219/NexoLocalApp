@@ -17,7 +17,8 @@ import 'redact.dart';
 /// escribiendo a mano (spec 049, AC-003).
 String assistErrorMessage(Object e) {
   if (e is ApiException) {
-    if (e.code == 'content.inappropriate') return 'El texto no cumple las reglas de la comunidad. Cámbialo e inténtalo de nuevo.';
+    if (e.code == 'content.inappropriate')
+      return 'El texto no cumple las reglas de la comunidad. Cámbialo e inténtalo de nuevo.';
     if (e.status == 429) return 'Usaste el asistente muchas veces. Espera un momento o escribe tú el texto.';
     if (e.code == 'assist.unavailable' || e.isNetwork || isUnavailable(e)) {
       return 'El asistente no está disponible ahora. Puedes escribir tu texto normalmente.';
@@ -119,7 +120,8 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SheetHeader('Borrador sugerido',
-            subtitle: 'Revísalo y cámbialo a tu gusto. No incluye precios ni datos de contacto, y no se publica hasta que tú lo hagas.'),
+            subtitle:
+                'Revísalo y cámbialo a tu gusto. No incluye precios ni datos de contacto, y no se publica hasta que tú lo hagas.'),
         const SizedBox(height: 12),
         if (_busy)
           const Padding(
@@ -162,7 +164,10 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
           ),
         ],
         const SizedBox(height: 8),
-        NexoButton(label: 'Seguir escribiendo yo', variant: NexoButtonVariant.ghost, onPressed: () => Navigator.of(context).pop()),
+        NexoButton(
+            label: 'Seguir escribiendo yo',
+            variant: NexoButtonVariant.ghost,
+            onPressed: () => Navigator.of(context).pop()),
       ],
     );
   }
@@ -171,7 +176,8 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
 /// Aviso con la sugerencia del modelo de visión: muestra la confianza y deja
 /// usarla o ignorarla (spec 049, AC-002).
 class CategoryGuessNotice extends StatelessWidget {
-  const CategoryGuessNotice({super.key, required this.guess, required this.name, required this.onUse, required this.onDismiss});
+  const CategoryGuessNotice(
+      {super.key, required this.guess, required this.name, required this.onUse, required this.onDismiss});
   final CategoryGuess guess;
   final String name;
   final VoidCallback onUse;
@@ -194,7 +200,9 @@ class CategoryGuessNotice extends StatelessWidget {
                 style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.brandDeep)),
           ),
         ),
-        TextButton(onPressed: onUse, child: Text('Usar', style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brand))),
+        TextButton(
+            onPressed: onUse,
+            child: Text('Usar', style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brand))),
         IconButton(
           tooltip: 'Ignorar sugerencia',
           visualDensity: VisualDensity.compact,

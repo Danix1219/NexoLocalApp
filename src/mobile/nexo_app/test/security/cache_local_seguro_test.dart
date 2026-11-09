@@ -14,7 +14,8 @@ import '../support/mock_adapter.dart';
 /// cuenta, y se borra al salir. Nunca se sirve caché ante un certificado
 /// inválido.
 void main() {
-  RequestOptions req(String method, String path) => RequestOptions(method: method, path: path, baseUrl: 'https://api.nexo.test');
+  RequestOptions req(String method, String path) =>
+      RequestOptions(method: method, path: path, baseUrl: 'https://api.nexo.test');
 
   test('nunca se guardan contacto, subidas, dispositivos, correo, contraseña ni reportes', () {
     for (final p in [
@@ -34,7 +35,11 @@ void main() {
 
   test('solo se encola publicar solicitud; pedidos, contacto y chat no', () {
     expect(OfflineCacheInterceptor.canQueue(req('POST', '/v1/discovery/requests')), isTrue);
-    for (final p in ['/v1/engagement/orders', '/v1/engagement/contacts/phone', '/v1/engagement/conversations/c1/messages']) {
+    for (final p in [
+      '/v1/engagement/orders',
+      '/v1/engagement/contacts/phone',
+      '/v1/engagement/conversations/c1/messages'
+    ]) {
       expect(OfflineCacheInterceptor.canQueue(req('POST', p)), isFalse, reason: p);
     }
     final replay = req('POST', '/v1/discovery/requests')..extra[kReplay] = true;
@@ -53,7 +58,8 @@ void main() {
     final store = MemoryLocalStore();
     await store.write('acc_1', '/v1/discovery/feed', CachedResponse(body: '{"items":[]}', savedAt: DateTime(2026)));
     final a = MockAdapter()
-      ..onRaw('GET', '/v1/discovery/feed', (o) => throw DioException(requestOptions: o, type: DioExceptionType.badCertificate));
+      ..onRaw('GET', '/v1/discovery/feed',
+          (o) => throw DioException(requestOptions: o, type: DioExceptionType.badCertificate));
     final dio = testDio(a)..interceptors.add(OfflineCacheInterceptor(store: () async => store, account: () => 'acc_1'));
     await expectLater(dio.get<dynamic>('/v1/discovery/feed'),
         throwsA(isA<DioException>().having((e) => e.type, 'tipo', DioExceptionType.badCertificate)));
@@ -64,7 +70,12 @@ void main() {
     await store.write('acc_1', '/v1/screens/account', CachedResponse(body: '{}', savedAt: DateTime(2026)));
     await store.write('acc_2', '/v1/screens/account', CachedResponse(body: '{}', savedAt: DateTime(2026)));
     await store.enqueue(OutboxItem(
-        account: 'acc_1', method: 'POST', path: '/v1/discovery/requests', body: '{}', idempotencyKey: 'i', createdAt: DateTime(2026)));
+        account: 'acc_1',
+        method: 'POST',
+        path: '/v1/discovery/requests',
+        body: '{}',
+        idempotencyKey: 'i',
+        createdAt: DateTime(2026)));
     final storage = MemoryTokenStorage();
     await storage.write(fakeTokens(sub: 'acc_1'));
     final c = ProviderContainer(overrides: [

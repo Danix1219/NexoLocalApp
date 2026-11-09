@@ -44,7 +44,8 @@ Future<PickedImage?> pickOneImage(BuildContext context) async {
 /// Varias fotos de la galería (publicar un trabajo, hasta [max]).
 Future<List<PickedImage>> pickImages({int max = 4}) async {
   try {
-    final files = await _picker.pickMultiImage(maxWidth: 1600, maxHeight: 1600, imageQuality: 85, limit: max >= 2 ? max : null);
+    final files =
+        await _picker.pickMultiImage(maxWidth: 1600, maxHeight: 1600, imageQuality: 85, limit: max >= 2 ? max : null);
     final out = <PickedImage>[];
     for (final f in files.take(max)) {
       final p = await _toPicked(f);

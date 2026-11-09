@@ -74,10 +74,7 @@ class NexoButton extends StatelessWidget {
           ],
           // Sin Flexible cuando el botón no es de bloque: puede ir dentro de
           // un Row (ancho sin límite) y Flexible ahí truena.
-          if (block)
-            Flexible(child: _text(fg))
-          else
-            _text(fg),
+          if (block) Flexible(child: _text(fg)) else _text(fg),
         ],
       ],
     );
@@ -104,8 +101,7 @@ class NexoButton extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: small ? 42 : 48),
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                  horizontal: small ? 13 : 17, vertical: small ? 9 : 12),
+              padding: EdgeInsets.symmetric(horizontal: small ? 13 : 17, vertical: small ? 9 : 12),
               child: Center(widthFactor: 1, child: content),
             ),
           ),
@@ -149,8 +145,7 @@ class NexoLink extends StatelessWidget {
               widthFactor: 1,
               child: Text(
                 label,
-                style: NexoText.body(14,
-                    weight: FontWeight.w800, color: NexoColors.brandDeep),
+                style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brandDeep),
               ),
             ),
           ),

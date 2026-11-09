@@ -6,8 +6,7 @@ import 'auth_tokens.dart';
 /// Tokens en almacenamiento seguro (Keystore en Android). Nunca se guarda la
 /// contraseña ni el código de verificación (spec 004).
 class TokenStorage {
-  TokenStorage([FlutterSecureStorage? storage])
-      : _s = storage ?? const FlutterSecureStorage();
+  TokenStorage([FlutterSecureStorage? storage]) : _s = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _s;
 

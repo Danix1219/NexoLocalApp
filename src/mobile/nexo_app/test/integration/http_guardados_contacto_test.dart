@@ -28,8 +28,12 @@ void main() {
   });
 
   test('guardar y quitar con POST/DELETE /saved/{kind}/{id}', () async {
-    a.on('POST', '/v1/discovery/saved/provider/prv_1', {'savedCounts': {'provider': 1}});
-    a.on('DELETE', '/v1/discovery/saved/provider/prv_1', {'savedCounts': {'provider': 0}});
+    a.on('POST', '/v1/discovery/saved/provider/prv_1', {
+      'savedCounts': {'provider': 1}
+    });
+    a.on('DELETE', '/v1/discovery/saved/provider/prv_1', {
+      'savedCounts': {'provider': 0}
+    });
     expect((await api.setSaved('provider', 'prv_1', true)).provider, 1);
     expect((await api.setSaved('provider', 'prv_1', false)).provider, 0);
   });
@@ -39,7 +43,8 @@ void main() {
     a.on('POST', '/v1/engagement/reports', {'message': 'Recibimos tu reporte.'}, status: 201);
     final r = await api.revealPhone(targetId: 'prv_1', targetType: 'provider', context: 'profile');
     expect(r.displayPhone, '771 555 0101');
-    final msg = await api.report(targetType: 'work', targetId: 'wrk_1', category: 'scam', reason: 'Pide anticipo por fuera');
+    final msg =
+        await api.report(targetType: 'work', targetId: 'wrk_1', category: 'scam', reason: 'Pide anticipo por fuera');
     expect(msg, 'Recibimos tu reporte.');
     final c = a.last('POST', '/v1/engagement/reports');
     expect(c.header('Idempotency-Key'), isNotEmpty);
@@ -58,6 +63,8 @@ void main() {
     expect(unread, 1);
     expect(list.single.read, isFalse);
     await api.markNotificationsRead(['n1']);
-    expect(a.last('POST', '/v1/engagement/notifications/read').body, {'notificationIds': ['n1']});
+    expect(a.last('POST', '/v1/engagement/notifications/read').body, {
+      'notificationIds': ['n1']
+    });
   });
 }

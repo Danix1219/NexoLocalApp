@@ -59,7 +59,9 @@ class SavedPage extends ConsumerWidget {
                       if (ws.isNotEmpty) ...[
                         Sect('Trabajos', trailing: '${ws.length}'),
                         for (final s in ws)
-                          s.work != null && s.available ? WorkCard(work: s.work!) : _gone(context, ref, s, 'Este trabajo ya no está disponible'),
+                          s.work != null && s.available
+                              ? WorkCard(work: s.work!)
+                              : _gone(context, ref, s, 'Este trabajo ya no está disponible'),
                       ],
                       if (rs.isNotEmpty) ...[
                         Sect('Solicitudes', trailing: '${rs.length}'),
@@ -105,7 +107,10 @@ class SavedPage extends ConsumerWidget {
         Row(children: [
           Expanded(
             child: NexoButton(
-                label: 'Quitar', small: true, variant: NexoButtonVariant.ghost, onPressed: () => _remove(context, ref, s)),
+                label: 'Quitar',
+                small: true,
+                variant: NexoButtonVariant.ghost,
+                onPressed: () => _remove(context, ref, s)),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -113,7 +118,8 @@ class SavedPage extends ConsumerWidget {
               label: 'Contactar',
               icon: 'chat',
               small: true,
-              onPressed: () => showContactSheet(context, ref, p.mini, responseTime: p.responseTime, canCall: p.channelCall),
+              onPressed: () =>
+                  showContactSheet(context, ref, p.mini, responseTime: p.responseTime, canCall: p.channelCall),
             ),
           ),
         ]),
@@ -125,7 +131,11 @@ class SavedPage extends ConsumerWidget {
         child: Row(children: [
           Expanded(child: Text(text, style: NexoText.body(14, color: NexoColors.muted))),
           NexoButton(
-              label: 'Quitar', small: true, block: false, variant: NexoButtonVariant.ghost, onPressed: () => _remove(context, ref, s)),
+              label: 'Quitar',
+              small: true,
+              block: false,
+              variant: NexoButtonVariant.ghost,
+              onPressed: () => _remove(context, ref, s)),
         ]),
       );
 }

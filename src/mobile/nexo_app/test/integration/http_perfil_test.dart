@@ -82,7 +82,12 @@ void main() {
     a.on('GET', '/v1/discovery/providers/compare', {
       'providers': [Fx.provider(), Fx.provider(id: 'prv_2', name: 'Electro Ruiz')],
       'rows': [
-        {'key': 'recs', 'label': 'Recomiendan', 'values': ['31', '22'], 'best': 0},
+        {
+          'key': 'recs',
+          'label': 'Recomiendan',
+          'values': ['31', '22'],
+          'best': 0
+        },
       ],
     });
     final r = await api.compare(['prv_1', 'prv_2']);
@@ -91,10 +96,13 @@ void main() {
   });
 
   test('error de negocio del perfil llega como ApiException con código', () async {
-    a.on('PATCH', '/v1/discovery/providers/me/prices', problem('provider.prices_limit', 400, 'Máximo 3 precios'), status: 400);
+    a.on('PATCH', '/v1/discovery/providers/me/prices', problem('provider.prices_limit', 400, 'Máximo 3 precios'),
+        status: 400);
     await expectLater(
       api.patchProvider('prices', {'prices': []}),
-      throwsA(isA<ApiException>().having((e) => e.code, 'code', 'provider.prices_limit').having((e) => e.detail, 'detail', 'Máximo 3 precios')),
+      throwsA(isA<ApiException>()
+          .having((e) => e.code, 'code', 'provider.prices_limit')
+          .having((e) => e.detail, 'detail', 'Máximo 3 precios')),
     );
   });
 }

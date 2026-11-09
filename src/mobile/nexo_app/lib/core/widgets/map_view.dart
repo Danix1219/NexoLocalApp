@@ -26,7 +26,8 @@ class MapPin extends StatelessWidget {
   final double size;
   final Color color;
   @override
-  Widget build(BuildContext context) => NexoIcon('pin', size: size, color: Colors.white, fillColor: color, strokeWidth: 1.6);
+  Widget build(BuildContext context) =>
+      NexoIcon('pin', size: size, color: Colors.white, fillColor: color, strokeWidth: 1.6);
 }
 
 /// `miniMap`: mapa pequeño de solo lectura con radio opcional y un botón.
@@ -86,7 +87,12 @@ class MiniMap extends StatelessWidget {
                         ]),
                       if (!approximate)
                         MarkerLayer(markers: [
-                          Marker(point: center, width: 38, height: 38, alignment: Alignment.topCenter, child: const MapPin()),
+                          Marker(
+                              point: center,
+                              width: 38,
+                              height: 38,
+                              alignment: Alignment.topCenter,
+                              child: const MapPin()),
                         ]),
                     ],
                   ),
@@ -114,7 +120,9 @@ class MiniMap extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: NexoColors.surface,
                               borderRadius: BorderRadius.circular(99),
-                              boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 2))],
+                              boxShadow: const [
+                                BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 2))
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -123,7 +131,8 @@ class MiniMap extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(label!,
-                                      overflow: TextOverflow.ellipsis, style: NexoText.body(13, weight: FontWeight.w700)),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: NexoText.body(13, weight: FontWeight.w700)),
                                 ),
                               ],
                             ),
@@ -157,7 +166,13 @@ class MiniMap extends StatelessWidget {
 
 /// Mapa con puntos (prestadores o solicitudes) y la zona de búsqueda.
 class PointsMap extends StatelessWidget {
-  const PointsMap({super.key, required this.center, required this.radiusKm, required this.points, this.onTapPoint, this.height = 260});
+  const PointsMap(
+      {super.key,
+      required this.center,
+      required this.radiusKm,
+      required this.points,
+      this.onTapPoint,
+      this.height = 260});
   final GeoPoint center;
   final num radiusKm;
   final List<MapPoint> points;

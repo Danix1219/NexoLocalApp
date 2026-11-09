@@ -59,7 +59,8 @@ void main() {
     await HttpNexoApi(dio).myRequests();
     a.offline();
     account = 'acc_2';
-    await expectLater(HttpNexoApi(dio).myRequests(), throwsA(isA<ApiException>().having((e) => e.isNetwork, 'red', isTrue)));
+    await expectLater(
+        HttpNexoApi(dio).myRequests(), throwsA(isA<ApiException>().having((e) => e.isNetwork, 'red', isTrue)));
   });
 
   test('revalida con ETag: If-None-Match y 304 devuelve lo guardado', () async {

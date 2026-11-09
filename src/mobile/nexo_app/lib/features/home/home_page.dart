@@ -94,7 +94,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         ]);
       }
       final orders = ref.watch(ordersProvider('client'));
-      final active = orders.asData?.value.items.where((o) => o.status != 'cancelled' && o.status != 'rejected').toList() ?? const <Order>[];
+      final active =
+          orders.asData?.value.items.where((o) => o.status != 'cancelled' && o.status != 'rejected').toList() ??
+              const <Order>[];
       return ListView(
         padding: const EdgeInsets.only(bottom: 90),
         children: [
@@ -158,7 +160,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     final mp = ref.watch(myProviderProvider);
     return mp.when(
       loading: () => ListView(children: const [HomeTopBar(), LoadingView()]),
-      error: (e, _) => ListView(children: [const HomeTopBar(), ErrorView(e, onRetry: () => ref.invalidate(myProviderProvider))]),
+      error: (e, _) =>
+          ListView(children: [const HomeTopBar(), ErrorView(e, onRetry: () => ref.invalidate(myProviderProvider))]),
       data: (me) {
         if (me == null) {
           return ListView(children: [
@@ -209,7 +212,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           const Sect('Trabajos de tu rubro'),
           asyncView(feed, (fp) {
             final mine = me.profile.categories.toSet();
-            final list = fp.page.items.where((w) => mine.contains(w.category) && w.provider.id != me.profile.id).toList();
+            final list =
+                fp.page.items.where((w) => mine.contains(w.category) && w.provider.id != me.profile.id).toList();
             if (list.isEmpty) {
               return const EmptyState(
                 icon: 'info',
@@ -268,7 +272,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tu perfil está al ${me.completeness}%', style: NexoText.body(14.5, weight: FontWeight.w800)),
+                      Text('Tu perfil está al ${me.completeness}%',
+                          style: NexoText.body(14.5, weight: FontWeight.w800)),
                       const SizedBox(height: 2),
                       Text(
                           'Los perfiles completos aparecen primero. Siguiente: ${me.todo.where((t) => !t.done).map((t) => t.label).firstOrNull ?? 'listo'}.',
@@ -324,7 +329,8 @@ class _SearchRow extends StatelessWidget {
                     const NexoIcon('search', size: 20, color: NexoColors.muted),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(hint, overflow: TextOverflow.ellipsis, style: NexoText.body(14.5, color: NexoColors.muted)),
+                      child: Text(hint,
+                          overflow: TextOverflow.ellipsis, style: NexoText.body(14.5, color: NexoColors.muted)),
                     ),
                   ]),
                 ),

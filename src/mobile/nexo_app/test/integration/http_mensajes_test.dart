@@ -52,13 +52,15 @@ void main() {
   });
 
   test('enviar texto o imagen, leer y bloquear', () async {
-    a.on('POST', '/v1/engagement/conversations/cnv_1/messages', {'messageId': 'm3', 'kind': 'text', 'text': 'hola', 'mine': true});
+    a.on('POST', '/v1/engagement/conversations/cnv_1/messages',
+        {'messageId': 'm3', 'kind': 'text', 'text': 'hola', 'mine': true});
     a.on('POST', '/v1/engagement/conversations/cnv_1/read', null, status: 204);
     a.on('POST', '/v1/engagement/conversations/cnv_1/block', {'blocked': true});
     await api.sendMessage('cnv_1', text: 'hola');
     expect(a.last('POST', '/v1/engagement/conversations/cnv_1/messages').body, {'kind': 'text', 'text': 'hola'});
     await api.sendMessage('cnv_1', imageUploadId: 'upl_1');
-    expect(a.last('POST', '/v1/engagement/conversations/cnv_1/messages').body, {'kind': 'image', 'imageUploadId': 'upl_1'});
+    expect(a.last('POST', '/v1/engagement/conversations/cnv_1/messages').body,
+        {'kind': 'image', 'imageUploadId': 'upl_1'});
     await api.markRead('cnv_1', 'm3');
     expect(a.last('POST', '/v1/engagement/conversations/cnv_1/read').body, {'upToMessageId': 'm3'});
     expect(await api.block('cnv_1', true, alsoReport: true), isTrue);

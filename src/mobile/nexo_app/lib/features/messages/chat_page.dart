@@ -77,7 +77,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void _toBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
-        _scroll.animateTo(_scroll.position.maxScrollExtent, duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+        _scroll.animateTo(_scroll.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
       }
     });
   }
@@ -112,11 +113,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         children: [
           SheetHeader(t.counterpart.displayName),
           if (t.counterpart.providerId != null) ...[
-            OptRow(icon: 'user', label: 'Ver perfil', trailingChevron: true, onTap: () => Navigator.of(ctx).pop('profile')),
+            OptRow(
+                icon: 'user',
+                label: 'Ver perfil',
+                trailingChevron: true,
+                onTap: () => Navigator.of(ctx).pop('profile')),
             const SizedBox(height: 8),
           ],
           if (t.activeOrder != null) ...[
-            OptRow(icon: 'check', label: 'Ver pedido', trailingChevron: true, onTap: () => Navigator.of(ctx).pop('order')),
+            OptRow(
+                icon: 'check', label: 'Ver pedido', trailingChevron: true, onTap: () => Navigator.of(ctx).pop('order')),
             const SizedBox(height: 8),
           ],
           OptRow(icon: 'flag', label: 'Reportar', onTap: () => Navigator.of(ctx).pop('report')),
@@ -310,7 +316,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             child: Text(t.blocked ? 'Bloqueaste a ${t.counterpart.displayName}.' : 'No puedes enviar mensajes aquí.',
                 style: NexoText.body(13.5, color: NexoColors.muted)),
           ),
-          if (t.blocked) NexoButton(label: 'Desbloquear', small: true, block: false, variant: NexoButtonVariant.line, onPressed: () => _block(false)),
+          if (t.blocked)
+            NexoButton(
+                label: 'Desbloquear',
+                small: true,
+                block: false,
+                variant: NexoButtonVariant.line,
+                onPressed: () => _block(false)),
         ]),
       );
     }
@@ -368,8 +380,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   height: 44,
                   child: Center(
                     child: _sending
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : NexoIcon('send', size: 20, color: _text.text.trim().isEmpty ? NexoColors.muted : Colors.white),
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : NexoIcon('send',
+                            size: 20, color: _text.text.trim().isEmpty ? NexoColors.muted : Colors.white),
                   ),
                 ),
               ),
@@ -406,7 +422,9 @@ class _Bubble extends StatelessWidget {
     final day = showDay && m.createdAt != null
         ? Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Center(child: Text(_day(m.createdAt), style: NexoText.body(12, weight: FontWeight.w700, color: NexoColors.muted))),
+            child: Center(
+                child: Text(_day(m.createdAt),
+                    style: NexoText.body(12, weight: FontWeight.w700, color: NexoColors.muted))),
           )
         : null;
     if (m.kind == 'system') {
@@ -464,7 +482,8 @@ class _Bubble extends StatelessWidget {
               Text(_hhmm(m.createdAt), style: NexoText.body(11, color: mine ? Colors.white70 : NexoColors.muted)),
               if (mine) ...[
                 const SizedBox(width: 3),
-                NexoIcon('check', size: 13, color: m.readAt != null ? const Color(0xFFB9F0DC) : Colors.white70, strokeWidth: 2.2),
+                NexoIcon('check',
+                    size: 13, color: m.readAt != null ? const Color(0xFFB9F0DC) : Colors.white70, strokeWidth: 2.2),
               ],
             ]),
           ),

@@ -107,8 +107,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('¿Aún no tienes cuenta?',
-                  style: NexoText.body(12.5, color: NexoColors.muted)),
+              Text('¿Aún no tienes cuenta?', style: NexoText.body(12.5, color: NexoColors.muted)),
               NexoLink('Crear cuenta', onTap: () => showSignupSheet(context)),
             ],
           ),

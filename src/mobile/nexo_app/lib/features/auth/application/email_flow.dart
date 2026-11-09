@@ -61,8 +61,7 @@ class EmailFlowController extends Notifier<EmailFlowState> {
   @override
   EmailFlowState build() => const EmailFlowState();
 
-  void setIntent(String intent) =>
-      state = EmailFlowState(intent: intent == 'provider' ? 'provider' : 'client');
+  void setIntent(String intent) => state = EmailFlowState(intent: intent == 'provider' ? 'provider' : 'client');
 
   void codeSent(String email, CodeDelivery d) {
     state = state.copyWith(
@@ -73,20 +72,16 @@ class EmailFlowController extends Notifier<EmailFlowState> {
     );
   }
 
-  void ticketReady(String ticket) =>
-      state = state.copyWith(ticket: ticket, idempotencyKey: const Uuid().v4());
+  void ticketReady(String ticket) => state = state.copyWith(ticket: ticket, idempotencyKey: const Uuid().v4());
 
-  void accountCreated(CreatedAccount a) =>
-      state = state.copyWith(createdName: a.name, nextStep: a.nextStep);
+  void accountCreated(CreatedAccount a) => state = state.copyWith(createdName: a.name, nextStep: a.nextStep);
 
   void reset() => state = const EmailFlowState();
 }
 
-final signupFlowProvider =
-    NotifierProvider<EmailFlowController, EmailFlowState>(EmailFlowController.new);
+final signupFlowProvider = NotifierProvider<EmailFlowController, EmailFlowState>(EmailFlowController.new);
 
-final resetFlowProvider =
-    NotifierProvider<EmailFlowController, EmailFlowState>(EmailFlowController.new);
+final resetFlowProvider = NotifierProvider<EmailFlowController, EmailFlowState>(EmailFlowController.new);
 
 NotifierProvider<EmailFlowController, EmailFlowState> flowFor(EmailPurpose p) =>
     p == EmailPurpose.signup ? signupFlowProvider : resetFlowProvider;

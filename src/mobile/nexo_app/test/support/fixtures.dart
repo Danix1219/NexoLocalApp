@@ -62,7 +62,12 @@ class Fx {
 
   static Map<String, Object?> work({String id = 'wrk_1'}) => {
         'workId': id,
-        'provider': {'providerId': 'prv_1', 'name': 'Hernández Plomería', 'kind': 'business', 'badges': ['phoneVerified']},
+        'provider': {
+          'providerId': 'prv_1',
+          'name': 'Hernández Plomería',
+          'kind': 'business',
+          'badges': ['phoneVerified']
+        },
         'category': 'plomeria',
         'title': 'Cambio de llave',
         'textExcerpt': 'Sustituimos la llave de cocina.',
@@ -102,7 +107,9 @@ class Fx {
         'client': {'displayName': 'Ana M.'},
       };
 
-  static Map<String, Object?> order({String id = 'ord_1', String status = 'pending', String role = 'provider', int version = 3}) => {
+  static Map<String, Object?> order(
+          {String id = 'ord_1', String status = 'pending', String role = 'provider', int version = 3}) =>
+      {
         'orderId': id,
         'status': status,
         'statusText': 'Pendiente',

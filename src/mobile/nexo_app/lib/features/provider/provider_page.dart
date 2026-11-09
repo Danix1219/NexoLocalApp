@@ -54,7 +54,8 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                   onTap: () => showReportSheet(context, ref, targetType: 'provider', targetId: p.id)),
           ]),
           Expanded(
-            child: asyncView(v, (p) => _body(p, own, mine), onRetry: () => ref.invalidate(providerProfileProvider(widget.id))),
+            child: asyncView(v, (p) => _body(p, own, mine),
+                onRetry: () => ref.invalidate(providerProfileProvider(widget.id))),
           ),
         ],
       ),
@@ -121,7 +122,8 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                         if (p.isNew) const NBadge('Perfil nuevo', tone: BadgeTone.brand),
                         if (p.updatedText.isNotEmpty)
                           NBadge(p.badges.any((b) => b.key == 'stale') ? 'Sin actualizar' : p.updatedText,
-                              icon: 'clock', tone: p.badges.any((b) => b.key == 'stale') ? BadgeTone.warn : BadgeTone.plain),
+                              icon: 'clock',
+                              tone: p.badges.any((b) => b.key == 'stale') ? BadgeTone.warn : BadgeTone.plain),
                       ]),
                       const SizedBox(height: 10),
                       Facts(facts),
@@ -130,7 +132,10 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                         ('${p.jobs}', 'Trabajos'),
                         ('${p.recs}', 'Recomiendan'),
                         if (p.attention == 'shop')
-                          (own ? 'Local' : p.distanceText.replaceFirst('a ', '').replaceFirst('~', ''), own ? 'Atención' : 'Del local a ti')
+                          (
+                            own ? 'Local' : p.distanceText.replaceFirst('a ', '').replaceFirst('~', ''),
+                            own ? 'Atención' : 'Del local a ti'
+                          )
                         else
                           ('${p.radiusKm} km', 'Radio'),
                       ]),
@@ -139,7 +144,9 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                         Row(children: [
                           Expanded(
                             child: NexoButton(
-                                label: 'Publicar un trabajo', icon: 'plus', onPressed: () => context.go(Routes.publish)),
+                                label: 'Publicar un trabajo',
+                                icon: 'plus',
+                                onPressed: () => context.go(Routes.publish)),
                           ),
                           const SizedBox(width: 8),
                           NexoButton(
@@ -155,8 +162,8 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                             child: NexoButton(
                               label: 'Contactar',
                               icon: 'chat',
-                              onPressed: () =>
-                                  showContactSheet(context, ref, p.mini, responseTime: p.responseTime, canCall: p.channelCall),
+                              onPressed: () => showContactSheet(context, ref, p.mini,
+                                  responseTime: p.responseTime, canCall: p.channelCall),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -171,7 +178,8 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                             },
                           ),
                           const SizedBox(width: 8),
-                          _BarIcon(icon: 'share', label: 'Compartir perfil', onTap: () => shareLink('/p/${p.id}', 'perfil')),
+                          _BarIcon(
+                              icon: 'share', label: 'Compartir perfil', onTap: () => shareLink('/p/${p.id}', 'perfil')),
                         ]),
                         const SizedBox(height: 8),
                         NexoButton(
@@ -300,7 +308,8 @@ class _TodoCard extends ConsumerWidget {
                   const NexoIcon('plus', size: 18, color: NexoColors.brand),
                   const SizedBox(width: 10),
                   Expanded(child: Text(t.label, style: NexoText.body(14, weight: FontWeight.w600))),
-                  Text('+${t.points}', style: NexoText.body(12.5, weight: FontWeight.w800, color: NexoColors.accentInk)),
+                  Text('+${t.points}',
+                      style: NexoText.body(12.5, weight: FontWeight.w800, color: NexoColors.accentInk)),
                   const SizedBox(width: 4),
                   const NexoIcon('chevron', size: 16, color: NexoColors.muted),
                 ]),
@@ -341,7 +350,8 @@ class _WorksTab extends ConsumerWidget {
                   for (final t in tiles)
                     GestureDetector(
                       onTap: () => showWorkSheet(context, t.$1),
-                      child: ClipRRect(borderRadius: BorderRadius.circular(6), child: NexoImage(t.$2.thumbUrl ?? t.$2.url)),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6), child: NexoImage(t.$2.thumbUrl ?? t.$2.url)),
                     ),
                   for (final im in p.portfolio)
                     ClipRRect(borderRadius: BorderRadius.circular(6), child: NexoImage(im.thumbUrl ?? im.url)),
@@ -369,7 +379,8 @@ class _WorksTab extends ConsumerWidget {
                   child: SizedBox(
                     width: 72,
                     height: 72,
-                    child: NexoImage(w.images.isEmpty ? 'demo://${w.category}/0' : (w.images.first.thumbUrl ?? w.images.first.url)),
+                    child: NexoImage(
+                        w.images.isEmpty ? 'demo://${w.category}/0' : (w.images.first.thumbUrl ?? w.images.first.url)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -378,7 +389,8 @@ class _WorksTab extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(w.title, style: NexoText.body(14.5, weight: FontWeight.w800)),
-                      Text('${catInfo(w.category).name} · ${w.ago}', style: NexoText.body(12.5, color: NexoColors.muted)),
+                      Text('${catInfo(w.category).name} · ${w.ago}',
+                          style: NexoText.body(12.5, color: NexoColors.muted)),
                       Text('${w.recs} ${plural(w.recs, 'recomendación', 'recomendaciones')}',
                           style: NexoText.body(12.5, color: NexoColors.muted)),
                     ],
@@ -468,7 +480,8 @@ class _InfoTabState extends ConsumerState<_InfoTab> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Row(children: [
-                      Text('Ver horario de la semana', style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
+                      Text('Ver horario de la semana',
+                          style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
                       const SizedBox(width: 4),
                       AnimatedRotation(
                         turns: _week ? .25 : 0,
@@ -488,7 +501,9 @@ class _InfoTabState extends ConsumerState<_InfoTab> {
                               style: NexoText.body(14, weight: i == today ? FontWeight.w800 : FontWeight.w400)),
                         ),
                         Text(
-                          i < p.days.length && p.days[i] != null ? '${p.days[i]!.open} a ${p.days[i]!.close}' : 'Cerrado',
+                          i < p.days.length && p.days[i] != null
+                              ? '${p.days[i]!.open} a ${p.days[i]!.close}'
+                              : 'Cerrado',
                           style: NexoText.body(14,
                               weight: i == today ? FontWeight.w800 : FontWeight.w400,
                               color: i < p.days.length && p.days[i] != null ? NexoColors.ink : NexoColors.muted),
@@ -543,7 +558,8 @@ class _InfoTabState extends ConsumerState<_InfoTab> {
                   if (p.owner != null) InfoRow('Responsable', p.owner!),
                   if (p.experience != null) InfoRow('Experiencia', '${p.experience} años'),
                   if (p.crew != null)
-                    InfoRow('Trabaja', switch (p.crew) { 'alone' => 'Solo', 'withHelpers' => 'Con ayudantes', _ => 'Con equipo' }),
+                    InfoRow('Trabaja',
+                        switch (p.crew) { 'alone' => 'Solo', 'withHelpers' => 'Con ayudantes', _ => 'Con equipo' }),
                 ],
               ],
             ),
@@ -634,7 +650,9 @@ class _TrustTab extends ConsumerWidget {
             return EmptyState(
               icon: 'star',
               title: 'Aún sin opiniones',
-              text: p.isNew ? 'Perfil nuevo, aún sin historial. No es una calificación negativa.' : 'Cuando alguien lo califique, lo verás aquí.',
+              text: p.isNew
+                  ? 'Perfil nuevo, aún sin historial. No es una calificación negativa.'
+                  : 'Cuando alguien lo califique, lo verás aquí.',
             );
           }
           return Column(
@@ -687,7 +705,8 @@ class _TrustTab extends ConsumerWidget {
         Center(
           child: TextButton(
             onPressed: () => showTrustSheet(context),
-            child: Text('Cómo leer estas señales', style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
+            child: Text('Cómo leer estas señales',
+                style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
           ),
         ),
       ],

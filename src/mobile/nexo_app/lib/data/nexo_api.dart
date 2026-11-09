@@ -171,7 +171,8 @@ abstract class NexoApi {
 
   // ---- 12 contacto y reportes ----
   Future<PhoneReveal> revealPhone({required String targetId, required String targetType, required String context});
-  Future<String> report({required String targetType, required String targetId, required String category, required String reason});
+  Future<String> report(
+      {required String targetType, required String targetId, required String category, required String reason});
 
   // ---- 13 notificaciones ----
   Future<(List<NotificationItem>, int)> notifications({String filter = 'all'});
@@ -311,16 +312,19 @@ class HybridNexoApi implements NexoApi {
   Future<void> confirmPhone(String code) => _run(ApiGroup.cuenta, 'confirmPhone', (a) => a.confirmPhone(code));
 
   @override
-  Future<ProviderProfile> provider(String id, {GeoPoint? at}) => _run(ApiGroup.perfil, 'provider', (a) => a.provider(id, at: at));
+  Future<ProviderProfile> provider(String id, {GeoPoint? at}) =>
+      _run(ApiGroup.perfil, 'provider', (a) => a.provider(id, at: at));
   @override
   Future<MyProvider?> myProvider() => _run(ApiGroup.perfil, 'myProvider', (a) => a.myProvider());
   @override
   Future<String> createProvider(ProviderDraft d, {required String idempotencyKey}) =>
       _run(ApiGroup.perfil, 'createProvider', (a) => a.createProvider(d, idempotencyKey: idempotencyKey));
   @override
-  Future<void> patchProvider(String section, Json body) => _run(ApiGroup.perfil, 'patchProvider', (a) => a.patchProvider(section, body));
+  Future<void> patchProvider(String section, Json body) =>
+      _run(ApiGroup.perfil, 'patchProvider', (a) => a.patchProvider(section, body));
   @override
-  Future<CompareResult> compare(List<String> ids, {GeoPoint? at}) => _run(ApiGroup.perfil, 'compare', (a) => a.compare(ids, at: at));
+  Future<CompareResult> compare(List<String> ids, {GeoPoint? at}) =>
+      _run(ApiGroup.perfil, 'compare', (a) => a.compare(ids, at: at));
 
   @override
   Future<List<ServiceCategory>> categories() => _run(ApiGroup.descubrimiento, 'categories', (a) => a.categories());
@@ -334,7 +338,8 @@ class HybridNexoApi implements NexoApi {
   Future<SearchResult> searchProviders(SearchFilters f, {required GeoPoint at, required int radiusKm}) =>
       _run(ApiGroup.descubrimiento, 'searchProviders', (a) => a.searchProviders(f, at: at, radiusKm: radiusKm));
   @override
-  Future<List<Suggestion>> suggest(String q, {required GeoPoint at}) => _run(ApiGroup.descubrimiento, 'suggest', (a) => a.suggest(q, at: at));
+  Future<List<Suggestion>> suggest(String q, {required GeoPoint at}) =>
+      _run(ApiGroup.descubrimiento, 'suggest', (a) => a.suggest(q, at: at));
   @override
   Future<LocationResult> setLocation(GeoPoint p, {required int radiusKm, String source = 'map'}) =>
       _run(ApiGroup.descubrimiento, 'setLocation', (a) => a.setLocation(p, radiusKm: radiusKm, source: source));
@@ -348,14 +353,23 @@ class HybridNexoApi implements NexoApi {
     GeoPoint? location,
     List<String> imageUploadIds = const [],
   }) =>
-      _run(ApiGroup.trabajos, 'createWork', (a) => a.createWork(
-          category: category, title: title, text: text, tag: tag, location: location, imageUploadIds: imageUploadIds));
+      _run(
+          ApiGroup.trabajos,
+          'createWork',
+          (a) => a.createWork(
+              category: category,
+              title: title,
+              text: text,
+              tag: tag,
+              location: location,
+              imageUploadIds: imageUploadIds));
   @override
   Future<void> deleteWork(String id) => _run(ApiGroup.trabajos, 'deleteWork', (a) => a.deleteWork(id));
   @override
   Future<Work> recommend(Work w, bool on) => _run(ApiGroup.trabajos, 'recommend', (a) => a.recommend(w, on));
   @override
-  Future<List<Work>> providerWorks(String providerId) => _run(ApiGroup.trabajos, 'providerWorks', (a) => a.providerWorks(providerId));
+  Future<List<Work>> providerWorks(String providerId) =>
+      _run(ApiGroup.trabajos, 'providerWorks', (a) => a.providerWorks(providerId));
 
   @override
   Future<ServiceRequest> createRequest({
@@ -368,23 +382,29 @@ class HybridNexoApi implements NexoApi {
     String? imageUploadId,
     required String idempotencyKey,
   }) =>
-      _run(ApiGroup.solicitudes, 'createRequest', (a) => a.createRequest(
-        category: category,
-        title: title,
-        description: description,
-        urgency: urgency,
-        contact: contact,
-        location: location,
-        imageUploadId: imageUploadId,
-        idempotencyKey: idempotencyKey,
-      ));
+      _run(
+          ApiGroup.solicitudes,
+          'createRequest',
+          (a) => a.createRequest(
+                category: category,
+                title: title,
+                description: description,
+                urgency: urgency,
+                contact: contact,
+                location: location,
+                imageUploadId: imageUploadId,
+                idempotencyKey: idempotencyKey,
+              ));
   @override
   Future<List<ServiceRequest>> myRequests() => _run(ApiGroup.solicitudes, 'myRequests', (a) => a.myRequests());
   @override
-  Future<List<ServiceRequest>> opportunities(OppFilters f) => _run(ApiGroup.solicitudes, 'opportunities', (a) => a.opportunities(f));
+  Future<List<ServiceRequest>> opportunities(OppFilters f) =>
+      _run(ApiGroup.solicitudes, 'opportunities', (a) => a.opportunities(f));
   @override
-  Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId}) =>
-      _run(ApiGroup.solicitudes, 'closeRequest', (a) => a.closeRequest(id, outcome: outcome, pickedProviderId: pickedProviderId));
+  Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId}) => _run(
+      ApiGroup.solicitudes,
+      'closeRequest',
+      (a) => a.closeRequest(id, outcome: outcome, pickedProviderId: pickedProviderId));
 
   @override
   Future<void> setInterest(String requestId, bool on, {String? note}) =>
@@ -405,17 +425,20 @@ class HybridNexoApi implements NexoApi {
     GeoPoint? location,
     required String idempotencyKey,
   }) =>
-      _run(ApiGroup.pedidos, 'createOrder', (a) => a.createOrder(
-        providerId: providerId,
-        requestId: requestId,
-        category: category,
-        description: description,
-        attention: attention,
-        address: address,
-        addressNote: addressNote,
-        location: location,
-        idempotencyKey: idempotencyKey,
-      ));
+      _run(
+          ApiGroup.pedidos,
+          'createOrder',
+          (a) => a.createOrder(
+                providerId: providerId,
+                requestId: requestId,
+                category: category,
+                description: description,
+                attention: attention,
+                address: address,
+                addressNote: addressNote,
+                location: location,
+                idempotencyKey: idempotencyKey,
+              ));
   @override
   Future<OrdersPage> orders({required String role, String status = 'all'}) =>
       _run(ApiGroup.pedidos, 'orders', (a) => a.orders(role: role, status: status));
@@ -428,17 +451,21 @@ class HybridNexoApi implements NexoApi {
   Future<Order> rejectOrder(Order o, {required String reason, String? note}) =>
       _run(ApiGroup.pedidos, 'rejectOrder', (a) => a.rejectOrder(o, reason: reason, note: note));
   @override
-  Future<Order> cancelOrder(Order o, {required String reason}) => _run(ApiGroup.pedidos, 'cancelOrder', (a) => a.cancelOrder(o, reason: reason));
+  Future<Order> cancelOrder(Order o, {required String reason}) =>
+      _run(ApiGroup.pedidos, 'cancelOrder', (a) => a.cancelOrder(o, reason: reason));
   @override
   Future<Order> resolveOrder(Order o, {int? finalPriceCents, String? note}) =>
       _run(ApiGroup.pedidos, 'resolveOrder', (a) => a.resolveOrder(o, finalPriceCents: finalPriceCents, note: note));
   @override
-  Future<Order> updateAddress(Order o, {required String address, String? addressNote, GeoPoint? location}) =>
-      _run(ApiGroup.pedidos, 'updateAddress', (a) => a.updateAddress(o, address: address, addressNote: addressNote, location: location));
+  Future<Order> updateAddress(Order o, {required String address, String? addressNote, GeoPoint? location}) => _run(
+      ApiGroup.pedidos,
+      'updateAddress',
+      (a) => a.updateAddress(o, address: address, addressNote: addressNote, location: location));
 
   @override
   Future<void> review({required String orderId, required int stars, required String text, required bool recommend}) =>
-      _run(ApiGroup.opiniones, 'review', (a) => a.review(orderId: orderId, stars: stars, text: text, recommend: recommend));
+      _run(ApiGroup.opiniones, 'review',
+          (a) => a.review(orderId: orderId, stars: stars, text: text, recommend: recommend));
   @override
   Future<ReviewsPage> reviews(String providerId) => _run(ApiGroup.opiniones, 'reviews', (a) => a.reviews(providerId));
 
@@ -446,14 +473,14 @@ class HybridNexoApi implements NexoApi {
   Future<(List<Conversation>, int)> conversations({required String role, String filter = 'all'}) =>
       _run(ApiGroup.mensajes, 'conversations', (a) => a.conversations(role: role, filter: filter));
   @override
-  Future<String> openConversation({String? providerId, String? requestId}) =>
-      _run(ApiGroup.mensajes, 'openConversation', (a) => a.openConversation(providerId: providerId, requestId: requestId));
+  Future<String> openConversation({String? providerId, String? requestId}) => _run(
+      ApiGroup.mensajes, 'openConversation', (a) => a.openConversation(providerId: providerId, requestId: requestId));
   @override
   Future<ChatThread> messages(String conversationId, {String? before}) =>
       _run(ApiGroup.mensajes, 'messages', (a) => a.messages(conversationId, before: before));
   @override
-  Future<Message> sendMessage(String conversationId, {String? text, String? imageUploadId}) =>
-      _run(ApiGroup.mensajes, 'sendMessage', (a) => a.sendMessage(conversationId, text: text, imageUploadId: imageUploadId));
+  Future<Message> sendMessage(String conversationId, {String? text, String? imageUploadId}) => _run(
+      ApiGroup.mensajes, 'sendMessage', (a) => a.sendMessage(conversationId, text: text, imageUploadId: imageUploadId));
   @override
   Future<void> markRead(String conversationId, String upToMessageId) =>
       _run(ApiGroup.mensajes, 'markRead', (a) => a.markRead(conversationId, upToMessageId));
@@ -462,22 +489,28 @@ class HybridNexoApi implements NexoApi {
       _run(ApiGroup.mensajes, 'block', (a) => a.block(conversationId, blocked, alsoReport: alsoReport));
 
   @override
-  Future<(List<SavedItem>, SavedCounts)> saved({String? kind}) => _run(ApiGroup.guardados, 'saved', (a) => a.saved(kind: kind));
+  Future<(List<SavedItem>, SavedCounts)> saved({String? kind}) =>
+      _run(ApiGroup.guardados, 'saved', (a) => a.saved(kind: kind));
   @override
-  Future<SavedCounts> setSaved(String kind, String id, bool on) => _run(ApiGroup.guardados, 'setSaved', (a) => a.setSaved(kind, id, on));
+  Future<SavedCounts> setSaved(String kind, String id, bool on) =>
+      _run(ApiGroup.guardados, 'setSaved', (a) => a.setSaved(kind, id, on));
 
   @override
   Future<PhoneReveal> revealPhone({required String targetId, required String targetType, required String context}) =>
-      _run(ApiGroup.contacto, 'revealPhone', (a) => a.revealPhone(targetId: targetId, targetType: targetType, context: context));
+      _run(ApiGroup.contacto, 'revealPhone',
+          (a) => a.revealPhone(targetId: targetId, targetType: targetType, context: context));
   @override
-  Future<String> report({required String targetType, required String targetId, required String category, required String reason}) =>
-      _run(ApiGroup.contacto, 'report', (a) => a.report(targetType: targetType, targetId: targetId, category: category, reason: reason));
+  Future<String> report(
+          {required String targetType, required String targetId, required String category, required String reason}) =>
+      _run(ApiGroup.contacto, 'report',
+          (a) => a.report(targetType: targetType, targetId: targetId, category: category, reason: reason));
 
   @override
   Future<(List<NotificationItem>, int)> notifications({String filter = 'all'}) =>
       _run(ApiGroup.notificaciones, 'notifications', (a) => a.notifications(filter: filter));
   @override
-  Future<void> markNotificationsRead(List<String> ids) => _run(ApiGroup.notificaciones, 'markNotificationsRead', (a) => a.markNotificationsRead(ids));
+  Future<void> markNotificationsRead(List<String> ids) =>
+      _run(ApiGroup.notificaciones, 'markNotificationsRead', (a) => a.markNotificationsRead(ids));
 
   @override
   Future<String> upload(PickedImage img, {required String purpose}) =>
@@ -494,8 +527,8 @@ class HybridNexoApi implements NexoApi {
           (a) => a.assistDraft(kind: kind, category: category, userText: userText, lengthLimit: lengthLimit));
 
   @override
-  Future<String> registerDevice({required String fcmToken, required String appVersion}) =>
-      _run(ApiGroup.dispositivos, 'registerDevice', (a) => a.registerDevice(fcmToken: fcmToken, appVersion: appVersion));
+  Future<String> registerDevice({required String fcmToken, required String appVersion}) => _run(
+      ApiGroup.dispositivos, 'registerDevice', (a) => a.registerDevice(fcmToken: fcmToken, appVersion: appVersion));
   @override
   Future<void> removeDevice(String deviceId) =>
       _run(ApiGroup.dispositivos, 'removeDevice', (a) => a.removeDevice(deviceId));

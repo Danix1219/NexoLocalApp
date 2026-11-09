@@ -129,7 +129,11 @@ class _BasicSheetState extends ConsumerState<_BasicSheet> {
           onTap: _busy ? null : _pick,
           borderRadius: BorderRadius.circular(16),
           child: Row(children: [
-            NexoAvatar(name: widget.p.name, url: _photo ?? widget.p.photoUrl, size: 72, icon: _photo == null && widget.p.photoUrl == null ? 'camera' : null),
+            NexoAvatar(
+                name: widget.p.name,
+                url: _photo ?? widget.p.photoUrl,
+                size: 72,
+                icon: _photo == null && widget.p.photoUrl == null ? 'camera' : null),
             const SizedBox(width: 14),
             Expanded(
               child: Text(widget.p.photoUrl == null && _photo == null ? 'Agregar foto o logotipo' : 'Cambiar foto',
@@ -233,7 +237,8 @@ class _ServicesSheetState extends ConsumerState<_ServicesSheet> {
               : () async {
                   setState(() => _busy = true);
                   final nav = Navigator.of(context);
-                  final ok = await _patch(ref, 'services', {'categories': _cats.toList(), 'specialties': _specs.toList()});
+                  final ok =
+                      await _patch(ref, 'services', {'categories': _cats.toList(), 'specialties': _specs.toList()});
                   if (ok) {
                     nav.pop();
                   } else if (mounted) {
@@ -264,7 +269,8 @@ Future<void> showZoneSheet(BuildContext context, WidgetRef ref, ProviderProfile 
     ),
   );
   if (r == null) return;
-  await _patch(ref, 'zone', {'location': r.point.toJson(), 'radiusKm': shop ? 0 : r.radiusKm, 'attention': p.attention});
+  await _patch(
+      ref, 'zone', {'location': r.point.toJson(), 'radiusKm': shop ? 0 : r.radiusKm, 'attention': p.attention});
 }
 
 // ----------------------------------------------------------------- horario
@@ -362,7 +368,9 @@ class _HoursSheetState extends ConsumerState<_HoursSheet> {
             String hh(int h) => '${h.toString().padLeft(2, '0')}:00';
             final ok = await _patch(ref, 'hours', {
               'schedule': {
-                'days': [for (final d in _d) d == null ? null : {'open': hh(d.$1), 'close': hh(d.$2)}],
+                'days': [
+                  for (final d in _d) d == null ? null : {'open': hh(d.$1), 'close': hh(d.$2)}
+                ],
                 'urgent': _urgent,
               }
             });
@@ -406,7 +414,8 @@ class _PricesSheetState extends ConsumerState<_PricesSheet> {
   late final _visitAmt = TextEditingController(
       text: widget.p.visitMode == 'paid' ? (widget.p.visitText ?? '').replaceAll(RegExp(r'[^0-9]'), '') : '');
   late final List<_PriceRow> _rows = [
-    for (final x in widget.p.prices.take(3)) _PriceRow(x.service, x.fromCents == null ? null : x.fromCents! ~/ 100, x.suffix),
+    for (final x in widget.p.prices.take(3))
+      _PriceRow(x.service, x.fromCents == null ? null : x.fromCents! ~/ 100, x.suffix),
     if (widget.p.prices.isEmpty) _PriceRow('', null, ''),
   ];
   bool _busy = false;
@@ -449,7 +458,11 @@ class _PricesSheetState extends ConsumerState<_PricesSheet> {
         ],
         _lbl('Servicios y precios (hasta 3)'),
         for (final r in _rows) ...[
-          TextField(controller: r.service, maxLength: 60, style: NexoText.body(15), decoration: _dec('Ej. Reparación de fuga')),
+          TextField(
+              controller: r.service,
+              maxLength: 60,
+              style: NexoText.body(15),
+              decoration: _dec('Ej. Reparación de fuga')),
           Row(children: [
             Expanded(
               child: TextField(
@@ -562,7 +575,8 @@ class _TermsSheetState extends ConsumerState<_TermsSheet> {
             ),
         ]),
         _lbl('Respondes en'),
-        SegControl<String>(small: true, options: _resp, value: _response, onChanged: (v) => setState(() => _response = v)),
+        SegControl<String>(
+            small: true, options: _resp, value: _response, onChanged: (v) => setState(() => _response = v)),
         _lbl('Garantía'),
         TextField(
           controller: _warranty,

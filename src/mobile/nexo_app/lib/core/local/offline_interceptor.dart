@@ -39,7 +39,14 @@ class OfflineCacheInterceptor extends Interceptor {
   final DateTime Function() _now;
 
   /// Datos que nunca se guardan en el teléfono.
-  static const _never = ['/contacts/', '/uploads', '/identity/devices', '/identity/email', '/identity/password', '/reports'];
+  static const _never = [
+    '/contacts/',
+    '/uploads',
+    '/identity/devices',
+    '/identity/email',
+    '/identity/password',
+    '/reports'
+  ];
 
   static const freshFor = {'/v1/discovery/categories': Duration(hours: 1)};
 
@@ -115,7 +122,8 @@ class OfflineCacheInterceptor extends Interceptor {
     if (e.response?.statusCode == 304 && cached is CachedResponse) {
       onOnline?.call();
       try {
-        await (await store()).write(account(), keyOf(o), CachedResponse(body: cached.body, etag: cached.etag, savedAt: _now()));
+        await (await store())
+            .write(account(), keyOf(o), CachedResponse(body: cached.body, etag: cached.etag, savedAt: _now()));
       } catch (_) {}
       return handler.resolve(_fromCache(o, cached, 'revalidated'));
     }

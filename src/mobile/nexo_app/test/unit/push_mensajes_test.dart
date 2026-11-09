@@ -10,7 +10,8 @@ void main() {
   });
 
   test('acepta link como respaldo y prioriza la notificación visible', () {
-    final m = PushMessage.fromData({'link': 'nexolocal://chat/c1', 'title': 'x'}, title: 'Nuevo mensaje', body: 'Laura te escribió');
+    final m = PushMessage.fromData({'link': 'nexolocal://chat/c1', 'title': 'x'},
+        title: 'Nuevo mensaje', body: 'Laura te escribió');
     expect(m.link, 'nexolocal://chat/c1');
     expect(m.title, 'Nuevo mensaje');
     expect(m.body, 'Laura te escribió');

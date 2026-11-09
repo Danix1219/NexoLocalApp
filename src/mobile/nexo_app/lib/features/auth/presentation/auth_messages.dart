@@ -15,8 +15,7 @@ String authErrorMessage(ApiException e) {
     return 'No pudimos conectar. Revisa tu conexión e intenta de nuevo.';
   }
   if (c.contains('pending_deletion')) {
-    return e.detail ??
-        'Tu cuenta está en proceso de eliminación. Recupera tu contraseña para entrar y cancelarla.';
+    return e.detail ?? 'Tu cuenta está en proceso de eliminación. Recupera tu contraseña para entrar y cancelarla.';
   }
   switch (c) {
     case 'auth.invalid_credentials':

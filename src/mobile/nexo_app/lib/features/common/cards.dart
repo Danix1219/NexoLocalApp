@@ -18,7 +18,8 @@ import 'carousel.dart';
 
 /// Botón de acción redondo de la publicación (`.act`).
 class ActIcon extends StatelessWidget {
-  const ActIcon({super.key, required this.icon, required this.label, required this.onTap, this.on = false, this.fill = false});
+  const ActIcon(
+      {super.key, required this.icon, required this.label, required this.onTap, this.on = false, this.fill = false});
   final String icon;
   final String label;
   final VoidCallback onTap;
@@ -261,8 +262,10 @@ class RequestCard extends ConsumerWidget {
                     children: [
                       Text(r.mine ? 'Tú' : r.clientName,
                           overflow: TextOverflow.ellipsis, style: NexoText.body(15, weight: FontWeight.w800)),
-                      Text('${r.zoneLabel}${r.distanceText.isNotEmpty && !r.mine ? ' · ${r.distanceText}' : ''} · ${r.ago}',
-                          overflow: TextOverflow.ellipsis, style: NexoText.body(12.5, color: NexoColors.muted)),
+                      Text(
+                          '${r.zoneLabel}${r.distanceText.isNotEmpty && !r.mine ? ' · ${r.distanceText}' : ''} · ${r.ago}',
+                          overflow: TextOverflow.ellipsis,
+                          style: NexoText.body(12.5, color: NexoColors.muted)),
                     ],
                   ),
                 ),
@@ -284,7 +287,8 @@ class RequestCard extends ConsumerWidget {
               children: [
                 Text(r.title, style: NexoText.display(16, weight: FontWeight.w700)),
                 const SizedBox(height: 3),
-                Text(r.description, style: NexoText.body(14, color: NexoColors.ink.withValues(alpha: .86), height: 1.45)),
+                Text(r.description,
+                    style: NexoText.body(14, color: NexoColors.ink.withValues(alpha: .86), height: 1.45)),
                 if (r.imageUrl != null) ...[
                   const SizedBox(height: 8),
                   ClipRRect(
@@ -295,7 +299,8 @@ class RequestCard extends ConsumerWidget {
                 const SizedBox(height: 9),
                 Wrap(spacing: 6, runSpacing: 6, children: [
                   NBadge(c.name, icon: c.icon, tone: BadgeTone.ink),
-                  if (r.matchesMyService && !r.mine) const NBadge('Coincide con tu perfil', icon: 'check', tone: BadgeTone.ok),
+                  if (r.matchesMyService && !r.mine)
+                    const NBadge('Coincide con tu perfil', icon: 'check', tone: BadgeTone.ok),
                   if (!r.inMyRadius && !r.mine) const NBadge('Fuera de tu radio', icon: 'pin', tone: BadgeTone.warn),
                   if (r.mine) const NBadge('Tu solicitud', tone: BadgeTone.ok),
                 ]),
@@ -397,7 +402,8 @@ class _MyRequestFoot extends ConsumerWidget {
     const pad = EdgeInsets.fromLTRB(14, 12, 14, 14);
     if (r.closed && r.orderId == null) {
       return const Padding(
-          padding: pad, child: Align(alignment: Alignment.centerLeft, child: NBadge('Resuelta', icon: 'check', tone: BadgeTone.ok)));
+          padding: pad,
+          child: Align(alignment: Alignment.centerLeft, child: NBadge('Resuelta', icon: 'check', tone: BadgeTone.ok)));
     }
     if (r.orderId != null && r.picked != null) {
       final done = r.summaryText.contains('resuelto');
@@ -412,7 +418,9 @@ class _MyRequestFoot extends ConsumerWidget {
             Row(children: [
               NexoIcon(done ? 'check' : 'clock', size: 16, color: NexoColors.brand),
               const SizedBox(width: 6),
-              Expanded(child: Text(r.summaryText, style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brandDeep))),
+              Expanded(
+                  child: Text(r.summaryText,
+                      style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brandDeep))),
             ]),
             const SizedBox(height: 10),
             _ProvRowMini(p: r.picked!),
@@ -458,11 +466,14 @@ class _MyRequestFoot extends ConsumerWidget {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: (34 + (prev.length - 1).clamp(0, 3) * 22 + (r.interestedMoreCount > 0 ? 24 : 0)).toDouble(),
+                        width:
+                            (34 + (prev.length - 1).clamp(0, 3) * 22 + (r.interestedMoreCount > 0 ? 24 : 0)).toDouble(),
                         height: 36,
                         child: Stack(children: [
                           for (var i = 0; i < prev.length && i < 4; i++)
-                            Positioned(left: i * 22.0, child: NexoAvatar(name: prev[i].name, url: prev[i].photoUrl, size: 36, border: true)),
+                            Positioned(
+                                left: i * 22.0,
+                                child: NexoAvatar(name: prev[i].name, url: prev[i].photoUrl, size: 36, border: true)),
                           if (r.interestedMoreCount > 0)
                             Positioned(
                               left: (prev.length.clamp(0, 4) * 22).toDouble(),
@@ -488,7 +499,8 @@ class _MyRequestFoot extends ConsumerWidget {
                           children: [
                             Text('${r.interestCount} ${plural(r.interestCount, 'interesado', 'interesados')}',
                                 style: NexoText.body(14.5, weight: FontWeight.w800)),
-                            Text('Compara y elige a quién pedirle', style: NexoText.body(12.5, color: NexoColors.muted)),
+                            Text('Compara y elige a quién pedirle',
+                                style: NexoText.body(12.5, color: NexoColors.muted)),
                           ],
                         ),
                       ),
@@ -500,7 +512,8 @@ class _MyRequestFoot extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 6),
-            NexoLink('Ya lo resolví · cerrar solicitud', center: true, onTap: () => showCloseRequestSheet(context, ref, r)),
+            NexoLink('Ya lo resolví · cerrar solicitud',
+                center: true, onTap: () => showCloseRequestSheet(context, ref, r)),
           ],
         ),
       );
@@ -586,13 +599,18 @@ class OrderMiniCard extends ConsumerWidget {
       onTap: () => context.push(Routes.order(o.id)),
       child: Row(
         children: [
-          AvatarPair(a: (me, null), b: (o.counterpart.displayName, o.counterpart.photoUrl), ok: o.status == 'accepted' || o.status == 'resolved', size: 38),
+          AvatarPair(
+              a: (me, null),
+              b: (o.counterpart.displayName, o.counterpart.photoUrl),
+              ok: o.status == 'accepted' || o.status == 'resolved',
+              size: 38),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(o.counterpart.displayName, overflow: TextOverflow.ellipsis, style: NexoText.body(14.5, weight: FontWeight.w800)),
+                Text(o.counterpart.displayName,
+                    overflow: TextOverflow.ellipsis, style: NexoText.body(14.5, weight: FontWeight.w800)),
                 Text('${catInfo(o.category).name} · $where · ${o.ago}',
                     overflow: TextOverflow.ellipsis, style: NexoText.body(12.5, color: NexoColors.muted)),
               ],
@@ -658,7 +676,9 @@ class _PendingOrderCardState extends ConsumerState<PendingOrderCard> {
             const SizedBox(width: 8),
             Expanded(
               child: NexoButton(
-                  label: 'Rechazar', variant: NexoButtonVariant.ghost, onPressed: () => context.push(Routes.order(o.id))),
+                  label: 'Rechazar',
+                  variant: NexoButtonVariant.ghost,
+                  onPressed: () => context.push(Routes.order(o.id))),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -775,8 +795,8 @@ class CompareBar extends ConsumerWidget {
                   : Container(
                       width: 34,
                       height: 34,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle, border: Border.all(color: Colors.white54, width: 1.5)),
+                      decoration:
+                          BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white54, width: 1.5)),
                       child: const Center(child: NexoIcon('plus', size: 16, color: Colors.white70)),
                     ),
             ),

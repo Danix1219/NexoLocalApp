@@ -37,7 +37,8 @@ class _InterestedPageState extends ConsumerState<InterestedPage> {
             child: Stack(children: [
               Positioned.fill(
                 child: asyncView(v, (page) {
-                  final c = catInfo(req?.category ?? (page.items.isEmpty ? 'otros' : page.items.first.provider.categories.firstOrNull ?? 'otros'));
+                  final c = catInfo(req?.category ??
+                      (page.items.isEmpty ? 'otros' : page.items.first.provider.categories.firstOrNull ?? 'otros'));
                   return ListView(
                     padding: const EdgeInsets.only(bottom: 100),
                     children: [
@@ -60,7 +61,9 @@ class _InterestedPageState extends ConsumerState<InterestedPage> {
                       ),
                       if (page.items.isEmpty)
                         const EmptyState(
-                            icon: 'user', title: 'Aún no hay interesados', text: 'Te avisaremos cuando un prestador se interese.')
+                            icon: 'user',
+                            title: 'Aún no hay interesados',
+                            text: 'Te avisaremos cuando un prestador se interese.')
                       else ...[
                         Sect('${page.items.length} ${plural(page.items.length, 'interesado', 'interesados')}'),
                         SizedBox(
@@ -69,10 +72,15 @@ class _InterestedPageState extends ConsumerState<InterestedPage> {
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             children: [
-                              for (final o in const [('rate', 'Mejor calificados'), ('recs', 'Más recomendados'), ('open', 'Abiertos ahora')])
+                              for (final o in const [
+                                ('rate', 'Mejor calificados'),
+                                ('recs', 'Más recomendados'),
+                                ('open', 'Abiertos ahora')
+                              ])
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8),
-                                  child: ToggleChip(label: o.$2, selected: _sort == o.$1, onTap: () => setState(() => _sort = o.$1)),
+                                  child: ToggleChip(
+                                      label: o.$2, selected: _sort == o.$1, onTap: () => setState(() => _sort = o.$1)),
                                 ),
                             ],
                           ),
@@ -123,8 +131,13 @@ class _IntCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(children: [
-                      Flexible(child: Text(p.name, overflow: TextOverflow.ellipsis, style: NexoText.body(15, weight: FontWeight.w800))),
-                      if (p.phoneVerified) ...[const SizedBox(width: 4), const NexoIcon('shield', size: 15, color: NexoColors.ok)],
+                      Flexible(
+                          child: Text(p.name,
+                              overflow: TextOverflow.ellipsis, style: NexoText.body(15, weight: FontWeight.w800))),
+                      if (p.phoneVerified) ...[
+                        const SizedBox(width: 4),
+                        const NexoIcon('shield', size: 15, color: NexoColors.ok)
+                      ],
                     ]),
                     Text(
                       [
@@ -160,7 +173,9 @@ class _IntCard extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Notice(
-                it.orderStatus == 'pending' ? 'Le enviaste un pedido · esperando respuesta' : 'Pedido ${it.orderStatus == 'accepted' ? 'aceptado' : it.orderStatus}',
+                it.orderStatus == 'pending'
+                    ? 'Le enviaste un pedido · esperando respuesta'
+                    : 'Pedido ${it.orderStatus == 'accepted' ? 'aceptado' : it.orderStatus}',
                 icon: 'check',
                 tone: BadgeTone.brand,
               ),

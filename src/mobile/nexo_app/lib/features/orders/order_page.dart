@@ -163,7 +163,9 @@ class _OrderPageState extends ConsumerState<OrderPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               InkWell(
-                onTap: o.counterpart.providerId == null ? null : () => context.push(Routes.provider(o.counterpart.providerId!)),
+                onTap: o.counterpart.providerId == null
+                    ? null
+                    : () => context.push(Routes.provider(o.counterpart.providerId!)),
                 child: Row(children: [
                   NexoAvatar(name: o.counterpart.displayName, url: o.counterpart.photoUrl),
                   const SizedBox(width: 10),
@@ -172,7 +174,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(o.counterpart.displayName, style: NexoText.body(15, weight: FontWeight.w800)),
-                        Text(client ? catInfo(o.category).name : 'Cliente', style: NexoText.body(12.5, color: NexoColors.muted)),
+                        Text(client ? catInfo(o.category).name : 'Cliente',
+                            style: NexoText.body(12.5, color: NexoColors.muted)),
                       ],
                     ),
                   ),
@@ -235,7 +238,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
               child: Row(children: [
                 const NexoIcon('check', size: 15, color: NexoColors.brand),
                 const SizedBox(width: 8),
-                Expanded(child: Text(t.text.isEmpty ? t.type : t.text, style: NexoText.body(13.5, color: NexoColors.muted))),
+                Expanded(
+                    child: Text(t.text.isEmpty ? t.type : t.text, style: NexoText.body(13.5, color: NexoColors.muted))),
               ]),
             ),
         ],
@@ -263,7 +267,11 @@ class _OrderPageState extends ConsumerState<OrderPage> {
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Notice('${o.counterpart.displayName} lo marcará como resuelto al terminar. Después podrás calificarlo.'),
           const SizedBox(height: 10),
-          NexoButton(label: 'Cancelar servicio', variant: NexoButtonVariant.ghost, loading: _busy, onPressed: () => _cancel(o)),
+          NexoButton(
+              label: 'Cancelar servicio',
+              variant: NexoButtonVariant.ghost,
+              loading: _busy,
+              onPressed: () => _cancel(o)),
         ]);
       case 'resolved' when client:
         if (o.myReviewStars != null) {
@@ -289,7 +297,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
           ]),
         );
       case 'resolved':
-        return Notice('Le pedimos a ${o.counterpart.displayName} que califique el servicio.', icon: 'check', tone: BadgeTone.ok);
+        return Notice('Le pedimos a ${o.counterpart.displayName} que califique el servicio.',
+            icon: 'check', tone: BadgeTone.ok);
       default:
         return const SizedBox.shrink();
     }
@@ -334,7 +343,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
       button: 'Guardar dirección',
     );
     if (text == null || text.trim().length < 5) return;
-    await _run(() => ref.read(apiProvider).updateAddress(o, address: text.trim(), location: r.point), 'Dirección actualizada');
+    await _run(
+        () => ref.read(apiProvider).updateAddress(o, address: text.trim(), location: r.point), 'Dirección actualizada');
   }
 
   Future<String?> _askText({required String title, required String hint, String initial = '', required String button}) {
@@ -362,7 +372,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   Future<void> _accept(Order o) async {
     final res = await showNexoSheet<(int?, String?)>(context, builder: (_) => const _AcceptSheet());
     if (res == null) return;
-    await _run(() => ref.read(apiProvider).acceptOrder(o, amountCents: res.$1, includes: res.$2), 'Aceptaste el pedido');
+    await _run(
+        () => ref.read(apiProvider).acceptOrder(o, amountCents: res.$1, includes: res.$2), 'Aceptaste el pedido');
   }
 
   Future<void> _reject(Order o) async {
@@ -397,19 +408,24 @@ class _OrderPageState extends ConsumerState<OrderPage> {
         confirmLabel: 'Sí, cancelar',
         cancelLabel: 'Volver');
     if (ok != true) return;
-    await _run(() => ref.read(apiProvider).cancelOrder(o, reason: o.iAmProvider ? 'No tengo disponibilidad' : 'Ya no lo necesito'),
+    await _run(
+        () => ref
+            .read(apiProvider)
+            .cancelOrder(o, reason: o.iAmProvider ? 'No tengo disponibilidad' : 'Ya no lo necesito'),
         'Pedido cancelado');
   }
 
   Future<void> _resolve(Order o) async {
-    final res = await showNexoSheet<(int?, String?)>(
-        context, builder: (_) => _AcceptSheet(resolve: true, initialCents: o.agreedPrice?.amountCents));
+    final res = await showNexoSheet<(int?, String?)>(context,
+        builder: (_) => _AcceptSheet(resolve: true, initialCents: o.agreedPrice?.amountCents));
     if (res == null) return;
-    await _run(() => ref.read(apiProvider).resolveOrder(o, finalPriceCents: res.$1, note: res.$2), 'Servicio marcado como resuelto');
+    await _run(() => ref.read(apiProvider).resolveOrder(o, finalPriceCents: res.$1, note: res.$2),
+        'Servicio marcado como resuelto');
   }
 
   Future<void> _review(Order o, int stars) async {
-    final res = await showNexoSheet<(int, String, bool)>(context, builder: (_) => _ReviewSheet(stars: stars, name: o.counterpart.displayName));
+    final res = await showNexoSheet<(int, String, bool)>(context,
+        builder: (_) => _ReviewSheet(stars: stars, name: o.counterpart.displayName));
     if (res == null) return;
     setState(() => _busy = true);
     try {
@@ -438,8 +454,7 @@ class _Steps extends StatelessWidget {
       child: Row(
         children: [
           for (var i = 0; i < 3; i++) ...[
-            if (i > 0)
-              Expanded(child: Container(height: 2, color: i <= step ? NexoColors.brand : NexoColors.line)),
+            if (i > 0) Expanded(child: Container(height: 2, color: i <= step ? NexoColors.brand : NexoColors.line)),
             Column(children: [
               Container(
                 width: 28,
@@ -453,12 +468,15 @@ class _Steps extends StatelessWidget {
                   child: i < step
                       ? const NexoIcon('check', size: 15, color: Colors.white, strokeWidth: 2.4)
                       : Text('${i + 1}',
-                          style: NexoText.body(13, weight: FontWeight.w800, color: i == step ? NexoColors.brand : NexoColors.muted)),
+                          style: NexoText.body(13,
+                              weight: FontWeight.w800, color: i == step ? NexoColors.brand : NexoColors.muted)),
                 ),
               ),
               const SizedBox(height: 4),
               Text(labels[i],
-                  style: NexoText.body(12, weight: i == step ? FontWeight.w800 : FontWeight.w600, color: i <= step ? NexoColors.ink : NexoColors.muted)),
+                  style: NexoText.body(12,
+                      weight: i == step ? FontWeight.w800 : FontWeight.w600,
+                      color: i <= step ? NexoColors.ink : NexoColors.muted)),
             ]),
           ],
         ],
@@ -501,15 +519,17 @@ class _AcceptSheetState extends State<_AcceptSheet> {
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: NexoText.body(16, weight: FontWeight.w700),
-          decoration: nexoInputDecoration(hint: widget.resolve ? 'Precio final (opcional)' : 'Precio acordado (opcional)')
-              .copyWith(prefixText: '\$ '),
+          decoration:
+              nexoInputDecoration(hint: widget.resolve ? 'Precio final (opcional)' : 'Precio acordado (opcional)')
+                  .copyWith(prefixText: '\$ '),
         ),
         const SizedBox(height: 10),
         TextField(
           controller: _note,
           maxLength: 100,
           style: NexoText.body(15),
-          decoration: nexoInputDecoration(hint: widget.resolve ? 'Nota (opcional)' : '¿Qué incluye? Ej. Material y mano de obra'),
+          decoration: nexoInputDecoration(
+              hint: widget.resolve ? 'Nota (opcional)' : '¿Qué incluye? Ej. Material y mano de obra'),
         ),
         const SizedBox(height: 6),
         NexoButton(
@@ -517,7 +537,8 @@ class _AcceptSheetState extends State<_AcceptSheet> {
           icon: 'check',
           onPressed: () {
             final n = int.tryParse(_amt.text);
-            Navigator.of(context).pop((n == null ? null : n * 100, _note.text.trim().isEmpty ? null : _note.text.trim()));
+            Navigator.of(context)
+                .pop((n == null ? null : n * 100, _note.text.trim().isEmpty ? null : _note.text.trim()));
           },
         ),
       ],

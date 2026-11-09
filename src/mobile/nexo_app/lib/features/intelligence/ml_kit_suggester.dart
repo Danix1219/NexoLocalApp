@@ -20,7 +20,8 @@ class MlKitCategorySuggester implements CategorySuggester {
       final g = guessFromLabels([for (final l in labels) (l.label, l.confidence)],
           allowed: allowed, latencyMs: sw.elapsedMilliseconds);
       if (kDebugMode) {
-        debugPrint('[ML] ${labels.length} etiquetas en ${sw.elapsedMilliseconds} ms -> ${g?.category ?? 'se abstiene'}');
+        debugPrint(
+            '[ML] ${labels.length} etiquetas en ${sw.elapsedMilliseconds} ms -> ${g?.category ?? 'se abstiene'}');
       }
       return g;
     } catch (_) {

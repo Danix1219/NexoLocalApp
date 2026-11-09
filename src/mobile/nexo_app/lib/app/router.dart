@@ -150,7 +150,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.registerCode, builder: (_, __) => const CodePage(purpose: EmailPurpose.signup)),
       GoRoute(path: Routes.registerAccount, builder: (_, __) => const RegisterAccountPage()),
       GoRoute(path: Routes.registerDone, builder: (_, __) => const RegisterDonePage()),
-
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => ShellPage(shell: shell),
         branches: [
@@ -161,7 +160,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [GoRoute(path: Routes.account, builder: (_, __) => const AccountPage())]),
         ],
       ),
-
       GoRoute(
         parentNavigatorKey: _rootKey,
         path: '/provider/:id',

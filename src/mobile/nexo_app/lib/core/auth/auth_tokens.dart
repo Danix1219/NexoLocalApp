@@ -51,8 +51,7 @@ class TokenClaims {
     try {
       final parts = jwt.split('.');
       if (parts.length < 2) return const TokenClaims();
-      final payload =
-          utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
       final m = jsonDecode(payload) as Map<String, dynamic>;
       final hp = m['has_provider'];
       return TokenClaims(

@@ -15,13 +15,12 @@ ThemeData buildNexoTheme() {
     scaffoldBackgroundColor: NexoColors.surface,
   );
   return base.copyWith(
-    textTheme: GoogleFonts.nunitoSansTextTheme(base.textTheme)
-        .apply(bodyColor: NexoColors.ink, displayColor: NexoColors.ink),
+    textTheme:
+        GoogleFonts.nunitoSansTextTheme(base.textTheme).apply(bodyColor: NexoColors.ink, displayColor: NexoColors.ink),
     textSelectionTheme: const TextSelectionThemeData(
       cursorColor: NexoColors.brand,
       selectionHandleColor: NexoColors.brand,
     ),
-    progressIndicatorTheme:
-        const ProgressIndicatorThemeData(color: NexoColors.brand),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: NexoColors.brand),
   );
 }

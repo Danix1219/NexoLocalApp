@@ -29,8 +29,7 @@ class NexoRingsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(NexoRingsPainter old) =>
-      old.t != t || old.left != left || old.right != right;
+  bool shouldRepaint(NexoRingsPainter old) => old.t != t || old.left != left || old.right != right;
 }
 
 /// Logo pequeño de la barra superior (viewBox 32×32, aros de radio 7).
@@ -74,8 +73,7 @@ class NexoWordmark extends StatelessWidget {
         ),
         TextSpan(
           text: 'local',
-          style: NexoText.display(size,
-              weight: FontWeight.w500, color: localColor, letterSpacing: ls),
+          style: NexoText.display(size, weight: FontWeight.w500, color: localColor, letterSpacing: ls),
         ),
       ]),
       semanticsLabel: 'Nexo Local',

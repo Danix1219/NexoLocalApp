@@ -49,7 +49,8 @@ void main() {
   test('cerrar solicitud con resultado', () async {
     a.on('POST', '/v1/discovery/requests/req_1/close', {'status': 'closed'});
     await api.closeRequest('req_1', outcome: 'solvedHere', pickedProviderId: 'prv_1');
-    expect(a.last('POST', '/v1/discovery/requests/req_1/close').body, {'outcome': 'solvedHere', 'pickedProviderId': 'prv_1'});
+    expect(a.last('POST', '/v1/discovery/requests/req_1/close').body,
+        {'outcome': 'solvedHere', 'pickedProviderId': 'prv_1'});
   });
 
   test('interés: POST con nota y DELETE para retirar', () async {
@@ -64,7 +65,12 @@ void main() {
   test('interesados ordenados', () async {
     a.on('GET', '/v1/engagement/requests/req_1/interested', {
       ...Fx.page([
-        {...Fx.provider(), 'note': 'Puedo hoy', 'conversationId': 'cnv_1', 'actions': {'canMessage': true, 'canOrder': true}},
+        {
+          ...Fx.provider(),
+          'note': 'Puedo hoy',
+          'conversationId': 'cnv_1',
+          'actions': {'canMessage': true, 'canOrder': true}
+        },
       ]),
       'requestTitle': 'Fuga',
       'requestStatus': 'open',

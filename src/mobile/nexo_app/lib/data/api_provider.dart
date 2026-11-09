@@ -12,8 +12,7 @@ import 'nexo_api.dart';
 
 /// Modo de cada grupo según `API_MODE`, `LIVE` y `FAKE` (spec 045).
 Map<ApiGroup, GroupMode> groupModes({String mode = Env.apiMode, String live = Env.live, String fake = Env.fake}) {
-  Set<String> parse(String raw) =>
-      raw.split(',').map((e) => e.trim().toLowerCase()).where((e) => e.isNotEmpty).toSet();
+  Set<String> parse(String raw) => raw.split(',').map((e) => e.trim().toLowerCase()).where((e) => e.isNotEmpty).toSet();
   final base = switch (mode.trim().toLowerCase()) {
     'live' => GroupMode.live,
     'fake' => GroupMode.fake,
@@ -112,8 +111,7 @@ class SearchLocationController extends Notifier<SearchLocation> {
   }
 }
 
-final searchLocationProvider =
-    NotifierProvider<SearchLocationController, SearchLocation>(SearchLocationController.new);
+final searchLocationProvider = NotifierProvider<SearchLocationController, SearchLocation>(SearchLocationController.new);
 
 /// Selección para comparar (máximo 2), barra `cmpBar`.
 class CompareController extends Notifier<List<ProviderMini>> {
@@ -204,7 +202,8 @@ final inboxProvider = FutureProvider.family<(List<Conversation>, int), String>((
   return ref.watch(apiProvider).conversations(role: role);
 });
 
-final savedProvider = FutureProvider.autoDispose<(List<SavedItem>, SavedCounts)>((ref) => ref.watch(apiProvider).saved());
+final savedProvider =
+    FutureProvider.autoDispose<(List<SavedItem>, SavedCounts)>((ref) => ref.watch(apiProvider).saved());
 
 final notificationsProvider = FutureProvider<(List<NotificationItem>, int)>((ref) {
   if (!ref.watch(sessionProvider).isSignedIn) return Future.value((const <NotificationItem>[], 0));
@@ -222,8 +221,8 @@ final providerWorksProvider =
 final reviewsProvider =
     FutureProvider.autoDispose.family<ReviewsPage, String>((ref, id) => ref.watch(apiProvider).reviews(id));
 
-final interestedProvider = FutureProvider.autoDispose.family<InterestedPage, (String, String)>(
-    (ref, a) => ref.watch(apiProvider).interested(a.$1, sort: a.$2));
+final interestedProvider = FutureProvider.autoDispose
+    .family<InterestedPage, (String, String)>((ref, a) => ref.watch(apiProvider).interested(a.$1, sort: a.$2));
 
 final searchResultsProvider = FutureProvider.autoDispose<SearchResult>((ref) {
   final f = ref.watch(searchFiltersProvider);

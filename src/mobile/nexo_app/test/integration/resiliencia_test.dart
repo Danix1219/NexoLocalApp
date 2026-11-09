@@ -59,7 +59,10 @@ void main() {
   test('el endpoint aparece: tras la espera se usa el backend real', () async {
     final api = build(all(GroupMode.auto));
     await api.feed(at: centro);
-    a.on('GET', '/v1/discovery/feed', {...Fx.page([Fx.work(id: 'wrk_real')]), 'zoneLabel': 'Centro'});
+    a.on('GET', '/v1/discovery/feed', {
+      ...Fx.page([Fx.work(id: 'wrk_real')]),
+      'zoneLabel': 'Centro'
+    });
     final still = await api.feed(at: centro);
     expect(still.page.items.first.id, isNot('wrk_real'));
     now = now.add(const Duration(seconds: 61));
@@ -78,9 +81,12 @@ void main() {
   });
 
   test('respuesta 200 que no es JSON (página HTML) → ejemplo', () async {
-    a.onRaw('GET', '/v1/discovery/feed', (_) => ResponseBody.fromString('<html>Hola</html>', 200, headers: {
-          Headers.contentTypeHeader: ['text/html'],
-        }));
+    a.onRaw(
+        'GET',
+        '/v1/discovery/feed',
+        (_) => ResponseBody.fromString('<html>Hola</html>', 200, headers: {
+              Headers.contentTypeHeader: ['text/html'],
+            }));
     final api = build(all(GroupMode.auto));
     final f = await api.feed(at: centro);
     expect(f.page.items, isNotEmpty);

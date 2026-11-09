@@ -78,7 +78,8 @@ class _PhoneSheetState extends ConsumerState<_PhoneSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHeader('Confirma tu celular',
-              subtitle: 'Te enviaremos un código por mensaje. Con el celular confirmado ganas la insignia de confianza.'),
+              subtitle:
+                  'Te enviaremos un código por mensaje. Con el celular confirmado ganas la insignia de confianza.'),
           Container(
             decoration: BoxDecoration(
               color: NexoColors.surface,

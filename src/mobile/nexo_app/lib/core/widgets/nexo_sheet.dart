@@ -100,8 +100,7 @@ class SheetHeader extends StatelessWidget {
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
-            Text(subtitle!,
-                style: NexoText.body(14.5, color: NexoColors.muted, height: 1.45)),
+            Text(subtitle!, style: NexoText.body(14.5, color: NexoColors.muted, height: 1.45)),
           ],
         ],
       ),
@@ -160,9 +159,7 @@ class ChoiceCard extends StatelessWidget {
                     children: [
                       Text(title, style: NexoText.body(16, weight: FontWeight.w700)),
                       const SizedBox(height: 2),
-                      Text(subtitle,
-                          style: NexoText.body(13.5,
-                              color: NexoColors.muted, height: 1.4)),
+                      Text(subtitle, style: NexoText.body(13.5, color: NexoColors.muted, height: 1.4)),
                     ],
                   ),
                 ),
@@ -233,11 +230,9 @@ class OptRow extends StatelessWidget {
                   NexoIcon(icon, size: 22, color: fg),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(label,
-                        style: NexoText.body(14, weight: FontWeight.w600, color: fg)),
+                    child: Text(label, style: NexoText.body(14, weight: FontWeight.w600, color: fg)),
                   ),
-                  if (trailingChevron)
-                    const NexoIcon('chevron', size: 18, color: NexoColors.muted),
+                  if (trailingChevron) const NexoIcon('chevron', size: 18, color: NexoColors.muted),
                 ],
               ),
             ),
@@ -272,8 +267,7 @@ class OneNote extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(text,
-                style: NexoText.body(13.5,
-                    weight: FontWeight.w600, color: NexoColors.brandDeep, height: 1.4)),
+                style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.brandDeep, height: 1.4)),
           ),
         ],
       ),

@@ -35,24 +35,39 @@ Future<void> showPrivacySheet(BuildContext context) => _legal(
       'Aviso de privacidad',
       page: LegalPages.privacy,
       [
-        ('Qué datos usamos',
-            'Tu correo, tu nombre, tu ubicación (zona), lo que publicas y las fotos que subes. Si ofreces servicios, también los datos de tu perfil.'),
-        ('Para qué los usamos',
-            'Para conectarte con prestadores o con personas que buscan un servicio, mostrar resultados cercanos, mantener la seguridad de la comunidad y moderar contenido.'),
-        ('Tu ubicación',
-            'Usamos el punto que marcas para calcular distancias. Los demás usuarios ven solo la zona aproximada, nunca el punto exacto.'),
-        ('Tu correo y tu número',
-            'No se muestran en tu perfil. Tu número solo lo ve la otra persona si tú lo compartes para una llamada.'),
-        ('Avisos y datos en tu teléfono',
-            'Si activas los avisos guardamos un identificador de tu teléfono para enviarlos; se quita al desactivarlos o al cerrar sesión. Lo último que viste se guarda en tu teléfono para mostrarlo sin señal y se borra al cerrar sesión.'),
-        ('Asistente y fotos',
-            'La sugerencia de categoría por foto se calcula en tu teléfono. El asistente de redacción recibe solo el texto que escribiste, sin teléfonos, correos ni direcciones, y no publica nada por ti.'),
-        ('Lo que no hacemos',
-            'No cobramos comisiones, no vendemos tus datos y no compartimos tu información con terceros con fines de publicidad.'),
-        ('Tus derechos',
-            'Puedes acceder a tus datos, corregirlos, oponerte a su uso o eliminarlos. Para eliminar tu cuenta entra a Cuenta, «Privacidad y cuenta».'),
-        ('Conservación',
-            'Al eliminar tu cuenta se borran tu perfil, publicaciones, solicitudes y datos de contacto.'),
+        (
+          'Qué datos usamos',
+          'Tu correo, tu nombre, tu ubicación (zona), lo que publicas y las fotos que subes. Si ofreces servicios, también los datos de tu perfil.'
+        ),
+        (
+          'Para qué los usamos',
+          'Para conectarte con prestadores o con personas que buscan un servicio, mostrar resultados cercanos, mantener la seguridad de la comunidad y moderar contenido.'
+        ),
+        (
+          'Tu ubicación',
+          'Usamos el punto que marcas para calcular distancias. Los demás usuarios ven solo la zona aproximada, nunca el punto exacto.'
+        ),
+        (
+          'Tu correo y tu número',
+          'No se muestran en tu perfil. Tu número solo lo ve la otra persona si tú lo compartes para una llamada.'
+        ),
+        (
+          'Avisos y datos en tu teléfono',
+          'Si activas los avisos guardamos un identificador de tu teléfono para enviarlos; se quita al desactivarlos o al cerrar sesión. Lo último que viste se guarda en tu teléfono para mostrarlo sin señal y se borra al cerrar sesión.'
+        ),
+        (
+          'Asistente y fotos',
+          'La sugerencia de categoría por foto se calcula en tu teléfono. El asistente de redacción recibe solo el texto que escribiste, sin teléfonos, correos ni direcciones, y no publica nada por ti.'
+        ),
+        (
+          'Lo que no hacemos',
+          'No cobramos comisiones, no vendemos tus datos y no compartimos tu información con terceros con fines de publicidad.'
+        ),
+        (
+          'Tus derechos',
+          'Puedes acceder a tus datos, corregirlos, oponerte a su uso o eliminarlos. Para eliminar tu cuenta entra a Cuenta, «Privacidad y cuenta».'
+        ),
+        ('Conservación', 'Al eliminar tu cuenta se borran tu perfil, publicaciones, solicitudes y datos de contacto.'),
       ],
     );
 
@@ -61,14 +76,22 @@ Future<void> showTermsSheet(BuildContext context) => _legal(
       'Términos de uso',
       page: LegalPages.terms,
       [
-        ('Qué es Nexo Local',
-            'Una red que conecta a personas que buscan un servicio con quienes lo ofrecen. No intervenimos en el trato, el precio ni el pago.'),
-        ('Tu responsabilidad',
-            'La información de tu perfil o de tus publicaciones debe ser verdadera. El trato se cierra entre ambas partes.'),
-        ('Contenido',
-            'No se permite contenido ofensivo, engañoso o que muestre datos de terceros. Las publicaciones pueden ser reportadas y revisadas por moderación.'),
-        ('Cuentas',
-            'Puedes cerrar sesión o eliminar tu cuenta en cualquier momento. Podemos suspender cuentas que incumplan estas reglas.'),
+        (
+          'Qué es Nexo Local',
+          'Una red que conecta a personas que buscan un servicio con quienes lo ofrecen. No intervenimos en el trato, el precio ni el pago.'
+        ),
+        (
+          'Tu responsabilidad',
+          'La información de tu perfil o de tus publicaciones debe ser verdadera. El trato se cierra entre ambas partes.'
+        ),
+        (
+          'Contenido',
+          'No se permite contenido ofensivo, engañoso o que muestre datos de terceros. Las publicaciones pueden ser reportadas y revisadas por moderación.'
+        ),
+        (
+          'Cuentas',
+          'Puedes cerrar sesión o eliminar tu cuenta en cualquier momento. Podemos suspender cuentas que incumplan estas reglas.'
+        ),
       ],
     );
 

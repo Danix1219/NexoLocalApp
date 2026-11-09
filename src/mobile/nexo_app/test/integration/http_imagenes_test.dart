@@ -21,7 +21,12 @@ void main() {
     storage.on('PUT', '/bucket/upl_1', null, status: 201);
     final api = HttpNexoApi(testDio(a), uploadDio: Dio()..httpClientAdapter = storage);
     final id = await api.upload(
-      PickedImage(path: '/tmp/foto.jpg', bytes: Uint8List.fromList(List.filled(2048, 7)), contentType: 'image/jpeg', width: 800, height: 600),
+      PickedImage(
+          path: '/tmp/foto.jpg',
+          bytes: Uint8List.fromList(List.filled(2048, 7)),
+          contentType: 'image/jpeg',
+          width: 800,
+          height: 600),
       purpose: 'work',
     );
     expect(id, 'upl_1');

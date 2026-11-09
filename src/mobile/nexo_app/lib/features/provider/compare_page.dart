@@ -79,7 +79,8 @@ class ComparePage extends ConsumerWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(width: 96, child: Text(row.label, style: NexoText.body(12.5, color: NexoColors.muted))),
+                          SizedBox(
+                              width: 96, child: Text(row.label, style: NexoText.body(12.5, color: NexoColors.muted))),
                           for (var i = 0; i < row.values.length && i < 2; i++)
                             Expanded(
                               child: Container(

@@ -28,10 +28,14 @@ class _InboxPageState extends ConsumerState<InboxPage> {
     final s = ref.watch(sessionProvider);
     if (s.isGuest) {
       return const GateScreen(
-          title: 'Mensajes', icon: 'chat', text: 'Con una cuenta puedes escribirle a los prestadores y acordar todo en un chat.');
+          title: 'Mensajes',
+          icon: 'chat',
+          text: 'Con una cuenta puedes escribirle a los prestadores y acordar todo en un chat.');
     }
     final role = ref.watch(roleProvider);
-    if (s.isProviderMode && ref.watch(myProviderProvider).asData?.value == null && ref.watch(myProviderProvider).hasValue) {
+    if (s.isProviderMode &&
+        ref.watch(myProviderProvider).asData?.value == null &&
+        ref.watch(myProviderProvider).hasValue) {
       return const NoProviderProfile(title: 'Mensajes');
     }
     final v = ref.watch(inboxProvider(role));
@@ -139,7 +143,8 @@ class _InboxRow extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: NexoText.body(13.5,
-                              weight: isNew ? FontWeight.w700 : FontWeight.w400, color: isNew ? NexoColors.ink : NexoColors.muted),
+                              weight: isNew ? FontWeight.w700 : FontWeight.w400,
+                              color: isNew ? NexoColors.ink : NexoColors.muted),
                         ),
                       ),
                       if (isNew)

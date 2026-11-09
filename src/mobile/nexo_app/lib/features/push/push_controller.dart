@@ -24,7 +24,8 @@ class PushState {
 final pushGatewayProvider = Provider<PushGateway>((ref) => FirebasePushGateway());
 
 /// Abre la pantalla de un aviso. Se separa para poder probarlo sin router.
-final pushNavigatorProvider = Provider<void Function(String path)>((ref) => (path) => ref.read(routerProvider).push(path));
+final pushNavigatorProvider =
+    Provider<void Function(String path)>((ref) => (path) => ref.read(routerProvider).push(path));
 
 /// Notificaciones push de los procesos principales: interés en una
 /// solicitud, pedido aceptado o resuelto y mensajes nuevos (spec 050).

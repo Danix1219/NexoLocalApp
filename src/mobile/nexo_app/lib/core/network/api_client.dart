@@ -78,9 +78,7 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final o = err.requestOptions;
-    if (err.response?.statusCode != 401 ||
-        o.extra[kAuth] != true ||
-        o.extra[_kRetried] == true) {
+    if (err.response?.statusCode != 401 || o.extra[kAuth] != true || o.extra[_kRetried] == true) {
       handler.next(err);
       return;
     }

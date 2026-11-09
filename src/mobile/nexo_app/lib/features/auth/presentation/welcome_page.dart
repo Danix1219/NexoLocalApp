@@ -83,8 +83,7 @@ class _Hero extends StatefulWidget {
 }
 
 class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
 
   @override
   void didChangeDependencies() {
@@ -107,10 +106,8 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final w = widget.compact ? 136.0 : 168.0;
     // Aros: 0.1–0.8 s; nombre: 0.35–0.95 s (como las animaciones CSS).
-    final rings = CurvedAnimation(
-        parent: _c, curve: const Interval(.1, .8, curve: Cubic(.2, .8, .2, 1)));
-    final brand =
-        CurvedAnimation(parent: _c, curve: const Interval(.35, .95, curve: Curves.easeOut));
+    final rings = CurvedAnimation(parent: _c, curve: const Interval(.1, .8, curve: Cubic(.2, .8, .2, 1)));
+    final brand = CurvedAnimation(parent: _c, curve: const Interval(.35, .95, curve: Curves.easeOut));
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -145,8 +142,7 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
               animation: brand,
               builder: (_, child) => Opacity(
                 opacity: brand.value,
-                child: Transform.translate(
-                    offset: Offset(0, 10 * (1 - brand.value)), child: child),
+                child: Transform.translate(offset: Offset(0, 10 * (1 - brand.value)), child: child),
               ),
               child: NexoWordmark(
                 size: widget.compact ? 40 : 48,
@@ -187,8 +183,7 @@ class _Sheet extends StatelessWidget {
                 header: true,
                 child: Text(
                   'Encuentra a quien sabe hacerlo, cerca de ti.',
-                  style: NexoText.display(compact ? 27 : 31,
-                      height: 1.08, letterSpacing: -0.045 * (compact ? 27 : 31)),
+                  style: NexoText.display(compact ? 27 : 31, height: 1.08, letterSpacing: -0.045 * (compact ? 27 : 31)),
                 ),
               ),
               const SizedBox(height: 22),
@@ -218,8 +213,7 @@ class _Sheet extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text('Explorar sin cuenta',
-                            style: NexoText.body(14,
-                                weight: FontWeight.w800, color: NexoColors.brandDeep)),
+                            style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brandDeep)),
                         const SizedBox(width: 5),
                         const NexoIcon('chevron', size: 17, color: NexoColors.brandDeep),
                       ],

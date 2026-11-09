@@ -186,5 +186,4 @@ class AuthRepository {
   }
 }
 
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => AuthRepository(ref.read(dioProvider)));
+final authRepositoryProvider = Provider<AuthRepository>((ref) => AuthRepository(ref.read(dioProvider)));

@@ -55,10 +55,12 @@ Future<void> openChatForRequest(BuildContext context, WidgetRef ref, String requ
 /// `contactSheet`: chat como vía principal; el número solo se copia.
 Future<void> showContactSheet(BuildContext context, WidgetRef ref, ProviderMini p,
     {String? responseTime, bool canCall = true, String? requestId}) async {
-  if (!requireAccount(context, ref, why: 'Con una cuenta puedes escribirle a ${p.name} y acordar todo en un chat.')) return;
+  if (!requireAccount(context, ref, why: 'Con una cuenta puedes escribirle a ${p.name} y acordar todo en un chat.'))
+    return;
   await showNexoSheet<void>(
     context,
-    builder: (ctx) => _ContactSheet(p: p, responseTime: responseTime, canCall: canCall, requestId: requestId, outer: context),
+    builder: (ctx) =>
+        _ContactSheet(p: p, responseTime: responseTime, canCall: canCall, requestId: requestId, outer: context),
   );
 }
 
@@ -82,7 +84,8 @@ class _ContactSheetState extends ConsumerState<_ContactSheet> {
   Future<void> _reveal() async {
     setState(() => _loading = true);
     try {
-      final r = await ref.read(apiProvider).revealPhone(targetId: widget.p.id, targetType: 'provider', context: 'profile');
+      final r =
+          await ref.read(apiProvider).revealPhone(targetId: widget.p.id, targetType: 'provider', context: 'profile');
       if (mounted) setState(() => _phone = r.displayPhone);
     } catch (e) {
       showNexoToast(apiErrorMessage(e));
@@ -172,7 +175,8 @@ class _ContactSheetState extends ConsumerState<_ContactSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Teléfono', style: NexoText.body(12, color: NexoColors.muted)),
-                      Text(_phone ?? '••• ••• ••••', style: NexoText.display(17, weight: FontWeight.w700, letterSpacing: .5)),
+                      Text(_phone ?? '••• ••• ••••',
+                          style: NexoText.display(17, weight: FontWeight.w700, letterSpacing: .5)),
                     ],
                   ),
                 ),
@@ -211,7 +215,8 @@ const reportCategories = [
 ];
 
 /// `reportSheet` → `POST /v1/engagement/reports`.
-Future<void> showReportSheet(BuildContext context, WidgetRef ref, {required String targetType, required String targetId}) async {
+Future<void> showReportSheet(BuildContext context, WidgetRef ref,
+    {required String targetType, required String targetId}) async {
   if (!requireAccount(context, ref)) return;
   await showNexoSheet<void>(context, builder: (_) => _ReportSheet(targetType: targetType, targetId: targetId));
 }
@@ -241,8 +246,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
     setState(() => _sending = true);
     final nav = Navigator.of(context);
     try {
-      final msg = await ref.read(apiProvider).report(
-          targetType: widget.targetType, targetId: widget.targetId, category: _cat!, reason: _text.text.trim());
+      final msg = await ref
+          .read(apiProvider)
+          .report(targetType: widget.targetType, targetId: widget.targetId, category: _cat!, reason: _text.text.trim());
       nav.pop();
       showNexoToast(msg);
     } catch (e) {
@@ -318,10 +324,12 @@ Future<void> showTrustSheet(BuildContext context) => showNexoSheet<void>(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SheetHeader('Cómo leer las señales', subtitle: 'Cada insignia dice exactamente qué se sabe.'),
-            tier('user', 'Declarado', 'Lo que el prestador dice de sí mismo. Se muestra con su fecha de actualización.'),
+            tier(
+                'user', 'Declarado', 'Lo que el prestador dice de sí mismo. Se muestra con su fecha de actualización.'),
             tier('shield', 'Teléfono confirmado',
                 'Nexo Local comprobó que la persona controla ese número. No certifica su capacidad técnica.'),
-            tier('thumb', 'Recomendaciones', 'Opiniones de otros usuarios. Ayudan a decidir, pero no garantizan el resultado.'),
+            tier('thumb', 'Recomendaciones',
+                'Opiniones de otros usuarios. Ayudan a decidir, pero no garantizan el resultado.'),
             tier('info', 'Perfil nuevo', 'Aún no tiene historial. No es una calificación negativa.'),
             const SizedBox(height: 4),
             NexoButton(label: 'Entendido', onPressed: () => Navigator.of(ctx).pop()),
@@ -383,7 +391,8 @@ void toggleCompare(BuildContext context, WidgetRef ref, ProviderMini p) {
 // ---------------------------------------------------------- pedir servicio
 
 /// `agSheet`: "Pedir servicio" → `POST /v1/engagement/orders`.
-Future<void> showRequestServiceSheet(BuildContext context, WidgetRef ref, ProviderProfile p, {ServiceRequest? request}) async {
+Future<void> showRequestServiceSheet(BuildContext context, WidgetRef ref, ProviderProfile p,
+    {ServiceRequest? request}) async {
   if (!requireAccount(context, ref)) return;
   if (ref.read(sessionProvider).isProviderMode) {
     showNexoToast('Cambia a modo cliente en Cuenta para pedir un servicio.');
@@ -487,7 +496,10 @@ class _OrderSheetState extends ConsumerState<_OrderSheet> {
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final c in p.categories)
               ToggleChip(
-                  label: catInfo(c).name, icon: catInfo(c).icon, selected: _cat == c, onTap: () => setState(() => _cat = c)),
+                  label: catInfo(c).name,
+                  icon: catInfo(c).icon,
+                  selected: _cat == c,
+                  onTap: () => setState(() => _cat = c)),
           ]),
           const SizedBox(height: 14),
         ],
@@ -517,7 +529,8 @@ class _OrderSheetState extends ConsumerState<_OrderSheet> {
           const SizedBox(height: 7),
           MiniMap(point: p.shopLocation ?? p.zonePoint ?? _place, label: p.zoneLabel),
           const SizedBox(height: 6),
-          Text('Irás a su local · ${p.distanceText.replaceFirst('a ', 'a ')}', style: NexoText.body(13, color: NexoColors.muted)),
+          Text('Irás a su local · ${p.distanceText.replaceFirst('a ', 'a ')}',
+              style: NexoText.body(13, color: NexoColors.muted)),
         ] else ...[
           Text('Tu domicilio', style: NexoText.body(14, weight: FontWeight.w700)),
           const SizedBox(height: 7),
@@ -572,7 +585,8 @@ Future<void> showCloseRequestSheet(BuildContext context, WidgetRef ref, ServiceR
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SheetHeader('Cerrar solicitud', subtitle: '«${r.title}» dejará de verse para los prestadores.'),
-        OptRow(icon: 'check', label: 'Lo resolví con alguien de Nexo', onTap: () => Navigator.of(ctx).pop('solvedHere')),
+        OptRow(
+            icon: 'check', label: 'Lo resolví con alguien de Nexo', onTap: () => Navigator.of(ctx).pop('solvedHere')),
         const SizedBox(height: 8),
         OptRow(icon: 'out', label: 'Lo resolví por otro lado', onTap: () => Navigator.of(ctx).pop('solvedElsewhere')),
         const SizedBox(height: 8),

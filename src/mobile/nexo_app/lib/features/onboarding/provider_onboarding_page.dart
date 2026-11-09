@@ -33,7 +33,12 @@ class ProviderOnboardingPage extends ConsumerStatefulWidget {
 
 class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage> {
   static const _steps = ['type', 'basic', 'services', 'zones', 'ready'];
-  static const _exps = [('<1', 'Menos de 1 año', 0), ('1-3', '1 a 3 años', 2), ('4-9', '4 a 9 años', 6), ('10+', '10 años o más', 10)];
+  static const _exps = [
+    ('<1', 'Menos de 1 año', 0),
+    ('1-3', '1 a 3 años', 2),
+    ('4-9', '4 a 9 años', 6),
+    ('10+', '10 años o más', 10)
+  ];
   static const _sectors = [
     ('servicios', 'Servicios', 'user'),
     ('comercial', 'Comercial', 'home'),
@@ -217,14 +222,23 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
     switch (_step) {
       case 'type':
         return [
-          _choice('trade', 'user', 'Soy una persona con un oficio',
-              'Trabajo por mi cuenta, por ejemplo como plomero, electricista, pintora o carpintero.', _d.kind,
+          _choice(
+              'trade',
+              'user',
+              'Soy una persona con un oficio',
+              'Trabajo por mi cuenta, por ejemplo como plomero, electricista, pintora o carpintero.',
+              _d.kind,
               (v) => setState(() {
                     _d.kind = v;
                     _d.attention = 'home';
                   })),
-          _choice('business', 'home', 'Tengo un negocio de servicios',
-              'Tengo un nombre comercial y puede haber más personas en mi equipo.', _d.kind, (v) => setState(() => _d.kind = v)),
+          _choice(
+              'business',
+              'home',
+              'Tengo un negocio de servicios',
+              'Tengo un nombre comercial y puede haber más personas en mi equipo.',
+              _d.kind,
+              (v) => setState(() => _d.kind = v)),
         ];
       case 'basic':
         return [
@@ -232,11 +246,18 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
             borderRadius: BorderRadius.circular(16),
             onTap: _busy ? null : _pickPhoto,
             child: Row(children: [
-              NexoAvatar(name: _name.text.isEmpty ? '?' : _name.text, url: _photoLocal, size: 72, icon: _photoLocal == null ? 'camera' : null),
+              NexoAvatar(
+                  name: _name.text.isEmpty ? '?' : _name.text,
+                  url: _photoLocal,
+                  size: 72,
+                  icon: _photoLocal == null ? 'camera' : null),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(_photoLocal != null ? (_biz ? 'Cambiar logotipo' : 'Cambiar foto') : (_biz ? 'Agregar logotipo o fachada' : 'Agregar foto de perfil'),
+                  Text(
+                      _photoLocal != null
+                          ? (_biz ? 'Cambiar logotipo' : 'Cambiar foto')
+                          : (_biz ? 'Agregar logotipo o fachada' : 'Agregar foto de perfil'),
                       style: NexoText.body(15, weight: FontWeight.w700, color: NexoColors.brand)),
                   Text(_biz ? 'Opcional. Ayuda a que te reconozcan.' : 'Opcional. Una foto tuya genera más confianza.',
                       style: NexoText.body(13, color: NexoColors.muted)),
@@ -262,13 +283,17 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
             ),
           if (_biz) ...[
             _lbl('¿Cómo atiendes?'),
-            _choice('home', 'home', 'A domicilio', 'Voy al lugar del cliente', _d.attention, (v) => setState(() => _d.attention = v)),
-            _choice('shop', 'pin', 'En mi local', 'El cliente viene a mí', _d.attention, (v) => setState(() => _d.attention = v)),
-            _choice('both', 'compare', 'Ambas', 'Local y a domicilio', _d.attention, (v) => setState(() => _d.attention = v)),
+            _choice('home', 'home', 'A domicilio', 'Voy al lugar del cliente', _d.attention,
+                (v) => setState(() => _d.attention = v)),
+            _choice('shop', 'pin', 'En mi local', 'El cliente viene a mí', _d.attention,
+                (v) => setState(() => _d.attention = v)),
+            _choice('both', 'compare', 'Ambas', 'Local y a domicilio', _d.attention,
+                (v) => setState(() => _d.attention = v)),
           ],
           _lbl(_biz ? 'Tiempo en operación' : 'Años en tu oficio'),
           Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final e in _exps) ToggleChip(label: e.$2, selected: _exp == e.$1, onTap: () => setState(() => _exp = e.$1)),
+            for (final e in _exps)
+              ToggleChip(label: e.$2, selected: _exp == e.$1, onTap: () => setState(() => _exp = e.$1)),
           ]),
           _lbl(_biz ? 'Tu equipo' : '¿Cómo trabajas?'),
           SegControl<String>(
@@ -287,7 +312,8 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
             maxLength: 600,
             textCapitalization: TextCapitalization.sentences,
             style: NexoText.body(15),
-            decoration: nexoInputDecoration(hint: 'Qué haces, cómo trabajas y qué te distingue (mínimo 20 caracteres).'),
+            decoration:
+                nexoInputDecoration(hint: 'Qué haces, cómo trabajas y qué te distingue (mínimo 20 caracteres).'),
           ),
         ];
       case 'services':
@@ -296,7 +322,11 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
             _lbl('Rubro'),
             Wrap(spacing: 8, runSpacing: 8, children: [
               for (final s in _sectors)
-                ToggleChip(label: s.$2, icon: s.$3, selected: _d.sector == s.$1, onTap: () => setState(() => _d.sector = s.$1)),
+                ToggleChip(
+                    label: s.$2,
+                    icon: s.$3,
+                    selected: _d.sector == s.$1,
+                    onTap: () => setState(() => _d.sector = s.$1)),
             ]),
             NexoField(
               label: '¿A qué se dedica tu negocio?',
@@ -389,7 +419,11 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
   }
 
   static const _titles = {
-    'type': ('¿Cómo vas a ofrecer tus servicios?', 'Elige la opción que mejor te describa. Podrás ajustarlo después.', 'hammer'),
+    'type': (
+      '¿Cómo vas a ofrecer tus servicios?',
+      'Elige la opción que mejor te describa. Podrás ajustarlo después.',
+      'hammer'
+    ),
     'basic': ('Cuéntanos quién eres', 'Quien busque un servicio querrá saber con quién trata.', 'user'),
     'services': ('¿Qué servicios ofreces?', 'Así te encontrarán quienes buscan justo eso.', 'hammer'),
     'zones': ('¿Dónde atiendes?', 'Verás solicitudes dentro de tu zona y aparecerás cuando alguien busque ahí.', 'pin'),
@@ -416,7 +450,8 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
             },
           ),
           const SizedBox(height: 8),
-          NexoButton(label: 'Ver oportunidades', variant: NexoButtonVariant.ghost, onPressed: () => context.go(Routes.home)),
+          NexoButton(
+              label: 'Ver oportunidades', variant: NexoButtonVariant.ghost, onPressed: () => context.go(Routes.home)),
         ],
       );
     }

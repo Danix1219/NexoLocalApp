@@ -18,8 +18,8 @@ InputDecoration nexoInputDecoration({String? hint, Widget? suffix}) {
     hintText: hint,
     hintStyle: NexoText.body(15, color: NexoColors.muted.withValues(alpha: .8)),
     filled: true,
-    fillColor: WidgetStateColor.resolveWith((states) =>
-        states.contains(WidgetState.focused) ? NexoColors.surface : NexoColors.field),
+    fillColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.focused) ? NexoColors.surface : NexoColors.field),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
     border: _border(Colors.transparent),
     enabledBorder: _border(Colors.transparent),
@@ -177,15 +177,13 @@ class PasswordRequirements extends StatelessWidget {
             excludeSemantics: true,
             child: Row(
               children: [
-                NexoIcon(ok ? 'check' : 'dots',
-                    size: 16, color: ok ? NexoColors.ok : NexoColors.muted),
+                NexoIcon(ok ? 'check' : 'dots', size: 16, color: ok ? NexoColors.ok : NexoColors.muted),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     text,
                     style: NexoText.body(13,
-                        weight: ok ? FontWeight.w600 : FontWeight.w400,
-                        color: ok ? NexoColors.ok : NexoColors.muted),
+                        weight: ok ? FontWeight.w600 : FontWeight.w400, color: ok ? NexoColors.ok : NexoColors.muted),
                   ),
                 ),
               ],
@@ -237,8 +235,7 @@ class NexoError extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: NexoText.body(13.5,
-                  weight: FontWeight.w600, color: NexoColors.danger, height: 1.4),
+              style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.danger, height: 1.4),
             ),
           ),
         ],

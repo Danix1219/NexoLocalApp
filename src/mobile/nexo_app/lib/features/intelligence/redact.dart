@@ -10,7 +10,8 @@ String redactForAssist(String input) {
     return digits.length >= 8 ? '[teléfono]' : m.group(0)!;
   });
   s = s.replaceAll(
-    RegExp(r'\b(calle|c\.|avenida|av\.?|privada|priv\.|callej[oó]n|andador|boulevard|blvd\.?)\s+[^,.;\n]{1,40}?\s*(#|n[uú]m\.?|no\.)?\s*\d+[a-z]?\b',
+    RegExp(
+        r'\b(calle|c\.|avenida|av\.?|privada|priv\.|callej[oó]n|andador|boulevard|blvd\.?)\s+[^,.;\n]{1,40}?\s*(#|n[uú]m\.?|no\.)?\s*\d+[a-z]?\b',
         caseSensitive: false),
     '[domicilio]',
   );

@@ -9,7 +9,8 @@ import '../../data/models.dart';
 /// Carrusel de fotos estilo Instagram (`carouselHTML`): se desliza, muestra
 /// "2/3", puntos, flechas y la etiqueta del trabajo.
 class PhotoCarousel extends StatefulWidget {
-  const PhotoCarousel({super.key, required this.images, required this.category, this.tag, this.onTap, this.aspect = 16 / 10});
+  const PhotoCarousel(
+      {super.key, required this.images, required this.category, this.tag, this.onTap, this.aspect = 16 / 10});
   final List<Img> images;
   final String category;
   final String? tag;
@@ -86,7 +87,9 @@ class _PhotoCarouselState extends State<PhotoCarousel> {
                 top: 0,
                 bottom: 0,
                 child: Center(
-                  child: _arrow('back', () => _c.previousPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
+                  child: _arrow(
+                      'back',
+                      () => _c.previousPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
                       'Foto anterior'),
                 ),
               ),
@@ -96,7 +99,9 @@ class _PhotoCarouselState extends State<PhotoCarousel> {
                 top: 0,
                 bottom: 0,
                 child: Center(
-                  child: _arrow('chevron', () => _c.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
+                  child: _arrow(
+                      'chevron',
+                      () => _c.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
                       'Foto siguiente'),
                 ),
               ),

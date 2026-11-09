@@ -62,12 +62,14 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHeader('¿Te avisamos?',
-              subtitle: 'Te mandamos un aviso cuando alguien se interese en lo que publicaste, acepten tu pedido o te escriban. '
+              subtitle:
+                  'Te mandamos un aviso cuando alguien se interese en lo que publicaste, acepten tu pedido o te escriban. '
                   'Los avisos no muestran tu dirección ni tu número.'),
           const SizedBox(height: 16),
           NexoButton(label: 'Activar avisos', icon: 'bell', onPressed: () => Navigator.of(ctx).pop(true)),
           const SizedBox(height: 8),
-          NexoButton(label: 'Ahora no', variant: NexoButtonVariant.ghost, onPressed: () => Navigator.of(ctx).pop(false)),
+          NexoButton(
+              label: 'Ahora no', variant: NexoButtonVariant.ghost, onPressed: () => Navigator.of(ctx).pop(false)),
         ],
       ),
     );
@@ -286,7 +288,8 @@ class _OfflineBanner extends StatelessWidget {
     final hh = t == null ? '' : ' de las ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
     final parts = [
       if (sync.offline) 'Sin conexión. Ves lo guardado$hh.',
-      if (sync.pending > 0) sync.pending == 1 ? '1 publicación por enviar.' : '${sync.pending} publicaciones por enviar.',
+      if (sync.pending > 0)
+        sync.pending == 1 ? '1 publicación por enviar.' : '${sync.pending} publicaciones por enviar.',
     ];
     return Semantics(
       liveRegion: true,
@@ -297,7 +300,9 @@ class _OfflineBanner extends StatelessWidget {
           child: Row(children: [
             const NexoIcon('info', size: 16, color: NexoColors.ink),
             const SizedBox(width: 8),
-            Expanded(child: Text(parts.join(' '), style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.ink))),
+            Expanded(
+                child:
+                    Text(parts.join(' '), style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.ink))),
           ]),
         ),
       ),

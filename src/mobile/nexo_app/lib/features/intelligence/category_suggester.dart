@@ -37,7 +37,8 @@ const labelToCategory = <String, String>{
   'paint': 'pintura', 'wall': 'pintura', 'graffiti': 'pintura', 'paint roller': 'pintura', 'ceiling': 'pintura',
   // jardinería
   'plant': 'jardineria', 'flower': 'jardineria', 'garden': 'jardineria', 'grass': 'jardineria', 'lawn': 'jardineria',
-  'tree': 'jardineria', 'leaf': 'jardineria', 'shrub': 'jardineria', 'flowerpot': 'jardineria', 'houseplant': 'jardineria',
+  'tree': 'jardineria', 'leaf': 'jardineria', 'shrub': 'jardineria', 'flowerpot': 'jardineria',
+  'houseplant': 'jardineria',
   // cerrajería
   'lock': 'cerrajeria', 'key': 'cerrajeria', 'padlock': 'cerrajeria', 'door handle': 'cerrajeria',
 };

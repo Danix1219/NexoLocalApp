@@ -114,7 +114,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         options: MapOptions(
                           initialCenter: _center,
                           initialZoom: a.showRadius ? zoomForRadius(_rad) : 16,
-                          interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+                          interactionOptions:
+                              const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
                           onPositionChanged: (camera, hasGesture) {
                             if (hasGesture) {
                               setState(() {
@@ -220,7 +221,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                     const NexoIcon('shield', size: 15, color: NexoColors.ok),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text('Tu punto exacto no se publica.', style: NexoText.body(12.5, color: NexoColors.muted)),
+                      child:
+                          Text('Tu punto exacto no se publica.', style: NexoText.body(12.5, color: NexoColors.muted)),
                     ),
                   ]),
                   const SizedBox(height: 10),

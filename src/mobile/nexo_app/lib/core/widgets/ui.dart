@@ -141,8 +141,7 @@ class NexoAvatar extends StatelessWidget {
           ? SizedBox.expand(child: NexoImage(url!))
           : icon != null
               ? NexoIcon(icon!, size: size * .42, color: NexoColors.brand)
-              : Text(initialsOf(name),
-                  style: NexoText.display(size * .36, color: NexoColors.brand, letterSpacing: 0)),
+              : Text(initialsOf(name), style: NexoText.display(size * .36, color: NexoColors.brand, letterSpacing: 0)),
     );
   }
 }
@@ -173,7 +172,9 @@ class AvatarPair extends StatelessWidget {
                 width: 22,
                 height: 22,
                 decoration: BoxDecoration(
-                    color: NexoColors.ok, shape: BoxShape.circle, border: Border.all(color: NexoColors.surface, width: 2)),
+                    color: NexoColors.ok,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: NexoColors.surface, width: 2)),
                 child: const Center(child: NexoIcon('check', size: 13, color: Colors.white, strokeWidth: 2.6)),
               ),
             ),
@@ -235,7 +236,9 @@ class SubBar extends StatelessWidget {
             onTap: onBack ?? () => Navigator.of(context).maybePop(),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(title, style: NexoText.display(17, weight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
+          Expanded(
+              child:
+                  Text(title, style: NexoText.display(17, weight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
           ...actions,
         ],
       ),
@@ -260,7 +263,8 @@ class Sect extends StatelessWidget {
           Expanded(
             child: Semantics(
               header: true,
-              child: Text(title, style: NexoText.display(18, weight: FontWeight.w700, height: 1.15, letterSpacing: -.18)),
+              child:
+                  Text(title, style: NexoText.display(18, weight: FontWeight.w700, height: 1.15, letterSpacing: -.18)),
             ),
           ),
           if (trailing != null)
@@ -270,8 +274,8 @@ class Sect extends StatelessWidget {
                     onTap: onTrailing,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text(trailing!,
-                          style: NexoText.body(13, weight: FontWeight.w700, color: NexoColors.brand)),
+                      child:
+                          Text(trailing!, style: NexoText.body(13, weight: FontWeight.w700, color: NexoColors.brand)),
                     ),
                   ),
         ],
@@ -282,7 +286,15 @@ class Sect extends StatelessWidget {
 
 /// `.empty`: aviso con borde punteado y acción opcional.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, this.icon, required this.title, this.text, this.action, this.onAction, this.secondary, this.onSecondary});
+  const EmptyState(
+      {super.key,
+      this.icon,
+      required this.title,
+      this.text,
+      this.action,
+      this.onAction,
+      this.secondary,
+      this.onSecondary});
   final String? icon;
   final String title;
   final String? text;
@@ -309,7 +321,8 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 280),
-              child: Text(text!, textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
+              child: Text(text!,
+                  textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
             ),
           ],
           if (action != null) ...[
@@ -388,7 +401,8 @@ class Facts extends StatelessWidget {
               const SizedBox(width: 5),
               Text(it.$2,
                   style: NexoText.body(13,
-                      weight: it.$3 ? FontWeight.w700 : FontWeight.w400, color: it.$3 ? NexoColors.ok : NexoColors.muted)),
+                      weight: it.$3 ? FontWeight.w700 : FontWeight.w400,
+                      color: it.$3 ? NexoColors.ok : NexoColors.muted)),
             ],
           ),
       ],
@@ -398,7 +412,8 @@ class Facts extends StatelessWidget {
 
 /// `.seg`: dos o más opciones exclusivas.
 class SegControl<T> extends StatelessWidget {
-  const SegControl({super.key, required this.options, required this.value, required this.onChanged, this.small = false});
+  const SegControl(
+      {super.key, required this.options, required this.value, required this.onChanged, this.small = false});
   final List<(T, String)> options;
   final T value;
   final ValueChanged<T> onChanged;
@@ -488,7 +503,13 @@ class ToggleChip extends StatelessWidget {
 
 /// `.card` / `.box`: contenedor blanco con borde y sombra suave.
 class NexoCard extends StatelessWidget {
-  const NexoCard({super.key, required this.child, this.margin = const EdgeInsets.fromLTRB(12, 10, 12, 0), this.padding = const EdgeInsets.all(14), this.onTap, this.title});
+  const NexoCard(
+      {super.key,
+      required this.child,
+      this.margin = const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      this.padding = const EdgeInsets.all(14),
+      this.onTap,
+      this.title});
   final Widget child;
   final EdgeInsets margin;
   final EdgeInsets padding;
@@ -586,7 +607,8 @@ class InfoRow extends StatelessWidget {
                     style: highlight
                         ? NexoText.display(18, color: NexoColors.brandDeep)
                         : NexoText.body(14, weight: FontWeight.w700, color: muted ? NexoColors.muted : NexoColors.ink)),
-                if (sub != null) Text(sub!, textAlign: TextAlign.right, style: NexoText.body(12.5, color: NexoColors.muted)),
+                if (sub != null)
+                  Text(sub!, textAlign: TextAlign.right, style: NexoText.body(12.5, color: NexoColors.muted)),
               ],
             ),
           ),
@@ -694,7 +716,8 @@ class LoadingView extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.all(padding),
         child: const Center(
-          child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.6, color: NexoColors.brand)),
+          child: SizedBox(
+              width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.6, color: NexoColors.brand)),
         ),
       );
 }

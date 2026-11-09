@@ -75,7 +75,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     final remote = tokens == null ? true : await ref.read(authRepositoryProvider).logout(tokens.refreshToken);
     ref.read(compareProvider.notifier).clear();
     await ref.read(sessionProvider.notifier).signOutLocal();
-    showNexoToast(remote ? 'Sesión cerrada' : 'Sesión cerrada en este teléfono. El cierre en el servidor queda pendiente.');
+    showNexoToast(
+        remote ? 'Sesión cerrada' : 'Sesión cerrada en este teléfono. El cierre en el servidor queda pendiente.');
   }
 
   @override
@@ -147,7 +148,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       Center(
         child: TextButton(
           onPressed: () => showPrivacySheet(context),
-          child: Text('Aviso de privacidad', style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
+          child:
+              Text('Aviso de privacidad', style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
         ),
       ),
     ]);
@@ -174,7 +176,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: NexoColors.warnSoft, borderRadius: BorderRadius.circular(16)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text('Tu cuenta se eliminará pronto', style: NexoText.body(15, weight: FontWeight.w800, color: NexoColors.warn)),
+                Text('Tu cuenta se eliminará pronto',
+                    style: NexoText.body(15, weight: FontWeight.w800, color: NexoColors.warn)),
                 const SizedBox(height: 4),
                 Text('Si cambiaste de opinión, puedes cancelarlo.', style: NexoText.body(13.5, color: NexoColors.warn)),
                 const SizedBox(height: 10),
@@ -206,7 +209,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 Text(pro && mp != null ? mp.profile.name : a.name, style: NexoText.body(16, weight: FontWeight.w800)),
                 const SizedBox(height: 2),
                 Row(children: [
-                  NexoIcon(a.phoneVerified ? 'shield' : 'info', size: 14, color: a.phoneVerified ? NexoColors.ok : NexoColors.muted),
+                  NexoIcon(a.phoneVerified ? 'shield' : 'info',
+                      size: 14, color: a.phoneVerified ? NexoColors.ok : NexoColors.muted),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -229,7 +233,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             value: s.mode,
             onChanged: (m) => _setMode(m, a),
           ),
-          if (_switching) const Padding(padding: EdgeInsets.only(top: 8), child: LinearProgressIndicator(color: NexoColors.brand)),
+          if (_switching)
+            const Padding(padding: EdgeInsets.only(top: 8), child: LinearProgressIndicator(color: NexoColors.brand)),
           if (!a.hasProvider && mp == null) ...[
             const SizedBox(height: 8),
             Text('¿Ofreces servicios? Elige Proveedor y crea tu perfil con esta misma cuenta.',
@@ -280,14 +285,21 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           ]),
           _box('Tu perfil', [
             Row(children: [
-              Expanded(child: Text('Completo al ${mp.completeness}%', style: NexoText.body(14, weight: FontWeight.w700))),
-              if (a.nextTodo != null) Flexible(child: Text('Sigue: ${a.nextTodo}', textAlign: TextAlign.right, style: NexoText.body(12.5, color: NexoColors.muted))),
+              Expanded(
+                  child: Text('Completo al ${mp.completeness}%', style: NexoText.body(14, weight: FontWeight.w700))),
+              if (a.nextTodo != null)
+                Flexible(
+                    child: Text('Sigue: ${a.nextTodo}',
+                        textAlign: TextAlign.right, style: NexoText.body(12.5, color: NexoColors.muted))),
             ]),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(9),
               child: LinearProgressIndicator(
-                value: mp.completeness / 100, minHeight: 7, color: NexoColors.brand, backgroundColor: NexoColors.surface2),
+                  value: mp.completeness / 100,
+                  minHeight: 7,
+                  color: NexoColors.brand,
+                  backgroundColor: NexoColors.surface2),
             ),
             const SizedBox(height: 12),
             NexoButton(
@@ -299,9 +311,11 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           _box('Disponibilidad', [
             Text(mp.profile.updatedText, style: NexoText.body(13, color: NexoColors.muted)),
             const SizedBox(height: 4),
-            Notice(mp.profile.status.text, icon: 'clock', tone: mp.profile.status.open ? BadgeTone.ok : BadgeTone.plain),
+            Notice(mp.profile.status.text,
+                icon: 'clock', tone: mp.profile.status.open ? BadgeTone.ok : BadgeTone.plain),
             const SizedBox(height: 10),
-            NexoButton(label: 'Actualizar horario', icon: 'clock', onPressed: () => showHoursSheet(context, ref, mp.profile)),
+            NexoButton(
+                label: 'Actualizar horario', icon: 'clock', onPressed: () => showHoursSheet(context, ref, mp.profile)),
           ]),
           _box('Cómo te contactan', [
             OptRow(icon: 'chat', label: 'Chat en Nexo · Activo', selected: true, onTap: () {}),
@@ -346,7 +360,11 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             ),
           ),
         _box('Privacidad y cuenta', [
-          OptRow(icon: 'shield', label: 'Aviso de privacidad', trailingChevron: true, onTap: () => showPrivacySheet(context)),
+          OptRow(
+              icon: 'shield',
+              label: 'Aviso de privacidad',
+              trailingChevron: true,
+              onTap: () => showPrivacySheet(context)),
           const SizedBox(height: 8),
           OptRow(icon: 'info', label: 'Términos de uso', trailingChevron: true, onTap: () => showTermsSheet(context)),
           const SizedBox(height: 8),
@@ -362,7 +380,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   showNexoToast('Avisos desactivados');
                 } else {
                   final ok = await n.enable();
-                  showNexoToast(ok ? 'Avisos activados' : 'Activa las notificaciones de Nexo en los ajustes del teléfono.');
+                  showNexoToast(
+                      ok ? 'Avisos activados' : 'Activa las notificaciones de Nexo en los ajustes del teléfono.');
                 }
               },
             ),

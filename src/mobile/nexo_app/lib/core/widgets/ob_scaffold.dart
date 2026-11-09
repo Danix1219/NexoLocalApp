@@ -115,9 +115,7 @@ class ObScaffold extends StatelessWidget {
                             child: Text(
                               stepLabel!.toUpperCase(),
                               style: NexoText.body(11,
-                                  weight: FontWeight.w800,
-                                  color: NexoColors.muted,
-                                  letterSpacing: .9),
+                                  weight: FontWeight.w800, color: NexoColors.muted, letterSpacing: .9),
                             ),
                           ),
                         ),
@@ -135,14 +133,11 @@ class ObScaffold extends StatelessWidget {
                       const SizedBox(height: 10),
                       Semantics(
                         header: true,
-                        child: Text(title,
-                            style: NexoText.display(26, height: 1.15)),
+                        child: Text(title, style: NexoText.display(26, height: 1.15)),
                       ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 6),
-                        Text(subtitle!,
-                            style: NexoText.body(15,
-                                color: NexoColors.muted, height: 1.45)),
+                        Text(subtitle!, style: NexoText.body(15, color: NexoColors.muted, height: 1.45)),
                       ],
                       const SizedBox(height: 18),
                       ...withGap(content, 18),

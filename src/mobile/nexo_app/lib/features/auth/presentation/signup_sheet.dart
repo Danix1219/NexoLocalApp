@@ -27,8 +27,7 @@ Future<void> showSignupSheet(BuildContext context) {
       children: [
         const SheetHeader(
           '¿Qué quieres hacer primero?',
-          subtitle:
-              'Elige según lo que necesitas ahora. También puedes seguir explorando sin registrarte.',
+          subtitle: 'Elige según lo que necesitas ahora. También puedes seguir explorando sin registrarte.',
         ),
         const OneNote(
           icon: 'user',
@@ -38,24 +37,21 @@ Future<void> showSignupSheet(BuildContext context) {
         ChoiceCard(
           icon: 'search',
           title: 'Quiero buscar servicios',
-          subtitle:
-              'Crea tu cuenta y empieza a explorar: guarda, compara y publica lo que necesitas.',
+          subtitle: 'Crea tu cuenta y empieza a explorar: guarda, compara y publica lo que necesitas.',
           onTap: () => start(ctx, 'client'),
         ),
         const SizedBox(height: 8),
         ChoiceCard(
           icon: 'hammer',
           title: 'Quiero ofrecer servicios',
-          subtitle:
-              'Crea tu cuenta y arma tu perfil: servicios, zona de cobertura y fotos de trabajos.',
+          subtitle: 'Crea tu cuenta y arma tu perfil: servicios, zona de cobertura y fotos de trabajos.',
           onTap: () => start(ctx, 'provider'),
         ),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('¿Ya tienes cuenta?',
-                style: NexoText.body(12.5, color: NexoColors.muted)),
+            Text('¿Ya tienes cuenta?', style: NexoText.body(12.5, color: NexoColors.muted)),
             NexoLink('Inicia sesión', onTap: () {
               Navigator.of(ctx).pop();
               router.push(Routes.login);

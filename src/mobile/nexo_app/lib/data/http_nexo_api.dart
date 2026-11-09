@@ -63,10 +63,7 @@ class HttpNexoApi implements NexoApi {
   Map<String, dynamic> _at(GeoPoint? p) => p == null ? {} : {'lat': p.lat, 'lng': p.lng};
 
   List<T> _items<T>(Json j, T Function(Json) f) =>
-      (j['items'] is List ? j['items'] as List : const [])
-          .whereType<Map>()
-          .map((e) => f(Json.from(e)))
-          .toList();
+      (j['items'] is List ? j['items'] as List : const []).whereType<Map>().map((e) => f(Json.from(e))).toList();
 
   // ---------------- cuenta ----------------
   @override
@@ -277,22 +274,21 @@ class HttpNexoApi implements NexoApi {
           mine: true);
 
   @override
-  Future<List<ServiceRequest>> myRequests() async =>
-      _items(await _get('/v1/discovery/requests/mine', {'status': 'all', 'limit': 50}),
-          (r) => ServiceRequest.fromJson(r, mine: true));
+  Future<List<ServiceRequest>> myRequests() async => _items(
+      await _get('/v1/discovery/requests/mine', {'status': 'all', 'limit': 50}),
+      (r) => ServiceRequest.fromJson(r, mine: true));
 
   @override
-  Future<List<ServiceRequest>> opportunities(OppFilters f) async =>
-      _items(
-          await _get('/v1/discovery/requests/opportunities', {
-            'cat': f.cat,
-            'today': f.today,
-            'inRadius': f.inRadius,
-            'myServiceOnly': f.myServiceOnly,
-            'q': f.q.trim(),
-            'limit': 50,
-          }),
-          (r) => ServiceRequest.fromJson(r));
+  Future<List<ServiceRequest>> opportunities(OppFilters f) async => _items(
+      await _get('/v1/discovery/requests/opportunities', {
+        'cat': f.cat,
+        'today': f.today,
+        'inRadius': f.inRadius,
+        'myServiceOnly': f.myServiceOnly,
+        'q': f.q.trim(),
+        'limit': 50,
+      }),
+      (r) => ServiceRequest.fromJson(r));
 
   @override
   Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId}) =>
@@ -347,7 +343,8 @@ class HttpNexoApi implements NexoApi {
     final j = await _get('/v1/engagement/orders', {'role': role, 'status': status, 'limit': 50});
     final c = j['counts'] is Map ? j['counts'] as Map : const {};
     int n(String k) => (c[k] as num?)?.toInt() ?? 0;
-    return OrdersPage(_items(j, Order.fromJson), pending: n('pending'), accepted: n('accepted'), resolved: n('resolved'));
+    return OrdersPage(_items(j, Order.fromJson),
+        pending: n('pending'), accepted: n('accepted'), resolved: n('resolved'));
   }
 
   @override
@@ -360,7 +357,8 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<Order> acceptOrder(Order o, {int? amountCents, String? includes}) => _action(o, 'accept', {
-        if (amountCents != null) 'agreedPrice': {'amountCents': amountCents, if (includes != null) 'includes': includes},
+        if (amountCents != null)
+          'agreedPrice': {'amountCents': amountCents, if (includes != null) 'includes': includes},
       });
 
   @override
@@ -475,16 +473,19 @@ class HttpNexoApi implements NexoApi {
 
   // ---------------- contacto y reportes ----------------
   @override
-  Future<PhoneReveal> revealPhone({required String targetId, required String targetType, required String context}) async {
+  Future<PhoneReveal> revealPhone(
+      {required String targetId, required String targetType, required String context}) async {
     final j = await _send('POST', '/v1/engagement/contacts/phone',
         body: {'targetId': targetId, 'targetType': targetType, 'context': context});
     return PhoneReveal('${j['displayPhone'] ?? j['phone'] ?? ''}', '${j['targetName'] ?? ''}');
   }
 
   @override
-  Future<String> report({required String targetType, required String targetId, required String category, required String reason}) async {
+  Future<String> report(
+      {required String targetType, required String targetId, required String category, required String reason}) async {
     final j = await _send('POST', '/v1/engagement/reports',
-        idem: _uuid.v4(), body: {'targetType': targetType, 'targetId': targetId, 'category': category, 'reason': reason});
+        idem: _uuid.v4(),
+        body: {'targetType': targetType, 'targetId': targetId, 'category': category, 'reason': reason});
     return '${j['message'] ?? 'Recibimos tu reporte.'}';
   }
 

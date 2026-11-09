@@ -49,7 +49,9 @@ void main() {
       final e = ApiException.fromDio(_error(
         423,
         {'error': 'auth.account_locked'},
-        headers: {'retry-after': ['600']},
+        headers: {
+          'retry-after': ['600']
+        },
       ));
       expect(e.code, 'auth.account_locked');
       expect(e.retryAfter, const Duration(minutes: 10));
