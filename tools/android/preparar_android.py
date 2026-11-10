@@ -126,6 +126,16 @@ if "proguard-rules.pro" not in g:
         count=1,
     )
 
+# Play no puede leer los crashes nativos sin los simbolos de libflutter.so y
+# libapp.so; --split-debug-info solo cubre el codigo Dart.
+if "debugSymbolLevel" not in g:
+    g = re.sub(
+        r"(\n        release \{\n)",
+        r'\1            ndk { debugSymbolLevel = "FULL" }\n',
+        g,
+        count=1,
+    )
+
 if "firebase-iid" not in g:
     # ML Kit (com.google.mlkit:linkfirebase) arrastra firebase-iid 20.1.5, cuyas
     # clases ya vienen en firebase-messaging 24.x: sin esto, el release falla en

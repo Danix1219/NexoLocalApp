@@ -51,6 +51,10 @@ android {
     buildTypes {
         release {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Simbolos nativos (libflutter.so, libapp.so) dentro del bundle: sin
+            // esto Play avisa que no puede leer los crashes nativos. --split-debug-info
+            // solo cubre el codigo Dart.
+            ndk { debugSymbolLevel = "FULL" }
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = if (keystoreProperties.isNotEmpty()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
