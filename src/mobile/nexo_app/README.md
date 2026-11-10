@@ -49,6 +49,6 @@ python3 ../../../tools/android/preparar_android.py .
 Requisitos que revisa el pipeline (`tools/ci/revisar_android.py`):
 
 - `android:allowBackup="false"` y sin `usesCleartextTraffic="true"` en `<application>`.
-- Permisos `INTERNET`, `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` y `POST_NOTIFICATIONS`; minSdk 23.
+- Permisos `INTERNET`, `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` y `POST_NOTIFICATIONS`; minSdk 24.
 - `<queries>` para `tel:`, `https:` y `whatsapp` (url_launcher).
 - Firma de release desde `key.properties` (ver [Play Store](../../../docs/play-store.md)); nunca commitear la keystore.

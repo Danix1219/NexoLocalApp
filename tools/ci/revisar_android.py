@@ -46,8 +46,8 @@ if gradle.exists():
     g = gradle.read_text(encoding="utf-8")
     if re.search(r"isDebuggable\s*=\s*true", g):
         fallas.append("isDebuggable = true en build.gradle.kts.")
-    if "minSdk" in g and re.search(r"minSdk\s*=\s*(1\d|2[0-2])\b", g):
-        fallas.append("minSdk menor a 23 (flutter_secure_storage y Firebase necesitan 23+).")
+    if "minSdk" in g and re.search(r"minSdk\s*=\s*(1\d|2[0-3])\b", g):
+        fallas.append("minSdk menor a 24 (lo exige la proteccion automatica de Google Play).")
     if "google-services" not in g:
         avisos.append("build.gradle.kts no aplica Google Services: sin push (corre tools/android/preparar_android.py).")
 else:

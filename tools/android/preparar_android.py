@@ -7,7 +7,7 @@ Uso (desde la raíz del repo, después de `flutter create .` o con tu android/):
 Es idempotente: solo agrega lo que falta y dice qué cambió.
 - AndroidManifest: allowBackup=false, sin tráfico en claro, permisos mínimos
   (INTERNET, ubicación, notificaciones) y <queries> para enlaces/llamadas.
-- app/build.gradle.kts: minSdk 23, firma de release con key.properties y el
+- app/build.gradle.kts: minSdk 24, firma de release con key.properties y el
   plugin de Google Services solo si existe google-services.json.
 - settings.gradle.kts: declara el plugin de Google Services.
 """
@@ -73,8 +73,8 @@ if m != orig:
 g_path = android / "app/build.gradle.kts"
 g = g_path.read_text(encoding="utf-8")
 g0 = g
-g = re.sub(r"minSdk\s*=\s*flutter\.minSdkVersion", "minSdk = 23", g)
-g = re.sub(r"minSdk\s*=\s*(1\d|2[0-2])\b", "minSdk = 23", g)
+g = re.sub(r"minSdk\s*=\s*flutter\.minSdkVersion", "minSdk = 24", g)
+g = re.sub(r"minSdk\s*=\s*(1\d|2[0-3])\b", "minSdk = 24", g)
 
 if "key.properties" not in g:
     # En .kts los import van antes de todo.
