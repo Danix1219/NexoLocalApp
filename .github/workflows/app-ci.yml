@@ -1218,7 +1218,7 @@ jobs:
       - name: Firebase para push (google-services.json desde secretos)
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-          ANDROID_PACKAGE_NAME: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.nexo_app' }}
+          ANDROID_PACKAGE_NAME: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.app' }}
         run: python3 ../../../tools/ci/preparar_firebase.py android
       - name: Firma de subida (keystore desde secretos)
         env:
@@ -1263,8 +1263,8 @@ jobs:
       - name: Subir a la pista internal
         uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3
         with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.nexo_app' }}
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON || secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.app' }}
           releaseFiles: salida/app/outputs/bundle/release/app-release.aab
           track: internal
           status: ${{ vars.PLAY_STATUS || 'draft' }}
@@ -1284,8 +1284,8 @@ jobs:
       - name: Subir a la pista production
         uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3
         with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.nexo_app' }}
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON || secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ vars.ANDROID_PACKAGE_NAME || 'mx.nexolocal.app' }}
           releaseFiles: salida/app/outputs/bundle/release/app-release.aab
           track: production
           status: ${{ vars.PLAY_STATUS || 'draft' }}
