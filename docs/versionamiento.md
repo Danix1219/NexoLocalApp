@@ -9,10 +9,11 @@ Requisito 11 del profesor: la matriz existe antes del desarrollo y se aplica en 
 | `MAYOR` | `X.0.0` | Cambia el contrato que la app consume y la versión anterior deja de funcionar con el backend | Equipo, en la rama release |
 | `MENOR` | `0.Y.0` | Funcionalidad nueva (una o más specs) compatible con lo anterior | Equipo, al abrir `release/x.y.z` |
 | `PARCHE` | `0.0.Z` | Solo correcciones en `release/*` o `hotfix/*` | Equipo |
-| Build (`versionCode`) | `+N` | En cada AAB: `run_number` de GitHub + `BUILD_NUMBER_OFFSET` (100). Nunca se repite ni baja | Pipeline |
+| Build (`versionCode`) | `+N` | En cada AAB: `run_number` de GitHub + `BUILD_NUMBER_OFFSET` (1000). Nunca se repite ni baja | Pipeline |
 | Etiqueta | `vX.Y.Z` | Al fusionar `release/x.y.z` en `main` | Equipo |
 
 - `pubspec.yaml` lleva `version: X.Y.Z+N`; la `N` local es solo de referencia, Play recibe la del pipeline.
+- La primera subida manual a Play (beta cerrada de 0.3.0) usa el `versionCode` **300** del pubspec. El desplazamiento del pipeline es 1000 justamente para que todo AAB posterior quede por encima de ese 300: Play rechaza cualquier `versionCode` que repita o baje respecto del ya subido.
 - La app informa `APP_VERSION=X.Y.Z` al registrar el teléfono para push (`POST /v1/identity/devices`).
 - Una versión ya subida a Play nunca se reutiliza: un rechazo o rollback publica un PARCHE nuevo.
 

@@ -1255,7 +1255,7 @@ jobs:
       - name: AAB release
         run: >-
           flutter build appbundle --release
-          --build-number=$(( ${{ github.run_number }} + ${{ vars.BUILD_NUMBER_OFFSET || 100 }} ))
+          --build-number=$(( ${{ github.run_number }} + ${{ vars.BUILD_NUMBER_OFFSET || 1000 }} ))
           --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}
           --dart-define=API_MODE=${{ vars.API_MODE || 'auto' }}
           --dart-define=LANDING_URL=${{ vars.LANDING_URL }}

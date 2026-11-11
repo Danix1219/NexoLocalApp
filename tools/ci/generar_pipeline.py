@@ -358,7 +358,7 @@ def build():
     y("- name: AAB release", 3)
     y("  run: >-", 3)
     y("    flutter build appbundle --release", 3)
-    y("    --build-number=$(( ${{ github.run_number }} + ${{ vars.BUILD_NUMBER_OFFSET || 100 }} ))", 3)
+    y("    --build-number=$(( ${{ github.run_number }} + ${{ vars.BUILD_NUMBER_OFFSET || 1000 }} ))", 3)
     y("    --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}", 3)
     y("    --dart-define=API_MODE=${{ vars.API_MODE || 'auto' }}", 3)
     y("    --dart-define=LANDING_URL=${{ vars.LANDING_URL }}", 3)

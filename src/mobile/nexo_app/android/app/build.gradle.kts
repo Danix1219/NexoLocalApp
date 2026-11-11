@@ -15,9 +15,10 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.example.nexo_app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    namespace = "mx.nexolocal.app"
+    compileSdk = 36
+    ndkVersion = "27.0.12077973"  // la mas alta que piden los plugins
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -29,12 +30,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.nexo_app"
+        applicationId = "mx.nexolocal.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 23
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36  // Play exige Android 16 (API 36) en apps nuevas desde 2026-08-31
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -51,6 +51,7 @@ android {
     }
     buildTypes {
         release {
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = if (keystoreProperties.isNotEmpty()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
@@ -63,7 +64,7 @@ flutter {
 }
 
 // Push (spec 050): solo si existe google-services.json (lo escribe el CI desde
-// el secreto, o lo copias tú de la consola de Firebase; no se sube al repo).
+// el secreto, o lo copias tÃº de la consola de Firebase; no se sube al repo).
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
