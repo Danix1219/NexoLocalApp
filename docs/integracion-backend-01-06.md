@@ -8,7 +8,7 @@
 | 05 trabajos | POST works con clave estable, GET providers/{id}/works con todos los cursores, DELETE propio y POST/DELETE recommend accesibles en perfil público. Autor real compuesto con perfil ya leído. |
 | 06 solicitudes | POST requests, GET mine, GET opportunities y POST close; estado/refresco en Inicio, Buscar y Mi perfil. Filtros coinciden con backend y local radio 0 usa 10 km. |
 
-Autoridad: [estado backend](../../../nexolocal_api/NexoLocalApi/docs/estado-desarrollo-endpoints.md), [incremento 06](../../../nexolocal_api/NexoLocalApi/specs/endpoints/06-solicitudes/implementacion.md). [Spec móvil 057](../specs/057-integracion-descubrimiento-trabajos-solicitudes/spec.md).
+Autoridad: [catálogo backend](../../API_NexoLocal/docs/endpoints.md), [fichas de operaciones](../../API_NexoLocal/docs/contracts/fichas-operaciones.md). [Spec móvil 057](../specs/057-integracion-descubrimiento-trabajos-solicitudes/spec.md).
 
 Decisiones: NexoApi/HttpNexoApi → Riverpod → pantallas actuales. Los grupos publicados no pasan a demo por error/red; fake sigue explícito. Listas existentes recorren páginas secuencialmente, rechazan cursores repetidos/faltantes y no truncan a la primera página. Catálogo cargando/error/reintento visible. Mutaciones mantienen sus claves por payload; cambiar payload genera otra clave después de un intento. Ubicación del servicio elegida o guardada real obligatoria; trabajo usa ubicación propia privada, nunca punto público difuminado como sustituto. Cierre envía pickedProviderId solo en solvedHere y refresca actividad; no habilita reseñas.
 

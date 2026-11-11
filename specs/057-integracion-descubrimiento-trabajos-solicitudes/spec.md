@@ -1,50 +1,44 @@
 # 057 — Integración de backend disponible en Flutter
-Estado: Borrador documental; implementación y pruebas locales ejecutadas, aceptación humana pendiente.
+
+Estado: Borrador documental; implementación y pruebas locales registradas; aceptación humana pendiente.
 
 ## 1. Contexto y alcance
-Persona con cuenta y prestador con perfil consultan/publican contenido real de los grupos 01–06 disponibles. App Flutter conserva NexoApi, Riverpod, rutas actuales y diseño aprobado. No crea endpoints de interés, detalle, pedidos o feed que todavía no existen.
+Personas con cuenta y prestadores consultan y publican contenido real de los grupos disponibles. Flutter conserva NexoApi, Riverpod, rutas y diseño aprobados. No se crean endpoints de interés, detalle, pedidos o feed que aún no existen.
 
 ## 2. Actores y precondiciones
-Cuenta real, sesión para mutaciones y perfil publicado para trabajos/oportunidades. Backend accesible con Mongo/Redis y Content Safety configurado para publicar. Solo fake explícito permite datos de ejemplo en los grupos conectados.
+Cuenta real y sesión para mutaciones; perfil publicado para trabajos y oportunidades. Backend y moderación de contenido deben estar disponibles para publicar. Solo el modo fake explícito permite datos de ejemplo.
 
 ## 3. Requisitos funcionales
-- FR-001: Consumir catálogo, búsqueda/sugerencias/mapa, trabajos y solicitudes con sus campos y cursores reales; errores explícitos sin demo implícita.
-- FR-002: Publicar con ubicación real, mantener clave de reintento por payload, cerrar solicitudes y actualizar pantallas; recomendar/retirar y borrar trabajos según propiedad.
+- FR-001: consumir catálogo, búsqueda, sugerencias, mapa, trabajos y solicitudes con campos y cursores reales; mostrar errores explícitos sin demo implícita.
+- FR-002: publicar con ubicación real y clave de reintento por payload, cerrar solicitudes y actualizar pantallas; recomendar, retirar y borrar trabajos según propiedad.
+- FR-003: cargar fotos reales para avatar, portada personal/profesional y publicaciones; esperar aprobación antes de guardar referencias.
+- FR-004: tarjetas muestran hasta tres líneas y permiten Ver más/Ver menos cuando el texto desborda, conservando descripción completa del backend.
 
 ## 4. Requisitos no funcionales y datos
-- NFR-001: Sesión/caché aisladas, estados privados sin caché obsoleta, logs sin ubicación ni consultas privadas y ninguna imagen inventada. Contratos backend autoritativos, no acceso a Mongo desde Flutter.
+- NFR-001: sesión y caché aisladas; estado privado no usa caché obsoleta; logs omiten ubicación y consultas privadas; no inventar imágenes ni acceder a Mongo desde Flutter.
+- NFR-002: no incluir credenciales Azure ni enviar Bearer a Blob; ocultar SAS en errores, conservar borrador si falla y no simular aprobación.
 
 ## 5. Frontera y decisiones
-[Solicitudes backend](../../../../nexolocal_api/NexoLocalApi/specs/endpoints/06-solicitudes/implementacion.md), [trabajos](../../../../nexolocal_api/NexoLocalApi/specs/endpoints/05-trabajos/implementacion.md). Catálogo backend usa categories; servicios consumen todas las páginas con detección de cursor repetido. Resumen de intereses degradado se conserva como desconocido. Mapa abre la solicitud mediante opportunities existente y comprueba id; no inventar GET detalle. Interés/guardados ausentes no simulan éxito en auto; fotos Próximamente. Publicaciones requieren moderación real.
+La autoridad de contrato es el [catálogo backend](../../../API_NexoLocal/docs/endpoints.md) y las [fichas de operaciones](../../../API_NexoLocal/docs/contracts/fichas-operaciones.md). Los servicios recorren páginas con detección de cursores repetidos. Mapa abre solicitudes mediante oportunidades existentes, sin inventar GET de detalle. Interés/guardados ausentes no simulan éxito. La publicación requiere moderación real.
 
 ## 6. Aceptación local
-- AC-001 → FR-001/NFR-001: test/integration verifica catálogo, tres listas con cursor, bucle inválido, claves y degradación.
-- AC-002 → FR-002/NFR-001: test/unit verifica modelo, filtros, widget de recomendación POST/DELETE y trabajo sin imágenes.
-- AC-003 → FR-001/FR-002/NFR-001: test/security verifica modo remoto, privacidad, logs y ausencia de caché de estado privado; flutter analyze y suite completa.
+- AC-001 → FR-001/NFR-001: pruebas HTTP verifican catálogo, listas paginadas, cursores inválidos, errores y degradación segura.
+- AC-002 → FR-002/NFR-001: pruebas verifican modelos, filtros, mutaciones, propiedad y ausencia de éxito ficticio.
+- AC-003 → FR-001/FR-002/NFR-001: pruebas de seguridad verifican modo remoto, privacidad, logs y caché privada.
+- AC-004 → FR-003/NFR-002: pruebas verifican carga, aprobación/rechazo y privacidad de SAS; cloud se valida por separado.
+- AC-005 → FR-004: pruebas widget/http verifican texto corto y largo, expansión y descripción completa.
 
 ## 7. Trazabilidad y límites
 | Requisito | Tareas | Criterios |
 |---|---|---|
 | FR-001 | T-001,T-003 | AC-001,AC-003 |
 | FR-002 | T-002,T-003 | AC-002,AC-003 |
-| NFR-001 | T-001,T-002,T-003 | AC-001,AC-002,AC-003 |
+| FR-003 | T-004,T-006 | AC-004 |
+| FR-004 | T-005,T-006 | AC-005 |
+| NFR-001 | T-001,T-002,T-003,T-006 | AC-001,AC-002,AC-003 |
+| NFR-002 | T-004,T-006 | AC-004 |
 
-Evidencia y límites: [integración](../../docs/integracion-backend-01-06.md). Dobles HTTP no acreditan Atlas/Content Safety ni revisión de cada recorrido físico.
+La evidencia automatizada y la [integración registrada](../../docs/integracion-backend-01-06.md) no acreditan Atlas, Content Safety, CDN ni recorridos físicos con cuenta real.
 
 ## Aprobación
-Sin revisor humano identificado. La evidencia técnica no firma Ready ni aceptación cloud.
-
-
-## Incremento de medios reales 2026-11-10
-- FR-003: seleccionar y subir fotos reales para avatar, portada personal/profesional y publicaciones; esperar aprobaci?n antes de guardar la referencia. Reutilizar composici?n actual de pantallas.
-- NFR-002: nunca incluir credenciales Azure en Flutter ni Bearer en Blob; ocultar SAS en errores, no simular aprobaci?n y mantener borrador si falla.
-- AC-004 ? FR-003/NFR-002: test/integration/http_imagenes_test.dart verifica polling y rechazo/portada; test/security verifica transporte, URL HTTPS y logs. Suite completa y flutter analyze; nube se comprueba por separado en backend.
-- T-004 ? FR-003/NFR-002/AC-004: conectar cuenta, perfil profesional y ambos compositores; ejecutar pruebas existentes y construir APK local. Sin nuevo job, Terraform ni archivo de pruebas.
-
-Autoridad: [incremento backend de medios](../../../../nexolocal_api/NexoLocalApi/specs/endpoints/14-imagenes-cdn/implementacion.md). Reemplaza el estado hist?rico Fotos Pr?ximamente; chat privado y CDN siguen fuera. Fotos m?ximo5MB y hasta6 por trabajo; no guardar una imagen processing. La instalaci?n local no acredita todos los recorridos f?sicos del usuario.
-
-
-## Corrección de publicaciones largas, 2026-11-10
-- FR-004: tarjetas de solicitud y trabajo muestran tres líneas y acción Ver más/Ver menos solo cuando el texto desborda; al expandir se lee completo. El modelo consume `description` completo de listados y conserva compatibilidad con `descriptionExcerpt`.
-- AC-005 -> FR-004: prueba widget en ancho estrecho y texto corto, expandir/contraer; prueba HTTP del backend verifica texto completo en mine/opportunities.
-- T-005 -> FR-004/AC-005: componente compartido en tarjetas y consumo del campo completo, documentar y verificar.
+Sin revisor humano identificado. La evidencia técnica no representa aceptación cloud ni firma de producto.

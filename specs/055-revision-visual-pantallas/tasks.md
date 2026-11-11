@@ -1,6 +1,5 @@
-# Tareas — 055
-- [x] T-001 FR-001: navegación única. Acepta: AC-001.
-- [x] T-002 FR-002 FR-003: fuentes y componentes/pantallas. Acepta: AC-002.
-- [x] T-003 FR-004 NFR-001: cabeceras/hojas y regresión. Acepta: AC-001/002.
+# Tareas 055
 
-Evidencia y límites: [revisión por pantalla](../../docs/revision-visual-pantallas.md). T-002 acredita implementación y layout técnico; la aceptación visual humana exhaustiva queda pendiente.
+- [ ] T-001 FR-001: corregir navegación raíz para evitar barras duplicadas. Acepta: AC-001/AC-003.
+- [ ] T-002 FR-002/FR-003: aplicar pesos tipográficos y reglas visuales por pantalla. Acepta: AC-002.
+- [ ] T-003 FR-001/FR-004/NFR-001: revisar cabeceras, hojas, navegación y regresión accesible. Acepta: AC-001/AC-003.

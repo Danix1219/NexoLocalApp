@@ -1,22 +1,38 @@
 # 055 — Revisión visual por pantalla y navegación única
-## 1. Contexto
-Captura del usuario: Mi perfil duplica barra inferior y texto aparece demasiado fino. La referencia es https://nexo-local-v1.netlify.app/ recorrida en Chrome.
-## 2. Objetivo
-Corregir diferencias observables por pantalla y no declarar paridad completa solo por componentes compartidos.
-## 3. Alcance
-- FR-001: una barra inferior visible en cada ruta principal/detalle; navegación de perfil y edición en navegador raíz.
-- FR-002: pesos estáticos explícitos de fuentes de referencia en todas las pantallas.
-- FR-003: ajustar portada/avatar, encabezados, lista de prestadores, compositores y mensajes según reglas finales observadas.
-- FR-004: mantener cabeceras relevantes al desplazar Inicio/Buscar y selector de ubicación como hoja donde corresponde.
-- NFR-001: conservar datos reales, correo verificado, formularios y movimientos reducidos; no inventar contenido pendiente.
-## 4. Contratos
-Sin nuevos endpoints ni datos demo implícitos. Se conserva 054.
-## 5. Criterios
-AC-001: ruta Cuenta → Mi perfil → editar/volver/navegar tiene una sola barra y acciones visibles.
-AC-002: comparación visual de capturas con fuentes cargadas, sin errores de layout a 390 y 320 px.
-## 6. Verificación
-Pruebas actuales unit/integration/security, analizador, APK e inspección en Android. Auditoría en docs/revision-visual-pantallas.md registra diferencias aplicadas y límites.
-## 7. Entrega
-Sin publicación ni firma humana.
+
+Estado: Borrador documental; correcciones locales registradas; aceptación visual humana pendiente.
+
+## 1. Contexto y alcance
+La revisión parte de capturas donde Mi perfil duplica la barra inferior y algunos textos se perciben demasiado finos. Se registra la corrección por pantalla, manteniendo como referencia la maqueta aprobada y las rutas existentes.
+
+## 2. Actores y precondiciones
+Persona con sesión que consulta Cuenta, Mi perfil, edición, Inicio y Buscar. La revisión visual debe comparar pantallas completas en anchos de 390 y 320 píxeles.
+
+## 3. Requisitos funcionales
+- FR-001: cada ruta principal o detalle muestra una sola barra inferior y permite navegar entre perfil, edición y pantallas raíz.
+- FR-002: las pantallas declaran pesos tipográficos estáticos y legibles de forma consistente.
+- FR-003: portada, avatar, encabezados, listas, compositores y mensajes siguen las reglas visuales aprobadas.
+- FR-004: Inicio y Buscar mantienen cabeceras relevantes al desplazarse, y la selección de ubicación se presenta como hoja cuando corresponde.
+
+## 4. Requisitos no funcionales y datos
+- NFR-001: conservar datos reales, verificación de correo y formularios; no inventar contenido pendiente y respetar movimiento reducido.
+
+## 5. Frontera y decisiones
+No se incorporan endpoints ni datos de demostración. Se conserva el alcance de [perfil profesional](../054-integracion-perfiles/spec.md). La auditoría registra las diferencias y límites en [revisión visual por pantalla](../../docs/revision-visual-pantallas.md).
+
+## 6. Aceptación local
+- AC-001 → FR-001/FR-004: Cuenta → Mi perfil → editar/volver conserva una sola barra y acciones visibles.
+- AC-002 → FR-002/FR-003: comparación visual a 390 y 320 píxeles sin errores de layout y con fuentes cargadas.
+- AC-003 → FR-001/FR-004/NFR-001: regresión de rutas principales y movimiento reducido; aprobación visual exhaustiva humana sigue pendiente.
+
+## 7. Trazabilidad y límites
+| Requisito | Tareas | Criterios |
+|---|---|---|
+| FR-001 | T-001,T-003 | AC-001,AC-003 |
+| FR-002 | T-002 | AC-002 |
+| FR-003 | T-002 | AC-002 |
+| FR-004 | T-003 | AC-001,AC-003 |
+| NFR-001 | T-003 | AC-003 |
+
 ## Aprobación
-Estado: Borrador documental; corrección autorizada, aceptación humana pendiente.
+Correcciones locales registradas; aceptación visual humana exhaustiva pendiente.
