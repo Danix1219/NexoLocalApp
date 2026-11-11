@@ -47,6 +47,18 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Widget _withHeader(List<Widget> header, {EdgeInsetsGeometry? padding, required List<Widget> children}) => Column(
+        children: [
+          header.first,
+          Expanded(
+              child: ListView(
+            padding: padding,
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [...header.skip(1), ...children],
+          )),
+        ],
+      );
+
   // ------------------------------------------------------------- cliente
   Widget _client(SessionState s) {
     final feed = ref.watch(feedProvider);
@@ -79,8 +91,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (_clientTab == 'mine') {
       if (s.isGuest) {
-        return ListView(children: [
-          ...header,
+        return _withHeader(header, children: [
           EmptyState(
             icon: 'search',
             title: 'Publica lo que necesitas',
@@ -97,10 +108,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       final active =
           orders.asData?.value.items.where((o) => o.status != 'cancelled' && o.status != 'rejected').toList() ??
               const <Order>[];
-      return ListView(
+      return _withHeader(
+        header,
         padding: const EdgeInsets.only(bottom: 90),
         children: [
-          ...header,
           if (active.isNotEmpty) ...[
             const Sect('Mis servicios'),
             for (final o in active) OrderMiniCard(o: o),
@@ -122,10 +133,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
     }
 
-    return ListView(
+    return _withHeader(
+      header,
       padding: const EdgeInsets.only(bottom: 90),
       children: [
-        ...header,
         asyncView(feed, (f) {
           final interests = {
             ...ref.watch(interestsProvider),
@@ -205,10 +216,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (_proTab == 'comm') {
       final feed = ref.watch(feedProvider);
-      return ListView(
+      return _withHeader(
+        header,
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          ...header,
           const Sect('Trabajos de tu rubro'),
           asyncView(feed, (fp) {
             final mine = me.profile.categories.toSet();
@@ -230,10 +241,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     final all = orders.asData?.value.items ?? const <Order>[];
     final pend = all.where((o) => o.status == 'pending').toList();
     final ok = all.where((o) => o.status == 'accepted').toList();
-    return ListView(
+    return _withHeader(
+      header,
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        ...header,
         if (pend.isNotEmpty) ...[
           const Sect('Pedidos por responder'),
           for (final o in pend) PendingOrderCard(o: o),

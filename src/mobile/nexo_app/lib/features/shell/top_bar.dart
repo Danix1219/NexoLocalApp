@@ -67,14 +67,14 @@ Future<void> openSearchLocation(BuildContext context, WidgetRef ref) async {
     extra: LocationPickerArgs(
       title: '¿Dónde buscas el servicio?',
       subtitle: 'Cámbiala cuando busques para otro lugar, como la casa de un familiar o tu negocio.',
-      initial: loc.point,
+      initial: loc.hasSelection ? loc.point : null,
       radiusKm: loc.radiusKm,
       button: 'Buscar aquí',
     ),
   );
   if (r == null) return;
   try {
-    await ref.read(searchLocationProvider.notifier).set(r.point, r.radiusKm, source: r.source);
+    await ref.read(searchLocationProvider.notifier).set(r.point, r.radiusKm, source: r.source, zoneLabel: r.zoneLabel);
     showNexoToast('Resultados adaptados a ${ref.read(searchLocationProvider).zoneLabel}');
   } catch (e) {
     showNexoToast(apiErrorMessage(e));

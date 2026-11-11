@@ -11,6 +11,8 @@ import '../../core/auth/session_controller.dart';
 import '../../core/local/sync_controller.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_icon.dart';
+import '../../core/widgets/nexo_motion.dart';
+import '../../core/widgets/nexo_navigation.dart';
 import '../../core/widgets/nexo_sheet.dart';
 import '../../core/widgets/toast.dart';
 import '../../data/api_provider.dart';
@@ -36,7 +38,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     super.initState();
     // Sin SignalR todavía: el globo de no leídos se actualiza cada 30 s.
     _poll = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!mounted) return;
+      if (!mounted || ref.read(sessionProvider).recoveryOnly) return;
       ref.invalidate(inboxProvider);
       ref.invalidate(notificationsProvider);
     });
@@ -85,19 +87,11 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     super.dispose();
   }
 
-  static const _items = [
-    ('home', 'Inicio'),
-    ('search', 'Buscar'),
-    ('plus', 'Publicar'),
-    ('chat', 'Mensajes'),
-    ('user', 'Cuenta'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
     final role = ref.watch(roleProvider);
-    final unread = ref.watch(inboxProvider(role)).asData?.value.$2 ?? 0;
+    final unread = session.recoveryOnly ? 0 : ref.watch(inboxProvider(role)).asData?.value.$2 ?? 0;
     final demo = ref.watch(demoGroupsProvider);
     final sync = ref.watch(syncProvider);
 
@@ -117,137 +111,32 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     final current = widget.shell.currentIndex;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
-      child: Scaffold(
-        backgroundColor: NexoColors.bg,
-        body: SafeArea(
-          bottom: false,
-          child: Column(children: [
-            if (sync.offline || sync.pending > 0)
-              _OfflineBanner(sync: sync)
-            else if (demo.isNotEmpty && !_hideDemo)
-              _DemoBanner(onClose: () => setState(() => _hideDemo = true)),
-            Expanded(child: widget.shell),
-          ]),
-        ),
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            color: NexoColors.surface,
-            border: Border(top: BorderSide(color: NexoColors.line)),
-            boxShadow: [BoxShadow(color: Color(0x121F302B), blurRadius: 20, offset: Offset(0, -5))],
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(7, 7, 7, 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  for (var i = 0; i < _items.length; i++)
-                    Expanded(
-                      child: _NavButton(
-                        icon: _items[i].$1,
-                        label: _items[i].$2,
-                        selected: current == i,
-                        middle: i == 2,
-                        badge: i == 3 ? unread : 0,
-                        onTap: () => widget.shell.goBranch(i, initialLocation: i == current),
-                      ),
-                    ),
-                ],
-              ),
+      child: PopScope(
+          canPop: current == 0,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && current != 0) widget.shell.goBranch(0);
+          },
+          child: Scaffold(
+            backgroundColor: NexoColors.bg,
+            body: SafeArea(
+              bottom: false,
+              child: Column(children: [
+                if (sync.offline || sync.pending > 0)
+                  _OfflineBanner(sync: sync)
+                else if (demo.isNotEmpty && !_hideDemo)
+                  _DemoBanner(onClose: () => setState(() => _hideDemo = true)),
+                Expanded(child: NexoEnter(trigger: current, child: widget.shell)),
+              ]),
             ),
-          ),
-        ),
-      ),
+            bottomNavigationBar: NexoNavigation(
+                current: current,
+                unread: unread,
+                onSelected: (i) => widget.shell.goBranch(i, initialLocation: i == current)),
+          )),
     );
   }
 }
 
-class _NavButton extends StatelessWidget {
-  const _NavButton({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.middle = false,
-    this.badge = 0,
-  });
-
-  final String icon;
-  final String label;
-  final bool selected;
-  final bool middle;
-  final int badge;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? NexoColors.brandDeep : (middle ? NexoColors.ink : NexoColors.muted);
-    Widget ic = middle
-        ? Container(
-            width: 42,
-            height: 32,
-            decoration: BoxDecoration(color: NexoColors.brand, borderRadius: BorderRadius.circular(11)),
-            child: const Center(child: NexoIcon('plus', size: 22, color: Colors.white)),
-          )
-        : NexoIcon(icon, size: 24, color: color);
-    if (badge > 0) {
-      ic = Stack(
-        clipBehavior: Clip.none,
-        children: [
-          ic,
-          Positioned(
-            right: -9,
-            top: -5,
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 18),
-              height: 18,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              decoration: BoxDecoration(
-                color: NexoColors.accent,
-                borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: NexoColors.surface, width: 1.5),
-              ),
-              child: Center(
-                child: Text(badge > 99 ? '99+' : '$badge',
-                    style: NexoText.body(10.5, weight: FontWeight.w800, color: Colors.white, height: 1)),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: badge > 0 ? '$label, $badge sin leer' : label,
-      excludeSemantics: true,
-      child: Material(
-        color: selected ? NexoColors.brandSoft : Colors.transparent,
-        borderRadius: BorderRadius.circular(13),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(13),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 52),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ic,
-                const SizedBox(height: 3),
-                Text(label, style: NexoText.body(10.5, weight: FontWeight.w600, color: color)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Aviso discreto cuando algún grupo responde con datos de ejemplo (spec 045).
 class _DemoBanner extends StatelessWidget {
   const _DemoBanner({required this.onClose});
   final VoidCallback onClose;

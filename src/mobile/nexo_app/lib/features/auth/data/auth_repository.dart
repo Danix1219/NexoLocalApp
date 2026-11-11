@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/env.dart';
+import '../../../data/models.dart';
 import '../../../core/auth/auth_tokens.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
@@ -124,6 +125,8 @@ class AuthRepository {
   /// `POST /v1/identity/accounts`. La [idempotencyKey] se reutiliza en los
   /// reintentos del mismo envío para no crear la cuenta dos veces.
   Future<CreatedAccount> createAccount({
+    required GeoPoint location,
+    required int radiusKm,
     required String ticket,
     required String name,
     required String password,
@@ -138,9 +141,9 @@ class AuthRepository {
             'name': name.trim(),
             'password': password,
             'acceptedTerms': true,
-            'searchLocation': {'lat': Env.defaultLat, 'lng': Env.defaultLng},
-            'searchZoneLabel': Env.defaultZone,
-            'searchRadiusKm': Env.defaultRadiusKm,
+            'searchLocation': location.toJson(),
+            'searchZoneLabel': 'Ubicacion seleccionada',
+            'searchRadiusKm': radiusKm,
             'intent': intent,
           },
           options: Options(headers: {'Idempotency-Key': idempotencyKey}),

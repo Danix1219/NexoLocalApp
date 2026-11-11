@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
+import 'nexo_motion.dart';
 
 /// Messenger global: los avisos sobreviven a los cambios de pantalla.
 final rootMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -25,5 +26,8 @@ void showNexoToast(String message) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       duration: const Duration(milliseconds: 2600),
     ),
+    snackBarAnimationStyle: AnimationStyle(
+        duration: NexoMotion.duration(m.context, const Duration(milliseconds: 200)),
+        reverseDuration: NexoMotion.duration(m.context, const Duration(milliseconds: 200))),
   );
 }

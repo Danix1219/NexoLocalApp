@@ -110,6 +110,15 @@ class _FNotif {
 /// haría la otra parte (un prestador que se interesa, que acepta el pedido o
 /// que responde el chat) para poder recorrer todos los flujos.
 class FakeNexoApi implements NexoApi {
+  @override
+  Future<List<GeoPlace>> searchPlaces(String query, {GeoPoint? at}) async =>
+      throw const ApiException(code: 'geocoding.unavailable', status: 503);
+  @override
+  Future<GeoPlace?> reversePlace(GeoPoint point) async =>
+      throw const ApiException(code: 'geocoding.unavailable', status: 503);
+  @override
+  Future<LocationResult?> getLocation() async => null;
+
   FakeNexoApi(this.ctx) {
     _seedClientDemo();
   }
@@ -995,6 +1004,12 @@ class FakeNexoApi implements NexoApi {
     return LocationResult(point: p, zoneLabel: zoneOf(p), radiusKm: radiusKm, summary: '$n prestadores atienden aquí');
   }
 
+  String? _cover;
+  @override
+  Future<String?> myCover() async => _cover;
+  @override
+  Future<String> setMyCover(String uploadId) async => _cover = 'demo://cover/$uploadId';
+
   // ============================================================== trabajos
   @override
   Future<Work> createWork({
@@ -1004,6 +1019,7 @@ class FakeNexoApi implements NexoApi {
     String? tag,
     GeoPoint? location,
     List<String> imageUploadIds = const [],
+    String? idempotencyKey,
   }) async {
     await _lag(500);
     final me = _me;
@@ -1016,6 +1032,20 @@ class FakeNexoApi implements NexoApi {
     me.jobs++;
     me.upd = 0;
     return _work(w);
+  }
+
+  @override
+  Future<Work> editWork(Work original,
+      {required String title, required String text, String? tag, required List<String> imageUploadIds}) async {
+    await _lag();
+    final index = _works.indexWhere((w) => w.id == original.id && w.p == 'me');
+    if (index < 0) throw StateError('No se puede editar este trabajo');
+    final old = _works[index];
+    final updated =
+        FWork(old.id, old.p, old.cat, old.zone, title, text, old.ago, old.recs, tag, List.of(imageUploadIds))
+          ..recommended = old.recommended;
+    _works[index] = updated;
+    return _work(updated);
   }
 
   @override
@@ -1050,7 +1080,7 @@ class FakeNexoApi implements NexoApi {
     required String urgency,
     required String contact,
     required GeoPoint location,
-    String? imageUploadId,
+    List<String> imageUploadIds = const [],
     required String idempotencyKey,
   }) async {
     await _lag(500);
@@ -1066,7 +1096,7 @@ class FakeNexoApi implements NexoApi {
       contact: contact,
       loc: location,
       mine: true,
-      imageUrl: imageUploadId,
+      imageUrl: imageUploadIds.isEmpty ? null : imageUploadIds.first,
     );
     _reqs.insert(0, r);
     // Prototipo: hasta 3 prestadores de la zona se interesan unos segundos después.
@@ -1086,6 +1116,35 @@ class FakeNexoApi implements NexoApi {
       });
     }
     return _request(r);
+  }
+
+  @override
+  Future<ServiceRequest> editRequest(String id,
+      {required String title,
+      required String description,
+      required String urgency,
+      required String contact,
+      required List<String> imageUploadIds}) async {
+    await _lag();
+    final old = _reqs.firstWhere((r) => r.id == id);
+    if (!old.mine || old.closed) throw StateError('No se puede editar');
+    final index = _reqs.indexOf(old);
+    final updated = FReq(
+        id: old.id,
+        user: old.user,
+        cat: old.cat,
+        zone: old.zone,
+        title: title,
+        text: description,
+        urg: urgency,
+        ago: old.ago,
+        contact: contact,
+        loc: old.loc,
+        mine: true,
+        interested: old.interested,
+        imageUrl: imageUploadIds.isEmpty ? null : imageUploadIds.first);
+    _reqs[index] = updated;
+    return _request(updated);
   }
 
   @override

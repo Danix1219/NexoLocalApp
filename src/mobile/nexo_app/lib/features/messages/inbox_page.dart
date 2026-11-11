@@ -42,7 +42,7 @@ class _InboxPageState extends ConsumerState<InboxPage> {
     return RefreshIndicator(
       color: NexoColors.brand,
       onRefresh: () async => ref.invalidate(inboxProvider(role)),
-      child: ListView(
+      child: PinnedHeaderList(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           const ScreenTitleBar('Mensajes'),

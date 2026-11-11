@@ -8,6 +8,7 @@ import '../../app/theme/typography.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/nexo_navigation.dart';
 import '../../data/api_provider.dart';
 import '../common/actions.dart';
 
@@ -20,6 +21,7 @@ class ComparePage extends ConsumerWidget {
     final sel = ref.watch(compareProvider);
     if (sel.length < 2) {
       return NexoPage(
+        bottom: const NexoNavigation(current: 1),
         child: Column(children: [
           const SubBar('Comparar'),
           EmptyState(
@@ -35,6 +37,7 @@ class ComparePage extends ConsumerWidget {
     final ids = sel.take(2).map((p) => p.id).join(',');
     final v = ref.watch(compareResultProvider(ids));
     return NexoPage(
+      bottom: const NexoNavigation(current: 1),
       background: NexoColors.surface,
       child: Column(
         children: [
@@ -66,7 +69,7 @@ class ComparePage extends ConsumerWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: NexoText.body(13.5, weight: FontWeight.w800, height: 1.2)),
-                            if (p.phoneVerified) const NexoIcon('shield', size: 15, color: NexoColors.ok),
+                            if (p.emailVerified) const NexoIcon('shield', size: 15, color: NexoColors.ok),
                           ]),
                         ),
                       ),

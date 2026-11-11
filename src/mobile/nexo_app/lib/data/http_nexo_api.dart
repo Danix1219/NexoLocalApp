@@ -1,19 +1,49 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:uuid/uuid.dart';
 
+import '../app/env.dart';
 import '../core/auth/auth_tokens.dart';
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import 'models.dart';
+import 'provider_contract.dart';
 import 'nexo_api.dart';
 
 /// Implementación contra el backend (.NET en Azure). Rutas y campos tal cual
 /// `docs/endpoints`. Todas las llamadas llevan el Bearer (el interceptor lo
 /// renueva solo).
 class HttpNexoApi implements NexoApi {
-  HttpNexoApi(this._dio, {Dio? uploadDio}) : _uploadDio = uploadDio ?? Dio();
+  @override
+  Future<List<GeoPlace>> searchPlaces(String query, {GeoPoint? at}) async {
+    final data = await _publicPlaces('/v1/discovery/places/search', {'q': query, ..._at(at)});
+    return (data['items'] as List).map((p) => GeoPlace.fromJson(Map<String, dynamic>.from(p as Map))).toList();
+  }
+
+  @override
+  Future<GeoPlace?> reversePlace(GeoPoint point) async {
+    final data = await _publicPlaces('/v1/discovery/places/reverse', _at(point));
+    return data['place'] == null ? null : GeoPlace.fromJson(Map<String, dynamic>.from(data['place'] as Map));
+  }
+
+  @override
+  Future<LocationResult?> getLocation() => _call(() async {
+        final response = await _dio.get('/v1/discovery/me/location', options: _auth());
+        if (response.data == null || response.data == '') return null;
+        return LocationResult.fromJson(Map<String, dynamic>.from(response.data as Map));
+      });
+
+  Future<Json> _publicPlaces(String path, Map<String, dynamic> query) => _call(() async {
+        final response =
+            await _dio.get<dynamic>(path, queryParameters: query, options: Options(extra: const {kAuth: false}));
+        if (response.data is! Map) throw const ApiException(code: 'client.unexpected_response');
+        return Json.from(response.data as Map);
+      });
+
+  HttpNexoApi(this._dio, {Dio? uploadDio, this.refreshToken}) : _uploadDio = uploadDio ?? Dio();
 
   final Dio _dio;
+  final Future<String> Function()? refreshToken;
 
   /// Cliente sin interceptores ni baseUrl para la URL firmada del
   /// almacenamiento: nunca debe llevar el Bearer de Nexo (spec 046).
@@ -67,7 +97,7 @@ class HttpNexoApi implements NexoApi {
 
   // ---------------- cuenta ----------------
   @override
-  Future<AccountScreen> accountScreen() async => AccountScreen.fromJson(await _get('/v1/screens/account'));
+  Future<AccountScreen> accountScreen() async => AccountScreen.fromJson(await _get('/v1/identity/me'));
 
   @override
   Future<void> updateMe({String? name, String? photoUploadId}) => _send('PATCH', '/v1/identity/me', body: {
@@ -76,8 +106,18 @@ class HttpNexoApi implements NexoApi {
       });
 
   @override
-  Future<AuthTokens?> switchMode(String mode) async =>
-      AuthTokens.tryFromAccount(await _send('POST', '/v1/identity/me/mode', body: {'mode': mode}));
+  Future<AuthTokens?> switchMode(String mode) async => _switchMode(mode);
+
+  Future<AuthTokens?> _switchMode(String mode) async {
+    final result = await _send('POST', '/v1/identity/me/mode', body: {'mode': mode});
+    if (result['tokenRefreshRequired'] != true) return AuthTokens.tryFromAccount(result);
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/connect/token',
+      data: {'grant_type': 'refresh_token', 'refresh_token': await refreshToken!()},
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+    return AuthTokens.fromOAuth(response.data!);
+  }
 
   @override
   Future<String> requestDeletion({required String password, String? reason}) async {
@@ -91,10 +131,10 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<String> addPhone(String phone) async =>
-      '${(await _send('POST', '/v1/identity/me/phone', body: {'phone': phone}))['maskedPhone'] ?? phone}';
+      '${(await _send('POST', '/v1/identity/me/phone', body: {'phone': phone}))['phone'] ?? phone}';
 
   @override
-  Future<void> confirmPhone(String code) => _send('POST', '/v1/identity/me/phone/confirm', body: {'code': code});
+  Future<void> confirmPhone(String code) async => throw const ApiException(code: 'phone.verification_retired');
 
   // ---------------- perfil prestador ----------------
   @override
@@ -106,7 +146,7 @@ class HttpNexoApi implements NexoApi {
     try {
       return MyProvider.fromJson(await _get('/v1/discovery/providers/me'));
     } on ApiException catch (e) {
-      if (e.status == 404) return null;
+      if (e.status == 404 && e.code == 'provider.not_found') return null;
       rethrow;
     }
   }
@@ -118,27 +158,30 @@ class HttpNexoApi implements NexoApi {
       'name': d.name,
       if (d.kind == 'business') 'owner': d.owner,
       if (d.kind == 'business') 'sector': d.sector,
-      if (d.activity.isNotEmpty) 'activity': d.activity,
+      if (d.kind == 'business') 'activity': d.activity,
       if (d.bio.isNotEmpty) 'bio': d.bio,
-      'experience': d.experience,
+      'experience': d.experience ?? 0,
       'crew': d.crew,
       if (d.kind == 'business' && d.crew == 'team' && d.teamSize != null) 'teamSize': d.teamSize,
       if (d.kind == 'trade') 'trades': d.trades,
-      'attention': d.attention,
+      'attention': d.kind == 'trade' ? 'home' : d.attention,
       'categories': d.categories,
-      'specialties': d.specialties,
+      'specialties': providerSpecialtySlugs(d.categories, d.specialties),
       'location': d.location?.toJson(),
       'radiusKm': d.attention == 'shop' ? 0 : d.radiusKm,
       'photoUploadId': d.photoUploadId,
       'coverUploadId': d.coverUploadId,
       'acceptedRules': d.acceptedRules,
     });
-    return '${j['providerId'] ?? ''}';
+    final id = j['providerId'];
+    if (id is! String || id.isEmpty) throw const ApiException(code: 'client.unexpected_response');
+    return id;
   }
 
   @override
-  Future<void> patchProvider(String section, Json body) =>
-      _send('PATCH', '/v1/discovery/providers/me/$section', body: body);
+  Future<void> patchProvider(String section, Json body) async {
+    await _send('PATCH', '/v1/discovery/providers/me/$section', body: body);
+  }
 
   @override
   Future<CompareResult> compare(List<String> ids, {GeoPoint? at}) async =>
@@ -146,8 +189,10 @@ class HttpNexoApi implements NexoApi {
 
   // ---------------- descubrimiento ----------------
   @override
-  Future<List<ServiceCategory>> categories() async =>
-      _items(await _get('/v1/discovery/categories'), ServiceCategory.fromJson);
+  Future<List<ServiceCategory>> categories() async => _call(() async {
+        final j = await _get('/v1/discovery/categories');
+        return (j['categories'] as List).map((v) => ServiceCategory.fromJson(Json.from(v as Map))).toList();
+      });
 
   @override
   Future<FeedPage> feed({required GeoPoint at, String? cursor}) async {
@@ -226,8 +271,9 @@ class HttpNexoApi implements NexoApi {
     String? tag,
     GeoPoint? location,
     List<String> imageUploadIds = const [],
+    String? idempotencyKey,
   }) async =>
-      Work.fromJson(await _send('POST', '/v1/discovery/works', idem: _uuid.v4(), body: {
+      Work.fromJson(await _send('POST', '/v1/discovery/works', idem: idempotencyKey ?? _uuid.v4(), body: {
         'category': category,
         'title': title,
         'text': text,
@@ -236,6 +282,17 @@ class HttpNexoApi implements NexoApi {
         'imageUploadIds': imageUploadIds,
       }));
 
+  @override
+  Future<Work> editWork(Work original,
+          {required String title, required String text, String? tag, required List<String> imageUploadIds}) async =>
+      Work.fromJson(
+          await _send('PATCH', '/v1/discovery/works/${original.id}', body: {
+            'title': title,
+            'text': text,
+            'tag': tag,
+            'imageUploadIds': imageUploadIds,
+          }),
+          provider: original.provider);
   @override
   Future<void> deleteWork(String id) => _send('DELETE', '/v1/discovery/works/$id');
 
@@ -246,8 +303,26 @@ class HttpNexoApi implements NexoApi {
   }
 
   @override
-  Future<List<Work>> providerWorks(String providerId) async =>
-      _items(await _get('/v1/discovery/providers/$providerId/works', {'limit': 30}), (w) => Work.fromJson(w));
+  Future<List<Work>> providerWorks(String providerId) =>
+      _allPages('/v1/discovery/providers/$providerId/works', {'limit': 50}, Work.fromJson);
+
+  // Preserve all records for existing list providers and reject cursor loops.
+  Future<List<T>> _allPages<T>(String path, Map<String, dynamic> query, T Function(Json) parse) async {
+    final items = <T>[];
+    final seen = <String>{};
+    String? cursor;
+    do {
+      final page = await _get(path, {...query, if (cursor != null) 'cursor': cursor});
+      items.addAll(_items(page,
+          (j) => parse({...j, if (page['interestSummaryAvailable'] == false) 'interestSummaryAvailable': false})));
+      cursor = page['nextCursor']?.toString();
+      if (page['hasMore'] != true) break;
+      if (cursor == null || cursor.isEmpty || !seen.add(cursor)) {
+        throw const ApiException(code: 'client.unexpected_response');
+      }
+    } while (true);
+    return items;
+  }
 
   // ---------------- solicitudes ----------------
   @override
@@ -258,7 +333,7 @@ class HttpNexoApi implements NexoApi {
     required String urgency,
     required String contact,
     required GeoPoint location,
-    String? imageUploadId,
+    List<String> imageUploadIds = const [],
     required String idempotencyKey,
   }) async =>
       ServiceRequest.fromJson(
@@ -269,26 +344,42 @@ class HttpNexoApi implements NexoApi {
             'urgency': urgency,
             'contact': contact,
             'location': location.toJson(),
-            if (imageUploadId != null) 'imageUploadId': imageUploadId,
+            'imageUploadIds': imageUploadIds,
           }),
           mine: true);
 
   @override
-  Future<List<ServiceRequest>> myRequests() async => _items(
-      await _get('/v1/discovery/requests/mine', {'status': 'all', 'limit': 50}),
-      (r) => ServiceRequest.fromJson(r, mine: true));
+  Future<ServiceRequest> editRequest(String id,
+          {required String title,
+          required String description,
+          required String urgency,
+          required String contact,
+          required List<String> imageUploadIds}) async =>
+      ServiceRequest.fromJson(
+          await _send('PATCH', '/v1/discovery/requests/$id', body: {
+            'title': title,
+            'description': description,
+            'urgency': urgency,
+            'contact': contact,
+            'imageUploadIds': imageUploadIds,
+          }),
+          mine: true);
+  @override
+  Future<List<ServiceRequest>> myRequests() => _allPages(
+      '/v1/discovery/requests/mine', {'status': 'all', 'limit': 50}, (j) => ServiceRequest.fromJson(j, mine: true));
 
   @override
-  Future<List<ServiceRequest>> opportunities(OppFilters f) async => _items(
-      await _get('/v1/discovery/requests/opportunities', {
+  Future<List<ServiceRequest>> opportunities(OppFilters f) => _allPages(
+      '/v1/discovery/requests/opportunities',
+      {
         'cat': f.cat,
         'today': f.today,
         'inRadius': f.inRadius,
         'myServiceOnly': f.myServiceOnly,
         'q': f.q.trim(),
         'limit': 50,
-      }),
-      (r) => ServiceRequest.fromJson(r));
+      },
+      ServiceRequest.fromJson);
 
   @override
   Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId}) =>
@@ -500,9 +591,19 @@ class HttpNexoApi implements NexoApi {
   Future<void> markNotificationsRead(List<String> ids) =>
       _send('POST', '/v1/engagement/notifications/read', body: {'notificationIds': ids});
 
+  @override
+  Future<String?> myCover() async => (await _get('/v1/discovery/me/cover'))['url'] as String?;
+  @override
+  Future<String> setMyCover(String uploadId) async =>
+      (await _send('PUT', '/v1/discovery/me/cover', body: {'uploadId': uploadId}))['url'] as String;
+
   // ---------------- imágenes ----------------
   @override
   Future<String> upload(PickedImage img, {required String purpose}) => _call(() async {
+        if (img.bytes.isEmpty || img.bytes.length > 5242880) throw const ApiException(code: 'upload.too_large');
+        if (!{'image/jpeg', 'image/png', 'image/webp'}.contains(img.contentType)) {
+          throw const ApiException(code: 'upload.content_type_invalid');
+        }
         final t = await _send('POST', '/v1/discovery/uploads', body: {
           'purpose': purpose,
           'contentType': img.contentType,
@@ -510,7 +611,16 @@ class HttpNexoApi implements NexoApi {
           if (img.width != null) 'width': img.width,
           if (img.height != null) 'height': img.height,
         });
-        final id = '${t['uploadId']}';
+        final id = t['uploadId'];
+        final uri = Uri.tryParse('${t['uploadUrl']}');
+        if (id is! String ||
+            id.isEmpty ||
+            uri == null ||
+            !Env.isSecureBaseUrl(uri.toString(), release: kReleaseMode) ||
+            uri.userInfo.isNotEmpty ||
+            t['method'] != null && t['method'] != 'PUT') {
+          throw const ApiException(code: 'client.unexpected_response');
+        }
         final headers = <String, dynamic>{};
         if (t['headers'] is Map) {
           (t['headers'] as Map).forEach((k, v) => headers['$k'] = '$v');
@@ -521,8 +631,19 @@ class HttpNexoApi implements NexoApi {
           data: Stream.fromIterable([img.bytes]),
           options: Options(headers: {...headers, Headers.contentLengthHeader: img.bytes.length}),
         );
-        await _send('POST', '/v1/discovery/uploads/$id/complete');
-        return id;
+        var state = await _send('POST', '/v1/discovery/uploads/$id/complete');
+        for (var n = 0; n < 40; n++) {
+          if (state['status'] == 'approved') return id;
+          if (state['status'] == 'rejected') throw const ApiException(code: 'upload.rejected_by_moderation');
+          if (state['status'] != 'processing' && state['status'] != 'uploaded' && state['status'] != 'pending') {
+            throw const ApiException(code: 'client.unexpected_response');
+          }
+          if (n > 0) await Future<void>.delayed(const Duration(seconds: 2));
+          state = await _get('/v1/discovery/uploads/$id');
+        }
+        throw const ApiException(
+            code: 'upload.processing_timeout',
+            detail: 'La foto sigue en revisión. Espera un momento y vuelve a intentarlo.');
       });
 
   // ---------------- asistente (IA generativa, EP-082) ----------------

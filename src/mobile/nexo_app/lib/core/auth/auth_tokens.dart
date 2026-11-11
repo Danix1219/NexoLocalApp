@@ -41,11 +41,12 @@ class AuthTokens {
 /// Claims que la app lee del access token. Son solo una pista para la UI: el
 /// servidor vuelve a autorizar cada petición (constitución §2).
 class TokenClaims {
-  const TokenClaims({this.sub, this.mode = 'client', this.hasProvider = false});
+  const TokenClaims({this.sub, this.mode = 'client', this.hasProvider = false, this.recoveryOnly = false});
 
   final String? sub;
   final String mode;
   final bool hasProvider;
+  final bool recoveryOnly;
 
   static TokenClaims decode(String jwt) {
     try {
@@ -56,6 +57,7 @@ class TokenClaims {
       final hp = m['has_provider'];
       return TokenClaims(
         sub: m['sub']?.toString(),
+        recoveryOnly: m['recovery_only']?.toString() == 'true',
         mode: m['mode']?.toString() == 'provider' ? 'provider' : 'client',
         hasProvider: hp == true || hp?.toString().toLowerCase() == 'true',
       );

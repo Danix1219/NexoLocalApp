@@ -40,11 +40,21 @@ class OfflineCacheInterceptor extends Interceptor {
 
   /// Datos que nunca se guardan en el teléfono.
   static const _never = [
+    '/identity/me',
+    '/discovery/places',
+    '/discovery/me/location',
+    '/discovery/providers',
     '/contacts/',
     '/uploads',
+    '/discovery/me/cover',
+    '/discovery/media',
     '/identity/devices',
     '/identity/email',
     '/identity/password',
+    '/discovery/requests',
+    '/discovery/works',
+    '/discovery/map',
+    '/discovery/search',
     '/reports'
   ];
 

@@ -8,16 +8,19 @@ import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
 import '../../core/auth/session_controller.dart';
 import '../../core/auth/token_storage.dart';
+import '../../core/network/api_client.dart';
 import '../../core/widgets/map_view.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_field.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_sheet.dart';
-import '../../core/widgets/pick_image.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/photo_feedback.dart';
 import '../../data/api_provider.dart';
+import '../../core/widgets/catalog_status.dart';
 import '../../data/models.dart';
+import '../../core/widgets/pick_image.dart';
 import '../auth/data/auth_repository.dart';
 import '../auth/presentation/legal_sheets.dart';
 import '../provider/edit_sheets.dart';
@@ -51,6 +54,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       await ref.read(sessionProvider.notifier).setMode(mode, tokens: tokens, hasProvider: hasProvider);
       ref.read(compareProvider.notifier).clear();
       refreshActivity(ref);
+      if (mounted) context.go(Routes.home);
       showNexoToast(mode == 'provider' ? 'Ahora estás en Modo Proveedor' : 'Ahora estás en Modo Cliente');
     } catch (e) {
       showNexoToast(apiErrorMessage(e));
@@ -90,19 +94,33 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         ref.invalidate(accountProvider);
         ref.invalidate(myProviderProvider);
       },
-      child: ListView(
+      child: PinnedHeaderList(
         padding: const EdgeInsets.only(bottom: 28),
         children: [
           const ScreenTitleBar('Cuenta'),
           asyncView(v, (a) => a == null ? const SizedBox.shrink() : _body(s, a),
               onRetry: () => ref.invalidate(accountProvider)),
+          if (v.hasError)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: NexoButton(
+                label: 'Volver a iniciar sesi?n',
+                variant: NexoButtonVariant.line,
+                onPressed: () async {
+                  ref.read(compareProvider.notifier).clear();
+                  await ref.read(sessionProvider.notifier).signOutLocal();
+                  ref.invalidate(accountProvider);
+                  if (mounted) context.go(Routes.login);
+                },
+              ),
+            ),
         ],
       ),
     );
   }
 
   Widget _guest() {
-    return ListView(children: [
+    return PinnedHeaderList(children: [
       const ScreenTitleBar('Cuenta'),
       NexoCard(
         margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -161,6 +179,33 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       );
 
   Widget _body(SessionState s, AccountScreen a) {
+    if (s.recoveryOnly) {
+      return NexoCard(
+          child: Column(children: [
+        const Text('Tu cuenta tiene una baja pendiente'),
+        const SizedBox(height: 12),
+        const Text('Puedes cancelar la baja dentro de los 30 días de gracia.'),
+        NexoButton(
+            label: 'Conservar mi cuenta',
+            onPressed: () async {
+              try {
+                await ref.read(apiProvider).cancelDeletion();
+                final stored = await ref.read(tokenStorageProvider).read();
+                final fresh = stored == null ? null : await refreshTokens(stored.refreshToken);
+                if (fresh == null) {
+                  await ref.read(sessionProvider.notifier).signOutLocal();
+                } else {
+                  await ref.read(sessionProvider.notifier).updateTokens(fresh);
+                  refreshActivity(ref);
+                  if (mounted) context.go(Routes.home);
+                }
+              } catch (e) {
+                showNexoToast(apiErrorMessage(e));
+              }
+            }),
+        NexoButton(label: 'Cerrar sesión', onPressed: _logout),
+      ]));
+    }
     final push = ref.watch(pushProvider);
     final pro = s.isProviderMode;
     final mp = ref.watch(myProviderProvider).asData?.value;
@@ -188,7 +233,15 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   onPressed: () async {
                     try {
                       await ref.read(apiProvider).cancelDeletion();
-                      ref.invalidate(accountProvider);
+                      final stored = await ref.read(tokenStorageProvider).read();
+                      final fresh = stored == null ? null : await refreshTokens(stored.refreshToken);
+                      if (fresh == null) {
+                        await ref.read(sessionProvider.notifier).signOutLocal();
+                      } else {
+                        await ref.read(sessionProvider.notifier).updateTokens(fresh);
+                        refreshActivity(ref);
+                        if (mounted) context.go(Routes.home);
+                      }
                       showNexoToast('Tu cuenta sigue activa');
                     } catch (e) {
                       showNexoToast(apiErrorMessage(e));
@@ -200,29 +253,28 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           ),
         // ---- tarjeta propia (`selfcard`)
         NexoCard(
-          onTap: () => pro && mp != null ? context.push(Routes.provider(mp.profile.id)) : _editMe(a),
+          onTap: () => pro && mp != null ? context.push(Routes.provider(mp.profile.id)) : _viewMe(a),
           child: Row(children: [
-            NexoAvatar(name: a.name, url: (pro ? mp?.profile.photoUrl : null) ?? a.photoUrl, size: 52),
+            NexoAvatar(name: a.name, url: (pro ? mp?.profile.photoUrl : null) ?? a.photoUrl, size: 50),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(pro && mp != null ? mp.profile.name : a.name, style: NexoText.body(16, weight: FontWeight.w800)),
                 const SizedBox(height: 2),
                 Row(children: [
-                  NexoIcon(a.phoneVerified ? 'shield' : 'info',
-                      size: 14, color: a.phoneVerified ? NexoColors.ok : NexoColors.muted),
+                  NexoIcon(a.emailVerified ? 'shield' : 'info',
+                      size: 14, color: a.emailVerified ? NexoColors.ok : NexoColors.muted),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                        '${a.phoneVerified ? 'Celular confirmado' : (a.email.isEmpty ? 'Cuenta' : a.email)} · ${pro && mp != null ? mp.profile.zoneLabel : loc.zoneLabel}',
+                        '${a.emailVerified ? 'Correo verificado' : (a.email.isEmpty ? 'Cuenta' : a.email)} · ${pro && mp != null ? mp.profile.zoneLabel : loc.zoneLabel}',
                         overflow: TextOverflow.ellipsis,
                         style: NexoText.body(12.5, color: NexoColors.muted)),
                   ),
                 ]),
               ]),
             ),
-            Text(pro && mp != null ? 'Ver perfil' : 'Editar',
-                style: NexoText.body(13, weight: FontWeight.w800, color: NexoColors.brand)),
+            Text('Ver perfil', style: NexoText.body(13, weight: FontWeight.w800, color: NexoColors.brand)),
             const NexoIcon('chevron', size: 16, color: NexoColors.brand),
           ]),
         ),
@@ -244,7 +296,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         if (!pro) ...[
           _box('Tus intereses', [
             Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final c in allCats)
+              const CatalogStatus(),
+              for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
                 ToggleChip(
                   label: c.name,
                   icon: c.icon,
@@ -254,13 +307,16 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             ]),
           ]),
           _box('Tu ubicación', [
-            MiniMap(
-              point: loc.point,
-              radiusKm: loc.radiusKm,
-              label: '${loc.zoneLabel} · ${loc.radiusKm} km',
-              actionLabel: 'Cambiar',
-              onAction: () => openSearchLocation(context, ref),
-            ),
+            if (!loc.hasSelection)
+              NexoButton(label: 'Elegir mi ubicación', icon: 'pin', onPressed: () => openSearchLocation(context, ref))
+            else
+              MiniMap(
+                point: loc.point,
+                radiusKm: loc.radiusKm,
+                label: '${loc.zoneLabel} · ${loc.radiusKm} km',
+                actionLabel: 'Cambiar',
+                onAction: () => openSearchLocation(context, ref),
+              ),
           ]),
           _box('Tu actividad', [
             StatsRow([
@@ -330,7 +386,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           _box('Tu visibilidad', [
             StatsRow([
               ('${mp.views}', 'Visitas al perfil'),
-              ('${mp.contactClicks}', 'Clics de contacto'),
+              (mp.contactClicks?.toString() ?? '—', 'Clics de contacto'),
               ('${mp.profile.jobs}', 'Trabajos'),
             ]),
           ]),
@@ -349,16 +405,15 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             onTap: () => context.push(Routes.saved),
           ),
         ),
-        if (!a.phoneVerified)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: OptRow(
-              icon: 'phone',
-              label: a.phone == null ? 'Confirma tu celular (opcional)' : 'Confirma tu celular ${a.phone}',
-              trailingChevron: true,
-              onTap: () => showPhoneSheet(context, ref),
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: OptRow(
+            icon: 'phone',
+            label: a.phone == null ? 'Agregar celular (opcional)' : 'Celular de contacto ${a.phone}',
+            trailingChevron: true,
+            onTap: () => showPhoneSheet(context, ref),
           ),
+        ),
         _box('Privacidad y cuenta', [
           OptRow(
               icon: 'shield',
@@ -395,8 +450,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     );
   }
 
-  Future<void> _editMe(AccountScreen a) =>
-      showNexoSheet<void>(context, builder: (_) => _EditMeSheet(name: a.name, photo: a.photoUrl));
+  Future<void> _viewMe(AccountScreen account) => context.push<void>(Routes.myProfile, extra: account);
 
   Future<void> _delete(AccountScreen a) async {
     if (a.pendingDeletion) {
@@ -406,6 +460,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     await showNexoSheet<void>(context, builder: (_) => const _DeleteSheet());
   }
 }
+
+Future<void> showAccountEditSheet(BuildContext context, AccountScreen account) =>
+    showNexoSheet<void>(context, builder: (_) => _EditMeSheet(name: account.name, photo: account.photoUrl));
 
 class _EditMeSheet extends ConsumerStatefulWidget {
   const _EditMeSheet({required this.name, this.photo});
@@ -418,6 +475,7 @@ class _EditMeSheet extends ConsumerStatefulWidget {
 class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
   late final _name = TextEditingController(text: widget.name);
   String? _local;
+  String? _pendingLocal;
   String? _uploadId;
   bool _busy = false;
 
@@ -438,20 +496,38 @@ class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
           onTap: _busy
               ? null
               : () async {
-                  final img = await pickOneImage(context);
-                  if (img == null) return;
-                  setState(() => _busy = true);
+                  final image = await pickOneImage(context);
+                  if (image == null || !mounted) return;
+                  setState(() {
+                    _busy = true;
+                    _pendingLocal = 'file://${image.path}';
+                  });
                   try {
-                    _uploadId = await ref.read(apiProvider).upload(img, purpose: 'avatar');
-                    setState(() => _local = 'file://${img.path}');
+                    final id = await ref.read(apiProvider).upload(image, purpose: 'avatar');
+                    if (mounted) {
+                      setState(() {
+                        _uploadId = id;
+                        _local = 'file://${image.path}';
+                      });
+                    }
                   } catch (e) {
                     showNexoToast(apiErrorMessage(e));
                   } finally {
-                    if (mounted) setState(() => _busy = false);
+                    if (mounted)
+                      setState(() {
+                        _busy = false;
+                        _pendingLocal = null;
+                      });
                   }
                 },
           child: Row(children: [
-            NexoAvatar(name: widget.name, url: _local ?? widget.photo, size: 72),
+            SizedBox(
+                width: 72,
+                height: 72,
+                child: Stack(children: [
+                  NexoAvatar(name: widget.name, url: _pendingLocal ?? _local ?? widget.photo, size: 72),
+                  if (_pendingLocal != null) const Positioned.fill(child: PhotoProcessingOverlay(circular: true)),
+                ])),
             const SizedBox(width: 14),
             Text(widget.photo == null && _local == null ? 'Agregar foto' : 'Cambiar foto',
                 style: NexoText.body(15, weight: FontWeight.w700, color: NexoColors.brand)),
@@ -548,8 +624,8 @@ class _DeleteSheetState extends ConsumerState<_DeleteSheet> {
             try {
               final msg = await ref.read(apiProvider).requestDeletion(
                   password: _pass.text, reason: _reason.text.trim().isEmpty ? null : _reason.text.trim());
-              ref.invalidate(accountProvider);
               nav.pop();
+              await ref.read(sessionProvider.notifier).signOutLocal();
               showNexoToast(msg);
             } catch (e) {
               if (mounted) {
