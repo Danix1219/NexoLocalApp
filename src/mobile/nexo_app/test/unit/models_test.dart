@@ -1,3 +1,4 @@
+import 'package:nexo_app/data/provider_contract.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nexo_app/data/models.dart';
 
@@ -6,6 +7,36 @@ import '../support/fixtures.dart';
 /// Spec 003/031/039: los modelos leen los campos de los contratos y toleran
 /// campos ausentes sin tronar.
 void main() {
+  test('solicitud real conserva estado y resumen sin habilitar reseña', () {
+    final r = ServiceRequest.fromJson({
+      'requestId': 'r',
+      'status': 'closed',
+      'descriptionExcerpt': 'Descripción real',
+      'summaryText': 'Solicitud cerrada',
+      'interestCount': 3,
+      'interestedPreview': []
+    }, mine: true);
+    expect(r.closed, true);
+    expect(r.description, 'Descripción real');
+    expect(r.interestCount, 3);
+    expect(r.mine, true);
+  });
+
+  test('insignia visual de correo no se infiere de un telefono declarado o confirmado', () {
+    final phoneOnly = ProviderMini.fromJson({
+      'providerId': 'p1',
+      'name': 'Ana',
+      'badges': ['phoneVerified']
+    });
+    expect(phoneOnly.emailVerified, isFalse);
+    final verified = ProviderProfile.fromJson({
+      'providerId': 'p1',
+      'name': 'Ana',
+      'badges': ['emailVerified']
+    });
+    expect(verified.emailVerified, isTrue);
+    expect(verified.mini.emailVerified, isTrue);
+  });
   test('ProviderProfile lee perfil completo del contrato', () {
     final p = ProviderProfile.fromJson(Fx.provider());
     expect(p.id, 'prv_1');
@@ -65,6 +96,17 @@ void main() {
     expect(o.address, isNull, reason: 'pendiente: sin domicilio exacto (H02)');
   });
 
+  test('contraparte proveedor usa accountId del contrato de pedidos como providerId', () {
+    final o = Order.fromJson({
+      ...Fx.order(role: 'client'),
+      'counterpart': {
+        'accountId': 'provider-123',
+        'displayName': 'PlomerÃ­a Centro',
+        'kind': 'provider',
+      },
+    });
+    expect(o.counterpart.providerId, 'provider-123');
+  });
   test('Order con precio acordado', () {
     final o = Order.fromJson({
       ...Fx.order(status: 'accepted'),
@@ -115,5 +157,23 @@ void main() {
       expect(formatMoney(120000), r'$1,200');
       expect(formatMoney(0), r'$0');
     });
+  });
+  test('especialidades del contrato tienen etiquetas y slugs estables', () {
+    expect(providerSpecialtySlugs(['plomeria'], ['Fugas y reparaciones', 'calentadores']), ['fugas', 'calentadores']);
+    expect(providerSpecialtyLabel(['plomeria'], 'fugas'), 'Fugas y reparaciones');
+    expect(() => providerSpecialtySlugs(['plomeria'], ['llaves']), throwsFormatException);
+    expect(responseTimeLabel('sameDay'), 'El mismo día');
+    expect(paymentLabel('transfer'), 'Transferencia');
+  });
+  test('importes no inventan cero y conservan centavos al editar', () {
+    expect(parseProviderMoney('120.50'), 12050);
+    expect(parseProviderMoney('120,5'), 12050);
+    expect(parseProviderMoney('0'), 0);
+    for (final invalid in ['', '-1', '1.234', '1,2.3', '1000000', '999999.99']) {
+      expect(parseProviderMoney(invalid), isNull, reason: invalid);
+    }
+    expect(centsInput(12050), '120.50');
+    expect(centsInput(12000), '120');
+    expect(formatMoney(12050), r'$120.50');
   });
 }

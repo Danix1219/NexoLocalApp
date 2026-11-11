@@ -43,15 +43,14 @@ void main() {
       ));
   });
 
-  test('sin señal se muestra lo último guardado de esa cuenta', () async {
+  test('solicitudes no muestran estado privado obsoleto sin señal', () async {
     a.on('GET', '/v1/discovery/requests/mine', Fx.page([Fx.request(mine: true)]));
     final api = HttpNexoApi(dio);
     expect(await api.myRequests(), hasLength(1));
     a.offline();
     now = now.add(const Duration(minutes: 5));
-    final again = await api.myRequests();
-    expect(again.single.id, 'req_1');
-    expect(offline.single, DateTime(2026, 11, 8, 12), reason: 'avisa la hora de lo guardado');
+    await expectLater(api.myRequests(), throwsA(isA<ApiException>()));
+    expect(offline, isEmpty, reason: 'estado privado vigente, sin caché de solicitudes');
   });
 
   test('otra cuenta no ve la caché de la anterior', () async {
@@ -63,22 +62,32 @@ void main() {
         HttpNexoApi(dio).myRequests(), throwsA(isA<ApiException>().having((e) => e.isNetwork, 'red', isTrue)));
   });
 
-  test('revalida con ETag: If-None-Match y 304 devuelve lo guardado', () async {
-    a.on('GET', '/v1/discovery/providers/prv_1', Fx.provider(), headers: {
+  test('solicitudes no usan ETag de estado privado almacenado', () async {
+    a.on('GET', '/v1/discovery/requests/mine', Fx.page([Fx.request(mine: true)]), headers: {
       'etag': ['"v7"'],
     });
     final api = HttpNexoApi(dio);
-    await api.provider('prv_1');
-    a.onRaw('GET', '/v1/discovery/providers/prv_1', (_) => ResponseBody.fromString('', 304));
-    final p = await api.provider('prv_1');
-    expect(p.name, 'Hernández Plomería');
-    expect(a.last('GET', '/v1/discovery/providers/prv_1').header('If-None-Match'), '"v7"');
+    await api.myRequests();
+    a.onRaw('GET', '/v1/discovery/requests/mine', (_) => ResponseBody.fromString('', 304));
+    await expectLater(api.myRequests(), throwsA(isA<ApiException>()));
+    expect(a.last('GET', '/v1/discovery/requests/mine').header('If-None-Match'), isNull);
+  });
+
+  test('perfil propio no se almacena y no aparece sin conexión', () async {
+    a.on('GET', '/v1/discovery/providers/me', {
+      ...Fx.provider(),
+      'location': {'lat': 20, 'lng': -99}
+    });
+    final api = HttpNexoApi(dio);
+    expect((await api.myProvider())!.location!.lat, 20);
+    a.offline();
+    await expectLater(api.myProvider(), throwsA(isA<ApiException>().having((e) => e.isNetwork, 'red', isTrue)));
   });
 
   test('el catálogo se sirve del teléfono durante 1 h y luego se pide otra vez', () async {
     a.on('GET', '/v1/discovery/categories', {
-      'items': [
-        {'id': 'plomeria', 'name': 'Plomería'},
+      'categories': [
+        {'slug': 'plomeria', 'name': 'Plomería'},
       ],
     });
     final api = HttpNexoApi(dio);
@@ -135,8 +144,8 @@ void main() {
       clock: () => now,
     );
     a.offline();
-    await hybrid.myRequests(); // deja el grupo en espera (datos de ejemplo)
-    expect(hybrid.usingDemo(ApiGroup.solicitudes), isTrue);
+    await expectLater(hybrid.myRequests(), throwsA(isA<ApiException>()));
+    expect(hybrid.usingDemo(ApiGroup.solicitudes), isFalse);
     await expectLater(
       hybrid.createRequest(
         category: 'plomeria',
