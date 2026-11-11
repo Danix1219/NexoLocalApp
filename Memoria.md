@@ -1,4 +1,4 @@
-# Memoria — App_NexoLocal
+﻿# Memoria — App_NexoLocal
 
 ## Fase documental — adaptación al profesor (2026-11-02)
 Estado: estructura y borradores documentales creados; sin implementación, compilación, suites de pruebas, CI o despliegue. El lint documental se registra por separado después de ejecutarlo.
@@ -112,3 +112,82 @@ Estado: revisado el documento «Requerimientos Móvil v2». Se agregaron ML en e
 Decisiones: base URL de producción HTTPS por omisión; el AAB falla sin Firebase, sin `LANDING_URL` HTTPS o con versión fuera de la matriz; asistente y registro de push no activan el aviso de datos de ejemplo; en release la maqueta no inventa borradores de IA.
 Deuda: NADA de esto se ha compilado ni probado todavía (sin SDK Flutter ni red en el entorno donde se generó); las versiones de los paquetes nuevos se confirman con `flutter pub get`. Faltan: proyecto Firebase y su secreto, páginas legales de la landing, EP-082 y devices en el backend, evaluación del modelo de ML con datos propios (013) y la primera subida a Play.
 A evitar: presentar plantillas de la maqueta como IA, subir `google-services.json`, publicar a producción sin aviso de privacidad o declarar verificado lo que solo está preparado.
+
+
+### 2026-11-09 — Integración Identity/Cuenta
+
+GET /me plano, correo verificado, celular declarado sin SMS, cambio de modo con refresh OAuth y recuperación de baja mediante recovery_only. Cuenta fuera de caché y sin fallback automático de identidad/operaciones destructivas. Tres archivos de pruebas actuales ampliados: 215 casos aprobados con cobertura en copia de validación. Sin teléfono Android conectado; SMTP/Atlas/Firebase reales no validados. Ver docs/integracion-identity-cuenta.md.
+
+Verificación posterior: APK debug compilado, instalado en Android conectado conservando datos y abierto con Status: ok. Proceso activo y sin errores AndroidRuntime/Flutter en la comprobación de arranque. El recorrido con Gmail/Atlas/Firebase reales permanece sin validar.
+
+
+### 2026-11-09 — Ubicacion real y Mi perfil
+
+Registro: mapa/GPS con consentimiento, seleccion obligatoria y envio del punto/radio elegidos. Tras el alta se guarda en Discovery. Cuenta: PUT real, sin fallback de guardado simulado; seleccion local segura aislada por accountId. GPS sin permiso o apagado permite mover el mapa. No hay geocodificacion de colonias: mostrar coordenadas aproximadas, nunca nombres de zonas ficticios.
+
+Mi perfil se abre desde la tarjeta propia con portada visual, foto disponible, nombre, correo verificado y accion separada de editar. Actividad sin implementar aparece proximamente. Fotos se anuncian proximamente por confirmacion del usuario: Blob Storage y moderacion no configurados; no se crearon recursos cloud.
+
+Las rutas inexistentes (404/405/501 sin codigo Nexo) muestran Proximamente sin boton Reintentar. Errores de autenticacion, red y negocio mantienen su tratamiento. Pruebas ampliadas en archivos existentes de integracion/seguridad; no se agregan jobs ni se aplica Terraform.
+
+Verificacion del incremento: 217 pruebas Flutter aprobadas con cobertura; 97 pruebas backend aprobadas. APK debug con API local compilado, instalado conservando datos y abierto en Android (Status: ok). Endpoint PUT de ubicacion disponible en 5188; peticion anonima devuelve 401. GPS sobre hardware y recorrido de alta/cambio con usuario real quedan para comprobacion interactiva del usuario. Etiquetas de ubicacion muestran coordenadas aproximadas: geocodificacion de colonias pendiente. No se configuro ni simulo Blob/moderacion.
+
+
+### 2026-11-09 — Recorridos de maqueta y paridad visual (053)
+
+Estado: recorridos de ambos roles examinados en Chrome; navegación compartida, Mi perfil visual, fuentes locales con licencia, entradas/pulsaciones/pestañas/chat y movimiento reducido aplicados en Flutter. Correo verificado conserva la decisión real de producto y no se confunde con celular declarado.
+
+Verificación: 225 pruebas Flutter aprobadas con cobertura; analyze sin errores ni warnings, con 13 infos. Pipeline regenerado a 54 checks requeridos al añadir archivo de widgets; sin Terraform apply. Detalle y límites en docs/paridad-visual-maqueta.md.
+
+Deuda: aceptación visual humana, todas las combinaciones de estados/tamaños, selector de ubicación como hoja y geocodificación. Fotos siguen Próximamente sin Blob/moderación. A evitar: copiar datos demo, declarar paridad total por pasar pruebas o presentar recorrido de Chrome como validación real de Atlas/Gmail en Android.
+
+APK visual debug compilado con API local. Instalación actual pendiente: adb devices sin teléfono conectado; no confundir con la instalación previa del incremento de ubicación. Workflows: WORKFLOWS-OK. SDD conserva enlaces históricos rotos; ejecución local se registra separada de casillas documentales y aceptación humana.
+
+
+### 2026-11-09 — Integración de perfiles backend en Flutter (054)
+
+Estado: alta/propio/público/edición/comparación conectados al contrato de grupo 03. Se corrigen bio en services, slugs de especialidades, tipo persona/negocio, importes con centavos, condiciones y punto privado propio. Alta conserva llave y no repite creación si solo falla el cambio de modo.
+
+Decisiones: perfil sin fallback automático ni caché privada; solo fake explícito. Fotos/portada próximas por falta de infraestructura. Catálogo inicial mapeado localmente, pendiente bloque 04 autoritativo. No se modifica backend ni .env.
+
+Deuda: recorrido con cuenta real en Android, moderación cloud y catálogo/búsqueda/trabajos/opiniones pendientes. Evidencia de suites y APK se registra al cierre en docs/integracion-perfiles.md; un doble Dio no acredita Atlas/Gmail ni aprobación humana.
+
+Cierre de 054: 237 pruebas aprobadas con cobertura (12 nuevas); analizador sin errores ni warnings, 13 infos pendientes. WORKFLOWS-OK y diff --check aprobados. SDD mantiene enlaces históricos rotos; la spec 054 no añade fallos propios. APK live compilado, instalado -r y abierto en Android (Status ok); reverse USB 5188. API actual ejecutándose en 5188 con health/ready 200 y cinco rutas de perfiles en OpenAPI. No se recorrió alta real ni se acreditó moderación cloud. No se publicaron cambios.
+
+
+### 2026-11-09 — Corrección visual por pantalla y menú duplicado (055)
+
+Estado: /my-profile en navegador raíz y hojas raíz eliminan barra duplicada. Se corrigen fuentes Nunito (peso variable inicial 200) con caras 400–800 explícitas, portada/avatar, títulos/pestañas, cabeceras fijas, listado Buscar, feed ancho completo con fotos cuadradas/contacto verde, tarjetas Solicitudes/Interesados y ubicación como hoja. Matriz de pantallas y límites en docs/revision-visual-pantallas.md.
+
+Evidencia: 242 pruebas completas aprobadas con cobertura, 14 regresiones visuales finales; analyze cero errores/warnings y 13 infos previos. APK live compilado e instalado -r conservando datos, reverse5188 y API ready200. Arranque inicial timeout, posterior Status ok y UI renderizada. Mi perfil abierto por el usuario: árbol físico con una sola instancia de cada destino; capturas observadas de Inicio/Cuenta/Buscar. Android bloquea inyección de toques USB; no se cambiaron permisos.
+
+Deuda: aceptación visual humana exhaustiva, geocodificación/búsqueda de direcciones, Blob/moderación y endpoints pendientes. SDD mantiene enlaces históricos rotos, workflows OK y diff sin errores; sin commit/push/Terraform. A evitar: afirmar equivalencia píxel a píxel, presentar capturas de otra pestaña como Mi perfil o equiparar tests de widgets con cloud real.
+
+
+### 2026-11-10 — Ubicación real y confirmación del registro (056)
+Estado: geocodificación Photon mediante Discovery sin demo; selector compartido con búsqueda explícita, mapa/GPS/radio y atribución. Restore del servidor/caché segura por cuenta con protección contra respuestas obsoletas, sin asignar centro inicial. Alta muestra confirmación explícita incluso si falla login o ubicación; reintentar zona no repite creación. Buscar ajustado a fondo/controles de maqueta.
+Verificación: 250 pruebas completas con cobertura, 19 widgets de diseño, y 55 finales de caché/seguridad; analyze sin errores/warnings y 13 infos previos. API real búsqueda/inversa Tula HTTP200; backend ready200. APK live compilado; instalación final registrada en docs/ubicacion-real-y-registro.md.
+Deuda: GPS físico, alta nueva/entrega Gmail con usuario real, aceptación visual exhaustiva, proveedor geocoding con SLA para volumen y endpoints de búsqueda de prestadores. Fotos pendientes. Sin claves ni .env nuevos, commit/push o Terraform. Evitar guardar consultas privadas en SQLite o convertir fallos del proveedor en resultados ficticios.
+
+### 2026-11-10 — Integración móvil hasta grupos 01–06 (057)
+Estado: catálogo real categories, filtros/selección, búsqueda/sugerencias/mapa y solicitudes del mapa; trabajos publicar/listar/borrar/recomendar/retirar desde perfil, solicitudes publicar/mine/opportunities/close en pantallas existentes. Cursores completos sin truncar primera página. Reintento de trabajo estable por payload; cierre pickedProviderId solo solvedHere. Fotos sin infraestructura Próximamente; omitir imágenes demo. Sin fallback automático en grupos publicados; resumen degradado conserva desconocido. Consultas/estados privados sin caché obsoleta ni coordenadas/consultas en logs.
+Verificación: 260 pruebas con cobertura, 10 nuevas en archivos de las tres capas existentes; sin nuevos jobs ni Terraform. Workflows OK, diff-check 0. SDD conserva deuda histórica externa; spec057 enlaza autoridad backend real. Detalle y resultado APK en docs/integracion-backend-01-06.md. No es validación de Atlas/Content Safety/recorrido físico completo ni firma humana.
+Deuda: feed, interés y otros grupos pendientes no se inventan; publicación requiere Content Safety y conectividad Mongo reales. Backend anterior ready503 por Mongo no disponible; no cambiar secreto/conexión para fingir salud. Sin commit/push, backend modificado ni despliegue.
+
+Cierre operativo 057: APK debug live compilado para http://127.0.0.1:5188, adb install -r Success conservando datos, reverse5188 y arranque Status ok. Proceso Android activo y sin AndroidRuntime:E/flutter:E en smoke. API health/ready200 verificado actualmente, sustituye limitación histórica ready503 sin cambiar conexiones. No se recorrió publicación real ni se creó contenido de prueba en la cuenta del usuario. Analizador 0 errores/warnings y 12 infos; Flutter reporta salida no cero por diagnósticos, no afirmar análisis sin observaciones. Check SDD conserva deuda histórica, sin errores propios de 057.
+
+
+### 2026-11-10 ? Fotos reales conectadas
+Estado: avatar, portada personal/profesional y fotos en solicitudes/trabajos usan Azure a trav?s de API. Polling hasta approved; ninguna imagen processing se vincula. Preserva borrador y foto anterior al fallar. El PUTBlob va sin Bearer y sus SAS no aparecen en logs. 267pruebas aprobadas con cobertura, analyze0errores/0warnings y13infos existentes; APK debug live instalado -r y app abierta sin borrar datos.
+Decisiones: API posee contratos de medios; Flutter no lleva claves ni accede a DB. MyProfile consume GET/PUT me/cover; PATCHidentity y perfil profesional existentes reciben uploadId aprobado. Solo fake expl?cito simula medios; grupo real sin fallbackdemo.
+Deuda: recorrido f?sico de galer?a/c?mara y todas las pantallas por usuario. Cloud validado por backend con imagen sint?tica aislada y limpieza; no se probaron fotos privadas del usuario. Sin CDN/chat privado. APIlocal5188 con adb reverse; para despliegue fijar PublicBaseUrlHTTPS del backend. Revisi?n humana pendiente.
+A evitar: confundir dobles HTTP con Azure o instalaci?n con publicaci?n remota. No secretos, commits/push ni nuevos archivos de test/jobs/Terraform.
+
+
+### 2026-11-10 ? Lectura de publicaciones y corrección de avatar
+Estado: tarjetas de trabajos y solicitudes muestran tres líneas y Ver más/Ver menos si desborda; aprovechan descripción completa del backend. Los errores de formato y resolución de foto se muestran por separado del rechazo de moderación. APK debug/live actualizado, instalado sin borrar datos y abierto en teléfono.
+Decisiones: el filtro de imágenes backend acepta nivel bajo y bloquea medio/alto, con política de texto independiente. No se asume cuál fue la clasificación de la foto real previa.
+Verificación: Flutter269/269 con cobertura, analyze0errores/0advertencias y13infos anteriores; backend242/242, APIready200. check_sdd.ps1 móvil falla por incidencias históricas ajenas al incremento 057.
+Deuda: el usuario debe repetir una carga con su foto para verificar la clasificación actual. Revisión humana pendiente. A evitar: afirmar prueba de esa foto o despliegue remoto por haber instalado el APK.
+
+### 2026-11-10 — Fotos, zona y navegación 059
+Estado: shimmer localizado durante subida/moderación de avatar y portada en perfiles personales y profesionales, incluido alta profesional; miniaturas para avatar, vista de autor de solicitud con datos públicos y retroceso de pestañas al Inicio. flutter test 275/275; APK debug live compilado. APK instalado en 2201116SG por ADB sin streaming, reverse 5188 activo y aplicación abierta; aceptación visual y prueba de fotos reales pendientes; flutter analyze sin errores ni advertencias, 19 avisos informativos.
