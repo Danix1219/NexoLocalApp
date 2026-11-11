@@ -4,83 +4,270 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aviso de privacidad — Nexo Local</title>
-<style>
-  :root { color-scheme: light dark; --fg:#1a1a1a; --bg:#fff; --muted:#555; --line:#e3e3e3; }
-  @media (prefers-color-scheme: dark) { :root { --fg:#e8e8e8; --bg:#141414; --muted:#aaa; --line:#333; } }
-  body { background:var(--bg); color:var(--fg); font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-         margin:0; padding:40px 16px; }
-  main { max-width:720px; margin:0 auto; }
-  h1 { font-size:1.6rem; line-height:1.25; margin:0 0 .2em; }
-  h2 { font-size:1.1rem; margin:2em 0 .5em; }
-  p, li { color:var(--fg); }
-  .meta { color:var(--muted); font-size:.9rem; margin:0 0 2em; }
-  table { border-collapse:collapse; width:100%; margin:1em 0; font-size:.95rem; }
-  th, td { text-align:left; padding:.5em .6em; border-bottom:1px solid var(--line); vertical-align:top; }
-  th { font-weight:600; }
-  footer { color:var(--muted); font-size:.9rem; margin-top:3em; border-top:1px solid var(--line); padding-top:1em; }
-</style>
+<link rel="stylesheet" href="../estilo.css">
 </head>
 <body>
 <main>
-<h1>Aviso de privacidad de Nexo Local</h1>
-<p class="meta">Aplicación móvil Nexo Local (<code>mx.nexolocal.app</code>) · Última actualización: 9 de noviembre de 2026</p>
+<nav class="migas"><a href="../">← Información legal</a></nav>
 
-<p>Nexo Local conecta a personas que necesitan un servicio con prestadores de su zona. Este aviso
-explica qué datos tratamos, para qué, con quién se comparten y cómo puedes eliminarlos.</p>
+<h1>Aviso de privacidad integral</h1>
+<p class="meta">
+  Aplicación móvil Nexo Local (<code>mx.nexolocal.app</code>)<br>
+  Última actualización: 10 de noviembre de 2026 · Versión 2
+</p>
 
-<h2>Qué datos recogemos</h2>
+<div class="resumen">
+<h2>En resumen</h2>
+<ul>
+  <li>Pedimos tu correo y tu nombre para la cuenta. El teléfono y la ubicación son opcionales.</li>
+  <li>Tu teléfono y tu domicilio exacto <strong>no se revelan</strong> a la otra parte hasta que el servicio se acepta.</li>
+  <li>Si usas «Ayúdame a redactar», <strong>ese texto sale de tu teléfono</strong> hacia un proveedor de inteligencia artificial.</li>
+  <li>Las fotos que subes se analizan <strong>dentro de tu teléfono</strong> para sugerir una categoría; esa imagen no se envía para ese fin.</li>
+  <li>No vendemos tus datos ni los usamos para publicidad.</li>
+  <li>Puedes eliminar tu cuenta desde la app, en cualquier momento, sin pedir permiso a nadie.</li>
+</ul>
+</div>
+
+<p>Este aviso se emite conforme a los artículos 15, 16 y 17 de la <strong>Ley Federal de Protección
+de Datos Personales en Posesión de los Particulares</strong> (LFPDPPP) y su Reglamento. Describe el
+tratamiento real que hace la aplicación, verificado contra su código.</p>
+
+<h2>1. Quién es responsable de tus datos</h2>
+<p><strong>Responsable:</strong> equipo Nexo Local, proyecto académico de la Universidad
+Tecnológica de Tula-Tepeji.</p>
+<p><strong>Domicilio para efectos de este aviso:</strong> [DOMICILIO COMPLETO: calle, número,
+colonia, municipio, estado y código postal].</p>
+<p><strong>Correo para asuntos de datos personales:</strong>
+<a href="mailto:kevindanielmartinezgranados12@gmail.com">kevindanielmartinezgranados12@gmail.com</a>.
+Esta dirección es la del departamento de datos personales previsto en el artículo 30 de la Ley.</p>
+
+<h2>2. Qué datos tratamos</h2>
 <table>
-  <tr><th>Dato</th><th>Para qué</th><th>Obligatorio</th></tr>
-  <tr><td>Correo electrónico y contraseña</td><td>Crear la cuenta e iniciar sesión</td><td>Sí</td></tr>
-  <tr><td>Nombre</td><td>Mostrarte ante la otra parte de un servicio</td><td>Sí</td></tr>
-  <tr><td>Teléfono</td><td>Contacto entre cliente y prestador; se muestra enmascarado hasta que el servicio se acepta</td><td>No</td></tr>
-  <tr><td>Ubicación aproximada o precisa</td><td>Buscar prestadores cercanos y situar una solicitud. El domicilio exacto no se revela al prestador hasta que acepta el servicio</td><td>No</td></tr>
-  <tr><td>Fotos que eliges</td><td>Foto de perfil, trabajos publicados, solicitudes y mensajes</td><td>No</td></tr>
-  <tr><td>Mensajes, solicitudes, pedidos y calificaciones</td><td>Prestar el servicio y resolver incidencias</td><td>Sí, si usas esas funciones</td></tr>
-  <tr><td>Identificador de notificaciones (token de Firebase) y versión de la app</td><td>Enviarte avisos de interés, aceptación y mensajes nuevos</td><td>No; solo si activas las notificaciones</td></tr>
+<thead>
+  <tr><th>Dato</th><th>Cuándo lo obtenemos</th><th>¿Es obligatorio?</th></tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Correo electrónico y contraseña</td>
+    <td data-th="Cuándo">Al registrarte</td>
+    <td data-th="Obligatorio">Sí. Sin esto no hay cuenta.</td>
+  </tr>
+  <tr>
+    <td>Nombre</td>
+    <td data-th="Cuándo">Al registrarte</td>
+    <td data-th="Obligatorio">Sí. Se muestra a la otra parte del servicio.</td>
+  </tr>
+  <tr>
+    <td>Teléfono</td>
+    <td data-th="Cuándo">Cuando tú decides añadirlo</td>
+    <td data-th="Obligatorio">No. Se muestra enmascarado hasta que el servicio se acepta.</td>
+  </tr>
+  <tr>
+    <td>Ubicación aproximada o precisa</td>
+    <td data-th="Cuándo">Solo cuando abres el mapa y concedes el permiso de Android</td>
+    <td data-th="Obligatorio">No. Puedes escribir la zona a mano.</td>
+  </tr>
+  <tr>
+    <td>Fotografías que eliges de tu galería</td>
+    <td data-th="Cuándo">Al poner foto de perfil, publicar un trabajo, crear una solicitud o enviar un mensaje</td>
+    <td data-th="Obligatorio">No.</td>
+  </tr>
+  <tr>
+    <td>Mensajes, solicitudes, pedidos y calificaciones</td>
+    <td data-th="Cuándo">Al usar esas funciones</td>
+    <td data-th="Obligatorio">Sí, si quieres usarlas.</td>
+  </tr>
+  <tr>
+    <td>Identificador de notificaciones (token de Firebase Cloud Messaging) y versión de la app</td>
+    <td data-th="Cuándo">Al aceptar las notificaciones</td>
+    <td data-th="Obligatorio">No. Si las rechazas, el identificador no se registra.</td>
+  </tr>
+</tbody>
 </table>
 
-<h2>Asistente de redacción</h2>
-<p>Si usas el botón «Ayúdame a redactar», el texto que has escrito se envía a un servicio de
-inteligencia artificial para proponerte un borrador. Antes de enviarlo, la app intenta quitar
-teléfonos, correos, enlaces y domicilios. <strong>Ese filtrado no es infalible</strong>: evita
-escribir datos de contacto en ese campo. El borrador que recibes es una propuesta; nada se
-publica sin que tú lo revises.</p>
+<h3>Datos personales sensibles</h3>
+<p><strong>No tratamos datos personales sensibles</strong> en el sentido del artículo 3, fracción VI
+de la Ley: ni origen racial o étnico, estado de salud, información genética, creencias religiosas,
+filosóficas o morales, afiliación sindical, opiniones políticas ni preferencia sexual. Tampoco
+tratamos datos financieros o patrimoniales: la aplicación no procesa pagos.</p>
+<p>Si por tu cuenta escribes datos de esa naturaleza dentro de un mensaje o una solicitud, ese
+contenido queda bajo tu responsabilidad. Te pedimos que no lo hagas.</p>
 
-<h2>Qué se guarda en tu teléfono</h2>
-<p>La app guarda en el dispositivo, separada por cuenta, una copia de las últimas pantallas
-consultadas para que puedas verlas sin conexión, y una cola de solicitudes pendientes de enviar.
-Nunca se guardan ahí contraseñas, datos de contacto de terceros ni fotos. <strong>Todo eso se
-borra al cerrar sesión</strong>, junto con tus credenciales.</p>
+<h3>Datos de menores de edad</h3>
+<p>La aplicación no está dirigida a menores de 18 años y no recabamos datos de menores de manera
+consciente. Si detectamos una cuenta de una persona menor de edad, la eliminamos. Si eres madre,
+padre o tutor y crees que se registró una cuenta de un menor a tu cargo, escríbenos a la dirección
+de arriba y la eliminaremos.</p>
 
-<h2>Con quién se comparten</h2>
+<h2>3. Para qué usamos tus datos</h2>
+
+<h3>Finalidades primarias</h3>
+<p>Son las necesarias para que exista la relación entre tú y Nexo Local. <strong>No puedes
+oponerte a estas sin dejar de usar la aplicación</strong>:</p>
 <ul>
-  <li>Con la otra parte del servicio, lo imprescindible para que pueda prestarlo.</li>
-  <li>Con los proveedores de infraestructura que operan la plataforma: Microsoft Azure (servidores),
-      Google Firebase (notificaciones) y el proveedor del asistente de redacción.</li>
-  <li>Con autoridades, cuando lo exija la ley.</li>
+  <li>Crear tu cuenta, identificarte y mantener tu sesión iniciada.</li>
+  <li>Mostrar tu perfil a la otra parte de un servicio.</li>
+  <li>Permitir que publiques trabajos, solicitudes, mensajes y calificaciones.</li>
+  <li>Localizar prestadores cercanos y situar una solicitud, si concediste la ubicación.</li>
+  <li>Enviarte avisos sobre tus propias solicitudes, servicios y mensajes, si aceptaste las notificaciones.</li>
+  <li>Atender reportes de abuso, resolver disputas entre las partes y cumplir obligaciones legales.</li>
+  <li>Prevenir fraude, suplantación de identidad y uso indebido de la plataforma.</li>
 </ul>
-<p>No vendemos datos personales ni los usamos para publicidad.</p>
 
-<h2>Cuánto tiempo</h2>
-<p>Mientras tengas la cuenta activa. Al solicitar la eliminación, la cuenta y sus datos se borran
-conforme al proceso descrito en <a href="../eliminar-cuenta/">Eliminar tu cuenta</a>. Los
-identificadores de notificaciones caducan a los 90 días sin uso.</p>
+<h3>Finalidades secundarias</h3>
+<p>No son necesarias para el servicio. <strong>Puedes negarte a estas y seguir usando la
+aplicación con normalidad</strong>:</p>
+<ul>
+  <li>Medir de forma agregada qué secciones se usan, para mejorar la aplicación.</li>
+  <li>Contactarte para invitarte a probar funciones nuevas o responder una encuesta.</li>
+</ul>
+<p><strong>Cómo negarte:</strong> envía un correo a la dirección de arriba con el asunto
+«Finalidades secundarias» desde la cuenta con la que te registraste. Tienes cinco días hábiles
+desde que conoces este aviso para manifestarlo, y también puedes hacerlo en cualquier momento
+después. Tu negativa no es motivo para negarte el servicio ni para limitarte ninguna función.</p>
 
-<h2>Tus derechos</h2>
-<p>Puedes acceder a tus datos, corregirlos, oponerte a su tratamiento o eliminarlos. Desde la app:
-<em>Tu cuenta</em> para consultarlos y editarlos, y <em>Eliminar cuenta</em> para borrarlos. También
-puedes escribirnos a la dirección de contacto de abajo.</p>
+<h2>4. El asistente de redacción: léelo antes de usarlo</h2>
+<div class="aviso">
+<p><strong>Si pulsas «Ayúdame a redactar», el texto que escribiste sale de tu teléfono</strong> y se
+envía a un proveedor externo de inteligencia artificial para que proponga un borrador.</p>
+<p>Antes de enviarlo, la aplicación intenta quitar automáticamente teléfonos, correos, enlaces y
+domicilios. <strong>Ese filtrado no es infalible y puede dejar pasar datos escritos de forma poco
+habitual.</strong> No escribas datos de contacto, de terceros ni información confidencial en ese
+campo.</p>
+</div>
+<p>El uso del asistente es siempre una decisión tuya: ninguna pantalla lo activa por su cuenta. El
+borrador que recibes es una propuesta y nada se publica sin que tú lo revises y lo confirmes.</p>
 
-<h2>Menores</h2>
-<p>La app no está dirigida a menores de 18 años.</p>
+<h2>5. Lo que ocurre dentro de tu teléfono, sin salir de él</h2>
+<p>Cuando eliges una foto para publicar un trabajo, la aplicación la analiza con un modelo de
+reconocimiento de imágenes que se ejecuta <strong>en el propio dispositivo</strong> para sugerirte
+una categoría. <strong>Esa imagen no se envía a ningún servidor para ese análisis</strong> y las
+etiquetas que produce no salen de tu teléfono. La fotografía solo viaja si tú decides publicarla.</p>
+<p>La aplicación también guarda en el dispositivo, <strong>separada por cuenta</strong>:</p>
+<ul>
+  <li>Una copia de las últimas pantallas que consultaste, para que puedas verlas sin conexión.</li>
+  <li>Una cola de acciones pendientes de enviar cuando recuperes la conexión.</li>
+  <li>Tus credenciales de sesión, en el almacén cifrado del sistema operativo.</li>
+</ul>
+<p>Ahí no se guardan contraseñas en claro ni fotografías. <strong>Todo lo anterior se borra del
+teléfono al cerrar sesión</strong>, de modo que otra persona que use el mismo dispositivo no
+alcanza tus datos.</p>
 
-<h2>Cambios</h2>
-<p>Si este aviso cambia, publicaremos la versión nueva en esta misma dirección con su fecha.</p>
+<h2>6. Con quién compartimos tus datos</h2>
+
+<h3>Lo que ve la otra parte de un servicio</h3>
+<p>Solo lo imprescindible para prestarlo. En concreto:</p>
+<ul>
+  <li><strong>Antes de aceptar el servicio:</strong> tu nombre, tu zona aproximada y lo que
+      escribiste en la solicitud. Tu teléfono aparece enmascarado y tu domicilio exacto no se revela.</li>
+  <li><strong>Después de aceptar el servicio:</strong> tu teléfono y la dirección que indicaste, para
+      que el servicio pueda llevarse a cabo.</li>
+</ul>
+
+<h3>Encargados del tratamiento</h3>
+<p>Son proveedores que tratan datos por cuenta nuestra y bajo nuestras instrucciones. Conforme al
+artículo 36 de la Ley, <strong>esto no constituye una transferencia y no requiere tu
+consentimiento</strong>:</p>
+<table>
+<thead>
+  <tr><th>Proveedor</th><th>Para qué</th><th>Dónde</th></tr>
+</thead>
+<tbody>
+  <tr><td>Microsoft Azure</td><td data-th="Para qué">Servidores y base de datos de la plataforma</td><td data-th="Dónde">Estados Unidos</td></tr>
+  <tr><td>Google Firebase Cloud Messaging</td><td data-th="Para qué">Entrega de notificaciones</td><td data-th="Dónde">Estados Unidos</td></tr>
+  <tr><td>Proveedor del asistente de redacción</td><td data-th="Para qué">Generar el borrador de texto que tú solicitas</td><td data-th="Dónde">Estados Unidos</td></tr>
+</tbody>
+</table>
+
+<h3>Transferencias</h3>
+<p>Solo transferimos datos personales a terceros en los supuestos del artículo 37 de la Ley, que
+<strong>no requieren tu consentimiento</strong>: cuando lo exija una ley o un tratado, cuando lo
+requiera una autoridad competente, cuando sea necesario para reconocer o defender un derecho en un
+procedimiento, o en caso de urgencia médica.</p>
+<p><strong>No vendemos, alquilamos ni cedemos tus datos personales con fines comerciales o
+publicitarios</strong>, ni los compartimos con intermediarios de datos o redes publicitarias.</p>
+
+<h2>7. Cuánto tiempo conservamos tus datos</h2>
+<table>
+<thead>
+  <tr><th>Dato</th><th>Plazo</th></tr>
+</thead>
+<tbody>
+  <tr><td>Cuenta y perfil</td><td data-th="Plazo">Mientras la cuenta esté activa</td></tr>
+  <tr><td>Mensajes, solicitudes y pedidos</td><td data-th="Plazo">Mientras la cuenta esté activa, o hasta que cierre la disputa a la que correspondan</td></tr>
+  <tr><td>Identificador de notificaciones</td><td data-th="Plazo">Caduca a los 90 días sin uso</td></tr>
+  <tr><td>Copia local en tu teléfono</td><td data-th="Plazo">Se borra al cerrar sesión</td></tr>
+  <tr><td>Registros exigidos por la ley</td><td data-th="Plazo">El plazo que la propia ley imponga</td></tr>
+</tbody>
+</table>
+<p>Cumplido el plazo, los datos se suprimen o se disocian de tu identidad.</p>
+
+<h2>8. Tus derechos ARCO</h2>
+<p>Tienes derecho a <strong>Acceder</strong> a tus datos, <strong>Rectificarlos</strong> si son
+inexactos, <strong>Cancelarlos</strong> cuando consideres que no son necesarios y
+<strong>Oponerte</strong> a un tratamiento concreto.</p>
+
+<h3>La vía rápida: desde la aplicación</h3>
+<ul>
+  <li><strong>Acceso y rectificación:</strong> pantalla <em>Tu cuenta</em>.</li>
+  <li><strong>Cancelación:</strong> <a href="../eliminar-cuenta/">Eliminar tu cuenta</a>, con efecto inmediato y sin trámite.</li>
+</ul>
+
+<h3>La vía formal: por correo</h3>
+<p>Escribe a la dirección de arriba, desde el correo con el que te registraste, indicando:</p>
+<ol>
+  <li>Tu nombre y un medio para comunicarte la respuesta.</li>
+  <li>Una copia de una identificación oficial, para acreditar que eres tú.</li>
+  <li>Qué derecho ejerces y sobre qué datos.</li>
+  <li>Si pides rectificación, el dato corregido y un documento que lo sustente.</li>
+</ol>
+<p><strong>Plazos:</strong> responderemos tu solicitud en un máximo de <strong>20 días hábiles</strong>
+y, si procede, la haremos efectiva dentro de los <strong>15 días hábiles</strong> siguientes.
+El ejercicio de estos derechos es gratuito; solo podrían cobrarse los gastos de envío o de copiado
+si pides el material en un soporte físico.</p>
+
+<h2>9. Revocar tu consentimiento y limitar el uso de tus datos</h2>
+<p>Puedes revocar en cualquier momento el consentimiento que nos diste, por el mismo correo. En la
+práctica, la revocación total equivale a eliminar tu cuenta, porque sin esos datos la aplicación
+no puede funcionar.</p>
+<p>Para limitaciones parciales, sin cerrar la cuenta:</p>
+<ul>
+  <li><strong>Ubicación:</strong> retira el permiso en los ajustes de Android. La app seguirá funcionando y escribirás la zona a mano.</li>
+  <li><strong>Notificaciones:</strong> desactívalas en los ajustes de Android o dentro de la app; el identificador se da de baja.</li>
+  <li><strong>Teléfono:</strong> bórralo desde <em>Tu cuenta</em> cuando quieras.</li>
+  <li><strong>Asistente de redacción:</strong> simplemente no lo uses. No se activa solo.</li>
+  <li><strong>Finalidades secundarias:</strong> como se explica en el punto 3.</li>
+</ul>
+
+<h2>10. Medidas de seguridad</h2>
+<p>Aplicamos medidas administrativas, técnicas y físicas razonables para proteger tus datos: todo el
+tráfico viaja cifrado por HTTPS, las credenciales se guardan en el almacén cifrado del sistema
+operativo, la copia local está separada por cuenta y se borra al cerrar sesión, y el respaldo
+automático del sistema está deshabilitado para que tus datos no salgan en una copia de seguridad
+del teléfono.</p>
+<p>Ningún sistema es infalible. Si ocurriera una vulneración que afecte de forma significativa a tus
+derechos, te lo comunicaremos conforme al artículo 20 de la Ley para que puedas tomar medidas.</p>
+
+<h2>11. Cambios a este aviso</h2>
+<p>Si modificamos este aviso, publicaremos la versión nueva en esta misma dirección, con su fecha y
+número de versión. Cuando el cambio afecte de forma sustancial al tratamiento de tus datos, te lo
+avisaremos dentro de la aplicación antes de que entre en vigor. Te recomendamos revisar esta página
+de vez en cuando.</p>
+
+<h2>12. Si no estás conforme</h2>
+<p>Si consideras que tu derecho a la protección de datos personales ha sido vulnerado, o que
+tratamos tus datos de forma indebida, puedes presentar una denuncia ante el
+<strong>Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos
+Personales (INAI)</strong>, en <a href="https://home.inai.org.mx/">home.inai.org.mx</a>.
+Agradeceremos que antes nos lo plantees a nosotros, para intentar resolverlo.</p>
 
 <footer>
-  <p>Contacto: <strong>kevindanielmartinezgranados12@gmail.com</strong><br>
-  Responsable: equipo Nexo Local — Universidad Tecnológica de Tula-Tepeji.</p>
+  <p>
+    Contacto: <strong>kevindanielmartinezgranados12@gmail.com</strong><br>
+    Responsable: equipo Nexo Local — Universidad Tecnológica de Tula-Tepeji.<br>
+    Ver también los <a href="../terminos/">términos de uso</a> y cómo
+    <a href="../eliminar-cuenta/">eliminar tu cuenta</a>.
+  </p>
 </footer>
 </main>
 </body>
