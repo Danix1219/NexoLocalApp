@@ -14,6 +14,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../support/fake_api.dart';
 import '../support/fixtures.dart';
 
+const testIdempotencyKey = 'profile-test';
+
 /// Spec 039/041/046 · H01/H02 y aislamiento por cuenta.
 void main() {
   test('grupos publicados no usan demo ante red ni ruta ausente', () async {
@@ -95,8 +97,9 @@ void main() {
     final adapter = MockAdapter()..offline();
     final api = HybridNexoApi(modes: const {}, http: HttpNexoApi(testDio(adapter)), fake: FakeSession().api);
     await expectLater(api.myProvider(), throwsA(isA<ApiException>()));
-    await expectLater(api.createProvider(ProviderDraft(), idempotencyKey: 'profile-test'),
-        throwsA(isA<ApiException>()));
+    await expectLater(
+        api.createProvider(ProviderDraft(), idempotencyKey: testIdempotencyKey), throwsA(isA<ApiException>()));
+
     await expectLater(api.patchProvider('basic', {'name': 'Nombre'}), throwsA(isA<ApiException>()));
     await expectLater(api.provider('perfil-real'), throwsA(isA<ApiException>()));
     await expectLater(api.compare(['a', 'b']), throwsA(isA<ApiException>()));

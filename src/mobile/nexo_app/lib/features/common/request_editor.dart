@@ -59,9 +59,17 @@ Future<void> showRequestEditor(BuildContext context, WidgetRef ref, ServiceReque
                 ),
                 const SizedBox(height: 12),
                 EditorCard(children: [
-                  EditorChoice(label: '¿Para cuándo?', options: const [('today', 'Hoy'), ('week', 'Esta semana'), ('noRush', 'Sin prisa')], value: urgency, onChanged: (v) => setSheet(() => urgency = v)),
+                  EditorChoice(
+                      label: '¿Para cuándo?',
+                      options: const [('today', 'Hoy'), ('week', 'Esta semana'), ('noRush', 'Sin prisa')],
+                      value: urgency,
+                      onChanged: (v) => setSheet(() => urgency = v)),
                   const SizedBox(height: 14),
-                  EditorChoice(label: 'Te contactan por', options: const [('chat', 'Solo chat'), ('chatCall', 'Chat o llamada')], value: contact, onChanged: (v) => setSheet(() => contact = v)),
+                  EditorChoice(
+                      label: 'Te contactan por',
+                      options: const [('chat', 'Solo chat'), ('chatCall', 'Chat o llamada')],
+                      value: contact,
+                      onChanged: (v) => setSheet(() => contact = v)),
                 ]),
                 const SizedBox(height: 12),
                 NexoButton(

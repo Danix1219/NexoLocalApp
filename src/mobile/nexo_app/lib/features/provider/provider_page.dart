@@ -177,7 +177,7 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                           GestureDetector(
                             onTap: () => showPhotoViewer(context, p.photoUrl,
                                 title: 'Cambiar foto de perfil',
-                                 circular: true,
+                                circular: true,
                                 onChange: own ? () => _changePhoto(cover: false) : null),
                             child: NexoAvatar(
                                 name: p.name,

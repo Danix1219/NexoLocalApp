@@ -42,7 +42,8 @@ class _PhotoProcessingOverlayState extends State<PhotoProcessingOverlay> with Si
   }
 }
 
-Future<void> showPhotoViewer(BuildContext context, String? url, {required String title, VoidCallback? onChange, bool circular = false}) async {
+Future<void> showPhotoViewer(BuildContext context, String? url,
+    {required String title, VoidCallback? onChange, bool circular = false}) async {
   if (url == null || url.isEmpty) {
     onChange?.call();
     return;
@@ -60,17 +61,20 @@ Future<void> showPhotoViewer(BuildContext context, String? url, {required String
                 onPressed: () => Navigator.of(dialog).pop(),
                 icon: const Icon(Icons.close, color: Colors.white),
               )),
-          Expanded(child: Center(child: circular
-              ? LayoutBuilder(builder: (context, bounds) {
-                  final size = (MediaQuery.sizeOf(context).width - 48).clamp(120.0, bounds.maxHeight - 24);
-                  return Container(
-                    width: size,
-                    height: size,
-                    decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 4)),
-                    child: ClipOval(child: NexoImage(url, fit: BoxFit.cover)),
-                  );
-                })
-              : InteractiveViewer(minScale: 1, maxScale: 4, child: NexoImage(url, fit: BoxFit.contain)))),
+          Expanded(
+              child: Center(
+                  child: circular
+                      ? LayoutBuilder(builder: (context, bounds) {
+                          final size = (MediaQuery.sizeOf(context).width - 48).clamp(120.0, bounds.maxHeight - 24);
+                          return Container(
+                            width: size,
+                            height: size,
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 4)),
+                            child: ClipOval(child: NexoImage(url, fit: BoxFit.cover)),
+                          );
+                        })
+                      : InteractiveViewer(minScale: 1, maxScale: 4, child: NexoImage(url, fit: BoxFit.contain)))),
           if (onChange != null)
             Padding(
               padding: const EdgeInsets.all(20),

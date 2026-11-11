@@ -348,8 +348,9 @@ Future<void> showZoneSheet(BuildContext context, WidgetRef ref, ProviderProfile 
   );
   if (r == null) return;
   try {
-    await ref.read(searchLocationProvider.notifier).set(r.point, r.radiusKm == 0 ? 5 : r.radiusKm,
-        source: r.source, zoneLabel: r.zoneLabel);
+    await ref
+        .read(searchLocationProvider.notifier)
+        .set(r.point, r.radiusKm == 0 ? 5 : r.radiusKm, source: r.source, zoneLabel: r.zoneLabel);
   } catch (e) {
     showNexoToast(apiErrorMessage(e));
     return;

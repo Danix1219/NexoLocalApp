@@ -34,25 +34,33 @@ String autoTitle(String text) {
 }
 
 Future<bool> _publishedSheet(BuildContext context, {required String title, required String detail}) async =>
-    await showNexoSheet<bool>(context, builder: (sheet) => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 8),
-        Center(child: Container(
-          width: 66, height: 66,
-          decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
-          child: const Center(child: NexoIcon('check', size: 30, color: NexoColors.brand)),
-        )),
-        const SizedBox(height: 16),
-        Text(title, textAlign: TextAlign.center, style: NexoText.display(23, weight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        Text(detail, textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
-        const SizedBox(height: 22),
-        NexoButton(label: 'Ver publicación', onPressed: () => Navigator.of(sheet).pop(true)),
-        const SizedBox(height: 8),
-        NexoButton(label: 'Volver a Inicio', variant: NexoButtonVariant.ghost, onPressed: () => Navigator.of(sheet).pop(false)),
-      ],
-    )) ?? false;
+    await showNexoSheet<bool>(context,
+        builder: (sheet) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                    child: Container(
+                  width: 66,
+                  height: 66,
+                  decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
+                  child: const Center(child: NexoIcon('check', size: 30, color: NexoColors.brand)),
+                )),
+                const SizedBox(height: 16),
+                Text(title, textAlign: TextAlign.center, style: NexoText.display(23, weight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Text(detail,
+                    textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
+                const SizedBox(height: 22),
+                NexoButton(label: 'Ver publicación', onPressed: () => Navigator.of(sheet).pop(true)),
+                const SizedBox(height: 8),
+                NexoButton(
+                    label: 'Volver a Inicio',
+                    variant: NexoButtonVariant.ghost,
+                    onPressed: () => Navigator.of(sheet).pop(false)),
+              ],
+            )) ??
+    false;
 
 /// 7.10 Publicar (`V.publish`): "Busco un servicio" y "Mi experiencia" para
 /// el cliente; "Publicar un trabajo" para el prestador.
@@ -268,9 +276,10 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
         idempotencyKey: _idem,
       );
       refreshActivity(ref);
-      final showPost = mounted && await _publishedSheet(context,
-          title: 'Tu solicitud ya está publicada',
-          detail: 'Los prestadores de tu zona pueden verla e interesarse. Podrás editarla desde Mis solicitudes.');
+      final showPost = mounted &&
+          await _publishedSheet(context,
+              title: 'Tu solicitud ya está publicada',
+              detail: 'Los prestadores de tu zona pueden verla e interesarse. Podrás editarla desde Mis solicitudes.');
       _reset();
       if (mounted) {
         context.go(Routes.home);
@@ -315,8 +324,10 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
         _CompTop(enabled: _ok, loading: _busy, onPublish: _publish),
         _KindTabs(value: 'req', onChanged: widget.onKind),
         _composeBox(children: [
-           _CompUser(name: s.name ?? 'Tú', photo: ref.watch(accountProvider).asData?.value?.photoUrl,
-               sub: 'Visible para prestadores de $zone'),
+          _CompUser(
+              name: s.name ?? 'Tú',
+              photo: ref.watch(accountProvider).asData?.value?.photoUrl,
+              sub: 'Visible para prestadores de $zone'),
           _bigText(_text, '¿Qué necesitas resolver${first.isEmpty ? '' : ', $first'}?', 600, () => setState(() {})),
           if (_imgs.isNotEmpty)
             SizedBox(
@@ -661,9 +672,10 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
       ref.invalidate(providerWorksProvider(p.id));
       ref.invalidate(myProviderProvider);
       ref.invalidate(feedProvider);
-      final showPost = mounted && await _publishedSheet(context,
-          title: 'Tu trabajo ya está publicado',
-          detail: 'Ya forma parte de tu perfil profesional. Puedes revisarlo y editarlo cuando lo necesites.');
+      final showPost = mounted &&
+          await _publishedSheet(context,
+              title: 'Tu trabajo ya está publicado',
+              detail: 'Ya forma parte de tu perfil profesional. Puedes revisarlo y editarlo cuando lo necesites.');
       setState(() {
         _text.clear();
         _tag.clear();

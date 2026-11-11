@@ -205,8 +205,9 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
         ));
     if (r != null) {
       try {
-        await ref.read(searchLocationProvider.notifier).set(r.point, r.radiusKm == 0 ? 5 : r.radiusKm,
-            source: r.source, zoneLabel: r.zoneLabel);
+        await ref
+            .read(searchLocationProvider.notifier)
+            .set(r.point, r.radiusKm == 0 ? 5 : r.radiusKm, source: r.source, zoneLabel: r.zoneLabel);
       } catch (e) {
         showNexoToast(apiErrorMessage(e));
         return;

@@ -7,6 +7,8 @@ import 'package:nexo_app/data/nexo_api.dart';
 import '../support/fixtures.dart';
 import '../support/mock_adapter.dart';
 
+const testIdempotencyKey = 'profile-test';
+
 /// Specs 031/032/033/044 · grupo `perfil`.
 void main() {
   late MockAdapter a;
@@ -118,7 +120,8 @@ void main() {
       ..categories = ['plomeria']
       ..specialties = ['Fugas y reparaciones']
       ..location = const GeoPoint(20, -99);
-    await api.createProvider(draft, idempotencyKey: 'profile-test');
+    await api.createProvider(draft, idempotencyKey: testIdempotencyKey);
+
     final body = a.last('POST', '/v1/discovery/providers').body as Map;
     expect(body['specialties'], ['fugas']);
     expect(body.containsKey('activity'), isFalse);
@@ -163,7 +166,8 @@ void main() {
 
   test('moderación no disponible permanece como fallo real', () async {
     a.on('POST', '/v1/discovery/providers', problem('server.dependency_unavailable', 503), status: 503);
-    await expectLater(api.createProvider(ProviderDraft(), idempotencyKey: 'profile-test'),
+    await expectLater(api.createProvider(ProviderDraft(), idempotencyKey: testIdempotencyKey),
+
         throwsA(isA<ApiException>().having((e) => e.code, 'code', 'server.dependency_unavailable')));
   });
 }

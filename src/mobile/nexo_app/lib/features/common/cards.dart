@@ -314,7 +314,8 @@ class RequestCard extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
               child: Row(children: [
-                Text('TU SOLICITUD', style: NexoText.body(11, weight: FontWeight.w800, color: NexoColors.brand, letterSpacing: .8)),
+                Text('TU SOLICITUD',
+                    style: NexoText.body(11, weight: FontWeight.w800, color: NexoColors.brand, letterSpacing: .8)),
                 const Spacer(),
                 NBadge(r.closed ? 'Resuelta' : 'Publicada', icon: r.closed ? 'check' : 'clock', tone: BadgeTone.ok),
               ]),
@@ -354,7 +355,9 @@ class RequestCard extends ConsumerWidget {
                             ? () => context.push(Routes.myProfile, extra: me)
                             : () => context.push(Routes.requestAuthor(r.id), extra: r),
                         child: Text(displayName,
-                            maxLines: 2, overflow: TextOverflow.ellipsis, style: NexoText.body(15, weight: FontWeight.w800)),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: NexoText.body(15, weight: FontWeight.w800)),
                       ),
                       Text(
                           '${r.zoneLabel}${r.distanceText.isNotEmpty && !r.mine ? ' · ${r.distanceText}' : ''} · ${r.ago}',
