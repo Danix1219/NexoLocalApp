@@ -182,6 +182,31 @@ jobs:
           path: ${{ env.APP_DIR }}/coverage/unidad-auth-parsing.lcov
           if-no-files-found: ignore
           retention-days: 7
+  unidad-diseno-maqueta:
+    name: "Unidad · diseno-maqueta"
+    needs: [formato, analisis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Preparar Flutter y dependencias
+        uses: ./.github/actions/flutter
+      - name: flutter test test/unit/diseno_maqueta_test.dart
+        run: flutter test --coverage --coverage-path=coverage/unidad-diseno-maqueta.lcov --reporter=expanded test/unit/diseno_maqueta_test.dart
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cov-unidad-diseno-maqueta
+          path: ${{ env.APP_DIR }}/coverage/unidad-diseno-maqueta.lcov
+          if-no-files-found: ignore
+          retention-days: 7
   unidad-fake-account:
     name: "Unidad · fake-account"
     needs: [formato, analisis]
@@ -459,7 +484,7 @@ jobs:
           retention-days: 7
   integracion-cache-sin-conexion:
     name: "Integración · cache-sin-conexion"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -484,7 +509,7 @@ jobs:
           retention-days: 7
   integracion-http-asistente-dispositivos:
     name: "Integración · http-asistente-dispositivos"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -509,7 +534,7 @@ jobs:
           retention-days: 7
   integracion-http-cuenta:
     name: "Integración · http-cuenta"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -534,7 +559,7 @@ jobs:
           retention-days: 7
   integracion-http-descubrimiento:
     name: "Integración · http-descubrimiento"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -559,7 +584,7 @@ jobs:
           retention-days: 7
   integracion-http-guardados-contacto:
     name: "Integración · http-guardados-contacto"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -584,7 +609,7 @@ jobs:
           retention-days: 7
   integracion-http-imagenes:
     name: "Integración · http-imagenes"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -609,7 +634,7 @@ jobs:
           retention-days: 7
   integracion-http-mensajes:
     name: "Integración · http-mensajes"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -634,7 +659,7 @@ jobs:
           retention-days: 7
   integracion-http-pedidos:
     name: "Integración · http-pedidos"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -659,7 +684,7 @@ jobs:
           retention-days: 7
   integracion-http-perfil:
     name: "Integración · http-perfil"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -684,7 +709,7 @@ jobs:
           retention-days: 7
   integracion-http-solicitudes-interes:
     name: "Integración · http-solicitudes-interes"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -709,7 +734,7 @@ jobs:
           retention-days: 7
   integracion-push-controlador:
     name: "Integración · push-controlador"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -734,7 +759,7 @@ jobs:
           retention-days: 7
   integracion-resiliencia:
     name: "Integración · resiliencia"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -759,7 +784,7 @@ jobs:
           retention-days: 7
   integracion-sesion:
     name: "Integración · sesion"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -784,7 +809,7 @@ jobs:
           retention-days: 7
   integracion-sincronizacion:
     name: "Integración · sincronizacion"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -1120,7 +1145,7 @@ jobs:
         run: python3 tools/ci/versionamiento.py
   cobertura:
     name: "Calidad · cobertura combinada"
-    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation, integracion-cache-sin-conexion, integracion-http-asistente-dispositivos, integracion-http-cuenta, integracion-http-descubrimiento, integracion-http-guardados-contacto, integracion-http-imagenes, integracion-http-mensajes, integracion-http-pedidos, integracion-http-perfil, integracion-http-solicitudes-interes, integracion-push-controlador, integracion-resiliencia, integracion-sesion, integracion-sincronizacion, seguridad-cabeceras-y-subidas, seguridad-cache-local-seguro, seguridad-enlaces-profundos, seguridad-ia-sin-datos-personales, seguridad-privacidad, seguridad-push-seguro, seguridad-registros-sin-datos-sensibles, seguridad-secretos-en-codigo, seguridad-transporte]
+    needs: [unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation, integracion-cache-sin-conexion, integracion-http-asistente-dispositivos, integracion-http-cuenta, integracion-http-descubrimiento, integracion-http-guardados-contacto, integracion-http-imagenes, integracion-http-mensajes, integracion-http-pedidos, integracion-http-perfil, integracion-http-solicitudes-interes, integracion-push-controlador, integracion-resiliencia, integracion-sesion, integracion-sincronizacion, seguridad-cabeceras-y-subidas, seguridad-cache-local-seguro, seguridad-enlaces-profundos, seguridad-ia-sin-datos-personales, seguridad-privacidad, seguridad-push-seguro, seguridad-registros-sin-datos-sensibles, seguridad-secretos-en-codigo, seguridad-transporte]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -1170,7 +1195,7 @@ jobs:
           retention-days: 14
   ci-verde:
     name: "CI · todo verde"
-    needs: [pipeline, preparar, formato, analisis, version, unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation, integracion-cache-sin-conexion, integracion-http-asistente-dispositivos, integracion-http-cuenta, integracion-http-descubrimiento, integracion-http-guardados-contacto, integracion-http-imagenes, integracion-http-mensajes, integracion-http-pedidos, integracion-http-perfil, integracion-http-solicitudes-interes, integracion-push-controlador, integracion-resiliencia, integracion-sesion, integracion-sincronizacion, seguridad-cabeceras-y-subidas, seguridad-cache-local-seguro, seguridad-enlaces-profundos, seguridad-ia-sin-datos-personales, seguridad-privacidad, seguridad-push-seguro, seguridad-registros-sin-datos-sensibles, seguridad-secretos-en-codigo, seguridad-transporte, seguridad-secretos, seguridad-dependencias, seguridad-manifest, seguridad-workflows, seguridad-revision-dependencias, cobertura, apk]
+    needs: [pipeline, preparar, formato, analisis, version, unidad-almacen-local, unidad-api-modes, unidad-asistente-y-dispositivos-fake, unidad-auth-parsing, unidad-diseno-maqueta, unidad-fake-account, unidad-fake-discovery, unidad-fake-messages, unidad-fake-orders, unidad-fake-requests, unidad-filters, unidad-ml-categoria, unidad-models, unidad-publish-rules, unidad-push-mensajes, unidad-validation, integracion-cache-sin-conexion, integracion-http-asistente-dispositivos, integracion-http-cuenta, integracion-http-descubrimiento, integracion-http-guardados-contacto, integracion-http-imagenes, integracion-http-mensajes, integracion-http-pedidos, integracion-http-perfil, integracion-http-solicitudes-interes, integracion-push-controlador, integracion-resiliencia, integracion-sesion, integracion-sincronizacion, seguridad-cabeceras-y-subidas, seguridad-cache-local-seguro, seguridad-enlaces-profundos, seguridad-ia-sin-datos-personales, seguridad-privacidad, seguridad-push-seguro, seguridad-registros-sin-datos-sensibles, seguridad-secretos-en-codigo, seguridad-transporte, seguridad-secretos, seguridad-dependencias, seguridad-manifest, seguridad-workflows, seguridad-revision-dependencias, cobertura, apk]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
