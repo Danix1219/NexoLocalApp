@@ -16,11 +16,9 @@ import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_sheet.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
-import '../../core/widgets/photo_feedback.dart';
-import '../../data/api_provider.dart';
 import '../../core/widgets/catalog_status.dart';
+import '../../data/api_provider.dart';
 import '../../data/models.dart';
-import '../../core/widgets/pick_image.dart';
 import '../auth/data/auth_repository.dart';
 import '../auth/presentation/legal_sheets.dart';
 import '../provider/edit_sheets.dart';
@@ -474,9 +472,6 @@ class _EditMeSheet extends ConsumerStatefulWidget {
 
 class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
   late final _name = TextEditingController(text: widget.name);
-  String? _local;
-  String? _pendingLocal;
-  String? _uploadId;
   bool _busy = false;
 
   @override
@@ -493,43 +488,13 @@ class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
         const SheetHeader('Tu cuenta', subtitle: 'Tu nombre y tu foto se muestran cuando publicas o escribes.'),
         InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: _busy
-              ? null
-              : () async {
-                  final image = await pickOneImage(context);
-                  if (image == null || !mounted) return;
-                  setState(() {
-                    _busy = true;
-                    _pendingLocal = 'file://${image.path}';
-                  });
-                  try {
-                    final id = await ref.read(apiProvider).upload(image, purpose: 'avatar');
-                    if (mounted) {
-                      setState(() {
-                        _uploadId = id;
-                        _local = 'file://${image.path}';
-                      });
-                    }
-                  } catch (e) {
-                    showNexoToast(apiErrorMessage(e));
-                  } finally {
-                    if (mounted)
-                      setState(() {
-                        _busy = false;
-                        _pendingLocal = null;
-                      });
-                  }
-                },
+          onTap: () => showNexoToast(
+            'Fotos de perfil: próximamente. Estamos preparando la carga y revisión de imágenes.',
+          ),
           child: Row(children: [
-            SizedBox(
-                width: 72,
-                height: 72,
-                child: Stack(children: [
-                  NexoAvatar(name: widget.name, url: _pendingLocal ?? _local ?? widget.photo, size: 72),
-                  if (_pendingLocal != null) const Positioned.fill(child: PhotoProcessingOverlay(circular: true)),
-                ])),
+            NexoAvatar(name: widget.name, url: widget.photo, size: 72),
             const SizedBox(width: 14),
-            Text(widget.photo == null && _local == null ? 'Agregar foto' : 'Cambiar foto',
+            Text(widget.photo == null ? 'Agregar foto' : 'Cambiar foto',
                 style: NexoText.body(15, weight: FontWeight.w700, color: NexoColors.brand)),
           ]),
         ),
@@ -543,7 +508,7 @@ class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
             setState(() => _busy = true);
             final nav = Navigator.of(context);
             try {
-              await ref.read(apiProvider).updateMe(name: _name.text.trim(), photoUploadId: _uploadId);
+              await ref.read(apiProvider).updateMe(name: _name.text.trim());
               await ref.read(sessionProvider.notifier).setName(_name.text.trim());
               ref.invalidate(accountProvider);
               nav.pop();
