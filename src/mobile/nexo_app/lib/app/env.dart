@@ -8,7 +8,7 @@ class Env {
   /// emulador: --dart-define=API_BASE_URL=http://10.0.2.2:8080
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://nexolocal-back-a5g4ceagb9fufjb7.northcentralus-01.azurewebsites.net',
+    defaultValue: 'https://nexolocal-ekfpbudfewd4g0cp.northcentralus-01.azurewebsites.net',
   );
 
   /// Landing con el aviso de privacidad, términos y baja de cuenta (requisito

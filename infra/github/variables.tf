@@ -40,7 +40,7 @@ variable "android_package_name" {
 variable "api_base_url" {
   description = "Backend para APK de prueba y AAB de release (solo https)."
   type        = string
-  default     = "https://nexolocal-back-a5g4ceagb9fufjb7.northcentralus-01.azurewebsites.net"
+  default     = "https://nexolocal-ekfpbudfewd4g0cp.northcentralus-01.azurewebsites.net"
 
   validation {
     condition     = startswith(var.api_base_url, "https://") && !endswith(var.api_base_url, "/")
