@@ -1083,7 +1083,7 @@ jobs:
         with:
           persist-credentials: false
       - name: osv-scanner sobre pubspec.lock
-        uses: google/osv-scanner-action/osv-scanner-action@e69cc6c86b31f1e7e23935bbe7031b50e51082de # v2.0.2
+        uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
         with:
           scan-args: |-
             --lockfile=src/mobile/nexo_app/pubspec.lock
