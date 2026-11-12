@@ -4,7 +4,7 @@
 **Sprint:** Scrum Sprint 2 (11–25 de noviembre de 2026).  
 **Repositorio:** `Danix1219/NexoLocalApp`.  
 **Rama:** `feature/NEX-13-041-cuenta-modo-celular-baja`.  
-**PR:** #17 hacia `develop`.
+**PR:** #18 hacia `develop`.
 
 ## Objetivo
 
@@ -48,7 +48,7 @@ Las pruebas HTTP emplean dobles de Dio; validan contratos, rutas y manejo de fal
 1. Completar y validar NEX-13: Blob Storage, CDN y moderación de medios.
 2. Probar carga, rechazo y reemplazo de avatar/portada con una cuenta real y recursos temporales.
 3. Cuando esa validación exista, volver a habilitar la selección de avatar y el envío de `photoUploadId` con manejo de rechazo conservando la foto anterior.
-4. Añadir el permalink de esta página al cuerpo de la PR #17 para completar la trazabilidad obligatoria.
+4. Mantener el permalink de esta página en el cuerpo de la PR #18 para completar la trazabilidad obligatoria.
 
 ## Registro de cambios
 
