@@ -37,6 +37,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.1
+
+# Icono de la app. Se ejecuta a mano y los PNG generados se suben al repo:
+#   dart run flutter_launcher_icons
+# El primer plano del icono adaptativo lleva los anillos recortados y con
+# margen, porque Android 8+ recorta el icono con una mascara circular.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/icon/icono.png
+  adaptive_icon_background: "#105D53"
+  adaptive_icon_foreground: assets/icon/icono_foreground.png
 
 flutter:
   uses-material-design: true
