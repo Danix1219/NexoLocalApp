@@ -85,7 +85,7 @@ El job «Seguridad · AndroidManifest y build» exige en `android/app/src/main/A
 
 ## Producción 0.3.0: push, landing y Android
 
-1. Prepara la carpeta Android una vez (idempotente): `python3 tools/android/preparar_android.py src/mobile/nexo_app`. Agrega `allowBackup=false`, sin tráfico en claro, permisos INTERNET/ubicación/POST_NOTIFICATIONS, `<queries>`, enlace `nexolocal://`, minSdk 23, firma con `key.properties` y Google Services condicionado a `google-services.json`. Haz commit de `android/`.
+1. Prepara la carpeta Android una vez (idempotente): `python3 tools/android/preparar_android.py src/mobile/nexo_app`. Agrega `allowBackup=false`, sin tráfico en claro, permisos INTERNET/ubicación/POST_NOTIFICATIONS, `<queries>`, enlace `nexolocal://`, minSdk 24, firma con `key.properties` y Google Services condicionado a `google-services.json`. Haz commit de `android/`.
 2. Firebase: crea el proyecto, registra la app Android `mx.nexolocal.nexo_app`, descarga `google-services.json` y guárdalo como secreto `GOOGLE_SERVICES_JSON` del entorno `firma` (Terraform: `TF_VAR_google_services_json`). Nunca lo subas al repositorio. El backend envía los avisos con FirebaseAdmin del mismo proyecto.
 3. Landing: publica `/privacidad`, `/terminos` y `/eliminar-cuenta` y pon su base en la variable `LANDING_URL` (HTTPS). Play Console pide además la URL de la política de privacidad y la de eliminación de cuenta: usa esas mismas páginas.
 4. Versión: antes de abrir `release/x.y.z`, sube `version:` en `pubspec.yaml` y agrega la fila en [versionamiento](versionamiento.md).

@@ -22,7 +22,7 @@ Incluye:
 
 - Aviso y términos con resumen en la app y botón «Ver versión completa» a la landing; enlace «Qué datos se borran» al eliminar cuenta.
 - Mensajes para `content.inappropriate`, `upload.rejected_by_moderation` y `content.images_limit`.
-- Script `tools/android/preparar_android.py`: `allowBackup=false`, sin tráfico en claro, permisos INTERNET/ubicación/POST_NOTIFICATIONS, `<queries>`, enlace `nexolocal://`, minSdk 23, firma y Google Services.
+- Script `tools/android/preparar_android.py`: `allowBackup=false`, sin tráfico en claro, permisos INTERNET/ubicación/POST_NOTIFICATIONS, `<queries>`, enlace `nexolocal://`, minSdk 24, firma y Google Services.
 - Matriz `docs/versionamiento.md` y job «Versión · matriz y SemVer».
 - Release: backend HTTPS de producción por omisión, `LANDING_URL` HTTPS y Firebase obligatorios en el AAB.
 

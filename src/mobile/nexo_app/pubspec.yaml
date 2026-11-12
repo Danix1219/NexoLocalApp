@@ -1,7 +1,7 @@
 name: nexo_app
 description: Nexo Local — app móvil (maqueta V1.00.002 completa).
 publish_to: "none"
-version: 0.3.0+300
+version: 0.3.1+301
 
 environment:
   sdk: ^3.6.0
