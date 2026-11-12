@@ -56,3 +56,4 @@ Las pruebas HTTP emplean dobles de Dio; validan contratos, rutas y manejo de fal
 |---|---|
 | 2026-11-10 | Integración de endpoints de descubrimiento, trabajos y solicitudes en la app. |
 | 2026-11-11 | Se ajusta Cuenta para no iniciar cargas de avatar hasta contar con infraestructura de medios y moderación verificadas; se mantiene catálogo remoto. |
+| 2026-11-12 | Se promociona la configuración confiable de trazabilidad a `main` y se vuelve a ejecutar la validación de la PR móvil. |
