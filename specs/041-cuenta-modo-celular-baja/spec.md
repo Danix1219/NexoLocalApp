@@ -20,7 +20,7 @@ Administrar la cuenta en un solo lugar y cambiar entre cliente y prestador con l
 
 Incluye:
 
-- Tarjeta propia (nombre, foto, correo verificado, zona) y edición de nombre/foto.
+- Tarjeta propia (nombre, foto, correo verificado, zona) y edición de nombre. La selección de avatar informa que está próximamente hasta que Blob/CDN y moderación estén disponibles.
 - Modo de uso Cliente/Proveedor con `POST /me/mode` (tokens nuevos) o guardado local mientras la API no exista.
 - Cliente: intereses, ubicación, actividad. Prestador: zona, completitud, disponibilidad, contacto, visibilidad.
 - Celular: alta y código de 6 dígitos.
@@ -65,7 +65,7 @@ Autoridad de contratos: API Nexo (`docs/endpoints`). Consumo en la app: [endpoin
 | Método | Ruta | Grupo (`LIVE`/`FAKE`) | Uso |
 |---|---|---|---|
 | GET | `/v1/identity/me` | cuenta | cuenta propia |
-| PATCH | `/v1/identity/me` | cuenta | nombre y foto |
+| PATCH | `/v1/identity/me` | cuenta | nombre; `photoUploadId` queda sin consumo desde esta pantalla hasta disponer de Blob/CDN y moderación. |
 | POST | `/v1/identity/me/mode` | cuenta | modo |
 | POST | `/v1/identity/me/phone` | cuenta | celular |
 | POST/DELETE | `/v1/identity/me/deletion` | cuenta | eliminar o cancelar |
@@ -109,3 +109,7 @@ Ver [integración actual](../../docs/integracion-identity-cuenta.md). Esta actua
 ## Incremento ubicacion y perfil 2026-11-09
 
 Registro selecciona punto real con GPS o mapa y envia coordenadas/radio elegidos. Cuenta guarda ubicacion mediante PUT /v1/discovery/me/location y conserva la seleccion por cuenta en el dispositivo. Pulsar tarjeta propia abre Mi perfil, editar es una accion separada. Las fotos requieren Blob Storage y moderacion no configurados: mostrar Proximamente. Los modulos sin ruta muestran Proximamente, nunca ocultar errores de negocio o conexion. Pruebas: http_descubrimiento_test.dart, http_cuenta_test.dart y privacidad_test.dart; backend CuentaTests.UbicacionSeGuardaSoloParaLaCuentaAutenticada.
+
+## Ajuste de medios 2026-11-11
+
+La edición de cuenta conserva la foto ya entregada por la API, pero no inicia una nueva carga ni envía `photoUploadId`. Al tocar el avatar comunica que la carga y revisión de imágenes está próximamente. La pantalla mantiene el catálogo remoto y sus estados de carga/error; no los sustituye por categorías de ejemplo. Este estado depende de la infraestructura de medios de NEX-13 y no equivale a que el endpoint de cuenta esté ausente.
