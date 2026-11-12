@@ -22,12 +22,12 @@ CHECKS = ROOT / "infra/github/checks.auto.tfvars.json"
 SHA = {
     "checkout": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2",
     "upload": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2",
-    "download": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0",
+    "download": "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2",
     "java": "actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1",
     "gitleaks": "gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9",
-    "osv": "google/osv-scanner-action/osv-scanner-action@e69cc6c86b31f1e7e23935bbe7031b50e51082de # v2.0.2",
-    "depreview": "actions/dependency-review-action@da24556b548a50705dd671f47852072ea4c105d9 # v4.7.1",
-    "play": "r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3",
+    "osv": "google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0",
+    "depreview": "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0",
+    "play": "r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5",
 }
 
 LAYERS = [
