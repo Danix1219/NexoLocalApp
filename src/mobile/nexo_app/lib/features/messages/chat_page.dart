@@ -14,6 +14,7 @@ import '../../core/widgets/nexo_sheet.dart';
 import '../../core/widgets/pick_image.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/nexo_motion.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../../data/nexo_api.dart';
@@ -78,7 +79,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(_scroll.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+            duration: NexoMotion.duration(context, const Duration(milliseconds: 220)), curve: Curves.easeOut);
       }
     });
   }
@@ -188,7 +189,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         if (i == t.messages.length) return _quickReplies(t);
                         final m = t.messages[i];
                         final prev = i > 0 ? t.messages[i - 1] : null;
-                        return _Bubble(m: m, showDay: prev == null || !_sameDay(prev.createdAt, m.createdAt));
+                        return NexoEnter(
+                            key: ValueKey(m.id),
+                            duration: const Duration(milliseconds: 180),
+                            beginOpacity: 0,
+                            distance: 6,
+                            child: _Bubble(m: m, showDay: prev == null || !_sameDay(prev.createdAt, m.createdAt)));
                       },
                     ),
             ),

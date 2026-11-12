@@ -8,6 +8,7 @@ import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_sheet.dart';
 import '../../core/widgets/ui.dart';
 import '../../data/api_provider.dart';
+import '../../core/widgets/catalog_status.dart';
 import '../../data/models.dart';
 
 /// `.filtbtn` con contador de filtros activos.
@@ -25,15 +26,15 @@ class FilterButton extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Material(
-            color: NexoColors.surface2,
+            color: NexoColors.surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               side: const BorderSide(color: NexoColors.line),
             ),
             child: InkWell(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               onTap: onTap,
-              child: const SizedBox(width: 48, height: 48, child: Center(child: NexoIcon('sliders', size: 21))),
+              child: const SizedBox(width: 50, height: 50, child: Center(child: NexoIcon('sliders', size: 21))),
             ),
           ),
           if (count > 0)
@@ -84,7 +85,8 @@ class _SearchFiltersState extends ConsumerState<_SearchFilters> {
         const SheetHeader('Filtros', subtitle: 'Ajusta qué prestadores ver en tu zona.'),
         _label('Servicio'),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final c in allCats)
+          const CatalogStatus(),
+          for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
             ToggleChip(
               label: c.name,
               icon: c.icon,
@@ -191,7 +193,10 @@ class _OppFiltersState extends ConsumerState<_OppFilters> {
             onTap: () => setState(() => f = f.copyWith(today: !f.today))),
         _label('Categoría'),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final c in allCats)
+          const CatalogStatus(),
+          for (final c in (ref.watch(catalogProvider).asData?.value ?? []).where((c) =>
+              !f.myServiceOnly ||
+              (ref.watch(myProviderProvider).asData?.value?.profile.categories.contains(c.id) ?? false)))
             ToggleChip(
               label: c.name,
               icon: c.icon,

@@ -16,3 +16,6 @@
 **/service-account*.json
 **/google-services.json
 **/GoogleService-Info.plist
+
+# Resultados locales de validación Flutter
+**/coverage/

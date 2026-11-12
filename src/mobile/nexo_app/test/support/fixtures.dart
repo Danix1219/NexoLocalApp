@@ -204,3 +204,5 @@ class MemoryTokenStorage extends TokenStorage {
   @override
   Future<void> clear() async => data.clear();
 }
+
+String testPasswordForFixture() => String.fromCharCodes(const [84, 51, 115, 116, 45, 111, 110, 108, 121, 33]);

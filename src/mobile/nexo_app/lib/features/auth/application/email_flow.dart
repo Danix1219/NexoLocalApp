@@ -16,6 +16,7 @@ class EmailFlowState {
     this.intent = 'client',
     this.idempotencyKey = '',
     this.createdName,
+    this.locationSaved = false,
     this.nextStep,
   });
 
@@ -32,6 +33,7 @@ class EmailFlowState {
 
   /// Solo registro: datos para la pantalla "Tu cuenta está lista".
   final String? createdName;
+  final bool locationSaved;
   final String? nextStep;
 
   EmailFlowState copyWith({
@@ -43,6 +45,7 @@ class EmailFlowState {
     String? intent,
     String? idempotencyKey,
     String? createdName,
+    bool? locationSaved,
     String? nextStep,
   }) =>
       EmailFlowState(
@@ -53,6 +56,7 @@ class EmailFlowState {
         intent: intent ?? this.intent,
         idempotencyKey: idempotencyKey ?? this.idempotencyKey,
         createdName: createdName ?? this.createdName,
+        locationSaved: locationSaved ?? this.locationSaved,
         nextStep: nextStep ?? this.nextStep,
       );
 }
@@ -75,6 +79,8 @@ class EmailFlowController extends Notifier<EmailFlowState> {
   void ticketReady(String ticket) => state = state.copyWith(ticket: ticket, idempotencyKey: const Uuid().v4());
 
   void accountCreated(CreatedAccount a) => state = state.copyWith(createdName: a.name, nextStep: a.nextStep);
+
+  void locationStored() => state = state.copyWith(locationSaved: true);
 
   void reset() => state = const EmailFlowState();
 }

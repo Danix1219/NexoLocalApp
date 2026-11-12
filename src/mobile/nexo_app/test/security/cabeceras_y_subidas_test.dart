@@ -13,6 +13,17 @@ import '../support/mock_adapter.dart';
 /// Spec 046: protección contra repeticiones (Idempotency-Key), escrituras
 /// concurrentes (If-Match) y fuga del Bearer al almacenamiento.
 void main() {
+  test('rechaza URL de subida HTTP antes de transferir bytes', () async {
+    final a = MockAdapter()
+      ..on('POST', '/v1/discovery/uploads', {'uploadId': 'u', 'uploadUrl': 'http://storage.test/u?sig=1'});
+    final blob = MockAdapter();
+    final api = HttpNexoApi(testDio(a), uploadDio: Dio()..httpClientAdapter = blob);
+    await expectLater(
+        api.upload(PickedImage(path: 'x.png', bytes: Uint8List(10), contentType: 'image/png'), purpose: 'avatar'),
+        throwsA(isA<Exception>()));
+    expect(blob.calls, isEmpty);
+  });
+
   late MockAdapter a;
   late HttpNexoApi api;
 
@@ -57,6 +68,7 @@ void main() {
       'uploadUrl': 'https://storage.nexo.test/b/upl_1?sig=1',
       'headers': {'Content-Type': 'image/jpeg'},
     });
+    a.on('POST', '/v1/discovery/uploads/upl_1/complete', {'status': 'approved'});
     await api.upload(PickedImage(path: '/x.jpg', bytes: Uint8List(10), contentType: 'image/jpeg'), purpose: 'avatar');
     final storage = a.calls.where((c) => c.host == 'storage.nexo.test').toList();
     final nexo = a.calls.where((c) => c.host == 'api.nexo.test').toList();

@@ -37,19 +37,18 @@ void main() {
 
   test('endpoint inexistente (404 sin código) → datos de ejemplo, sin error', () async {
     final api = build(all(GroupMode.auto));
-    final f = await api.feed(at: centro);
-    expect(f.page.items, isNotEmpty, reason: 'viene de la maqueta');
-    expect(api.usingDemo(ApiGroup.descubrimiento), isTrue);
-    expect(events, ['descubrimiento:true']);
+    await expectLater(api.feed(at: centro), throwsA(isA<ApiException>()));
+    expect(api.usingDemo(ApiGroup.descubrimiento), isFalse);
+    expect(events, isEmpty);
   });
 
-  test('sin señal → todos los grupos auto pasan a ejemplo de una vez', () async {
+  test('sin señal → grupos pendientes pasan a ejemplo y perfiles permanece remoto', () async {
     a.offline();
     final api = build(all(GroupMode.auto));
-    final r = await api.myRequests();
-    expect(r, isNotEmpty);
+    final r = await api.orders(role: 'client');
+    expect(r.items, isNotEmpty);
     for (final g in ApiGroup.values) {
-      expect(api.usingDemo(g), isTrue, reason: g.name);
+      expect(api.usingDemo(g), HybridNexoApi.remoteGroups.contains(g) ? isFalse : isTrue, reason: g.name);
     }
     final before = a.calls.length;
     await api.orders(role: 'client');
@@ -58,18 +57,18 @@ void main() {
 
   test('el endpoint aparece: tras la espera se usa el backend real', () async {
     final api = build(all(GroupMode.auto));
-    await api.feed(at: centro);
+    await expectLater(api.feed(at: centro), throwsA(isA<ApiException>()));
     a.on('GET', '/v1/discovery/feed', {
       ...Fx.page([Fx.work(id: 'wrk_real')]),
       'zoneLabel': 'Centro'
     });
     final still = await api.feed(at: centro);
-    expect(still.page.items.first.id, isNot('wrk_real'));
+    expect(still.page.items.single.id, 'wrk_real');
     now = now.add(const Duration(seconds: 61));
     final real = await api.feed(at: centro);
     expect(real.page.items.single.id, 'wrk_real');
     expect(api.usingDemo(ApiGroup.descubrimiento), isFalse);
-    expect(events.last, 'descubrimiento:false');
+    expect(events, isEmpty);
   });
 
   test('errores de negocio NO se ocultan con datos de ejemplo', () async {
@@ -88,8 +87,7 @@ void main() {
               Headers.contentTypeHeader: ['text/html'],
             }));
     final api = build(all(GroupMode.auto));
-    final f = await api.feed(at: centro);
-    expect(f.page.items, isNotEmpty);
+    await expectLater(api.feed(at: centro), throwsA(isA<ApiException>()));
   });
 
   test('modo live muestra el error y modo fake nunca llama a la red', () async {

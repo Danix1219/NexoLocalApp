@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'tokens.dart';
 
@@ -15,7 +14,8 @@ class NexoText {
     double? height,
     double? letterSpacing,
   }) =>
-      GoogleFonts.plusJakartaSans(
+      TextStyle(
+        fontFamily: 'PlusJakartaSans',
         fontSize: size,
         fontWeight: weight,
         color: color,
@@ -30,7 +30,8 @@ class NexoText {
     double? height,
     double? letterSpacing,
   }) =>
-      GoogleFonts.nunitoSans(
+      TextStyle(
+        fontFamily: 'NunitoSans',
         fontSize: size,
         fontWeight: weight,
         color: color,

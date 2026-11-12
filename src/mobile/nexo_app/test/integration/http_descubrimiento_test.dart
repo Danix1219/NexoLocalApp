@@ -7,6 +7,28 @@ import '../support/mock_adapter.dart';
 
 /// Specs 027/029/030 · grupo `descubrimiento`.
 void main() {
+  test('catálogo usa categories y especialidades reales del servidor', () async {
+    final adapter = MockAdapter()
+      ..on('GET', '/v1/discovery/categories', {
+        'categories': [
+          {
+            'slug': 'plomeria',
+            'name': 'Plomería',
+            'icon': 'drop',
+            'gradient': {'from': '#123456', 'to': '#654321'},
+            'specialties': [
+              {'slug': 'fugas', 'name': 'Fugas'}
+            ]
+          }
+        ],
+        'version': '2026-11-10'
+      });
+    final c = (await HttpNexoApi(testDio(adapter)).categories()).single;
+    expect(c.slug, 'plomeria');
+    expect(c.specialties.single.slug, 'fugas');
+    expect(c.c1, '#123456');
+  });
+
   late MockAdapter a;
   late HttpNexoApi api;
   const at = GeoPoint(20.05, -99.34);
@@ -68,17 +90,16 @@ void main() {
         {'kind': 'category', 'slug': 'plomeria', 'label': 'Plomería'},
       ],
     });
-    a.on(
-        'GET',
-        '/v1/discovery/categories',
-        Fx.page([
-          {
-            'slug': 'plomeria',
-            'name': 'Plomería',
-            'icon': 'drop',
-            'gradient': {'from': '#46A3F0', 'to': '#2B72D1'}
-          },
-        ]));
+    a.on('GET', '/v1/discovery/categories', {
+      'categories': [
+        {
+          'slug': 'plomeria',
+          'name': 'Plomería',
+          'icon': 'drop',
+          'gradient': {'from': '#46A3F0', 'to': '#2B72D1'}
+        },
+      ]
+    });
     a.on('GET', '/v1/discovery/map/nearby', {
       'summary': {'text': '3 prestadores'},
       'points': [

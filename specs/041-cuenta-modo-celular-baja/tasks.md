@@ -21,3 +21,8 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+
+## Incremento de ubicacion/perfil 2026-11-09
+
+Registro y selector GPS/mapa: register_account_page.dart, location_picker_page.dart, auth_repository.dart. Persistencia: api_provider.dart y PUT /v1/discovery/me/location en backend. Mi perfil y edicion separada: account_page.dart. Proximamente: ui.dart, solo rutas sin implementacion. Fotos pendientes de Blob/moderacion confirmados por usuario. Evidencia de pruebas en docs/integracion-identity-cuenta.md; ninguna firma ni aceptacion humana agregada.

@@ -17,6 +17,7 @@ import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
+import '../../data/nexo_api.dart';
 import '../location/location_picker_page.dart';
 import '../shell/gate.dart';
 import 'carousel.dart';
@@ -326,8 +327,8 @@ Future<void> showTrustSheet(BuildContext context) => showNexoSheet<void>(
             const SheetHeader('Cómo leer las señales', subtitle: 'Cada insignia dice exactamente qué se sabe.'),
             tier(
                 'user', 'Declarado', 'Lo que el prestador dice de sí mismo. Se muestra con su fecha de actualización.'),
-            tier('shield', 'Teléfono confirmado',
-                'Nexo Local comprobó que la persona controla ese número. No certifica su capacidad técnica.'),
+            tier('shield', 'Correo verificado',
+                'Nexo Local comprobó el acceso al correo de la cuenta. No confirma la propiedad del celular ni certifica su capacidad técnica.'),
             tier('thumb', 'Recomendaciones',
                 'Opiniones de otros usuarios. Ayudan a decidir, pero no garantizan el resultado.'),
             tier('info', 'Perfil nuevo', 'Aún no tiene historial. No es una calificación negativa.'),
@@ -566,6 +567,10 @@ class _OrderSheetState extends ConsumerState<_OrderSheet> {
 
 /// "Me interesa" / "Interés enviado" (prestador).
 Future<void> toggleInterest(BuildContext context, WidgetRef ref, ServiceRequest r) async {
+  if (groupModes()[ApiGroup.interes] != GroupMode.fake) {
+    showNexoToast('Mostrar interés: próximamente. Ya puedes consultar las solicitudes reales.');
+    return;
+  }
   if (!requireAccount(context, ref)) return;
   final on = !r.iAmInterested;
   try {
@@ -596,8 +601,10 @@ Future<void> showCloseRequestSheet(BuildContext context, WidgetRef ref, ServiceR
   );
   if (outcome == null) return;
   try {
-    await ref.read(apiProvider).closeRequest(r.id, outcome: outcome, pickedProviderId: r.picked?.id);
-    ref.invalidate(myRequestsProvider);
+    await ref
+        .read(apiProvider)
+        .closeRequest(r.id, outcome: outcome, pickedProviderId: outcome == 'solvedHere' ? r.picked?.id : null);
+    refreshActivity(ref);
     showNexoToast('Solicitud cerrada');
   } catch (e) {
     showNexoToast(apiErrorMessage(e));

@@ -103,18 +103,26 @@ class ServiceCategory {
 /// Resumen de prestador (feed, chat, guardados, interesados).
 class ProviderMini {
   const ProviderMini(
-      {required this.id, required this.name, this.photoUrl, this.kind = 'trade', this.phoneVerified = false});
+      {required this.id,
+      required this.name,
+      this.photoUrl,
+      this.kind = 'trade',
+      this.emailVerified = false,
+      this.phoneVerified = false});
   factory ProviderMini.fromJson(Json j) => ProviderMini(
         id: _sd(j['providerId'] ?? j['id']),
         name: _sd(j['name'] ?? j['displayName']),
         photoUrl: _s(j['photoUrl']),
         kind: _sd(j['kind'], 'trade'),
+        emailVerified:
+            _b(j['emailVerified']) || j['emailVerifiedAt'] != null || _ls(j['badges']).contains('emailVerified'),
         phoneVerified: _ls(j['badges']).contains('phoneVerified'),
       );
   final String id;
   final String name;
   final String? photoUrl;
   final String kind;
+  final bool emailVerified;
   final bool phoneVerified;
 }
 
@@ -174,6 +182,7 @@ class ProviderProfile {
     this.urgent = false,
     this.visitMode = 'hidden',
     this.visitText,
+    this.visitAmountCents,
     this.minPriceText,
     this.minPriceCents,
     this.prices = const [],
@@ -190,6 +199,7 @@ class ProviderProfile {
     this.channelChat = true,
     this.channelCall = false,
     this.updatedText = '',
+    this.emailVerified = false,
     this.phoneVerified = false,
     this.isNew = false,
   });
@@ -238,8 +248,15 @@ class ProviderProfile {
       days: days,
       urgent: _b(sched?['urgent'] ?? j['urgent']),
       visitMode: _sd(visit?['mode'], 'hidden'),
-      visitText: _s(visit?['text']),
-      minPriceText: _s(minP?['text']),
+      visitText: _s(visit?['text']) ??
+          (visit?['mode'] == 'free'
+              ? 'Sin costo'
+              : visit?['mode'] == 'paid' && visit?['amountCents'] is num
+                  ? formatMoney(_i(visit!['amountCents']))
+                  : null),
+      visitAmountCents: visit?['amountCents'] is num ? _i(visit!['amountCents']) : null,
+      minPriceText:
+          _s(minP?['text']) ?? (minP?['fromCents'] is num ? 'Desde ${formatMoney(_i(minP!['fromCents']))}' : null),
       minPriceCents: minP?['fromCents'] == null ? null : _i(minP!['fromCents']),
       prices: _lo(j['prices'], PriceItem.fromJson),
       payment: _ls(j['payment']),
@@ -255,6 +272,8 @@ class ProviderProfile {
       channelChat: channels == null ? true : _b(channels['chat']),
       channelCall: _b(channels?['call']),
       updatedText: _sd(j['updatedText']),
+      emailVerified:
+          _b(j['emailVerified']) || j['emailVerifiedAt'] != null || badges.any((b) => b.key == 'emailVerified'),
       phoneVerified: _b(j['phoneVerified']) || badges.any((b) => b.key == 'phoneVerified'),
       isNew: _b(j['isNew']) || badges.any((b) => b.key == 'isNew'),
     );
@@ -285,6 +304,7 @@ class ProviderProfile {
   final bool urgent;
   final String visitMode;
   final String? visitText;
+  final int? visitAmountCents;
   final String? minPriceText;
   final int? minPriceCents;
   final List<PriceItem> prices;
@@ -301,13 +321,14 @@ class ProviderProfile {
   final bool channelChat;
   final bool channelCall;
   final String updatedText;
+  final bool emailVerified;
   final bool phoneVerified;
   final bool isNew;
 
   bool get isBusiness => kind == 'business';
   bool get hasShop => attention == 'shop' || attention == 'both';
-  ProviderMini get mini =>
-      ProviderMini(id: id, name: name, photoUrl: photoUrl, kind: kind, phoneVerified: phoneVerified);
+  ProviderMini get mini => ProviderMini(
+      id: id, name: name, photoUrl: photoUrl, kind: kind, emailVerified: emailVerified, phoneVerified: phoneVerified);
 }
 
 /// `GET /providers/me`: el perfil propio con lo que falta por completar.
@@ -317,7 +338,8 @@ class MyProvider {
       this.completeness = 0,
       this.todo = const [],
       this.views = 0,
-      this.contactClicks = 0,
+      this.contactClicks,
+      this.policyVersion,
       this.location});
   factory MyProvider.fromJson(Json j) {
     final st = _m(j['stats']);
@@ -326,7 +348,8 @@ class MyProvider {
       completeness: _i(j['completeness']),
       todo: _lo(j['todo'], (t) => TodoItem(_sd(t['key']), _sd(t['label']), _i(t['points']), _b(t['done']))),
       views: _i(st?['views']),
-      contactClicks: _i(st?['contactClicks']),
+      contactClicks: st?['contactClicks'] is num ? _i(st!['contactClicks']) : null,
+      policyVersion: _s(j['policyVersion']),
       location: _m(j['location']) == null ? null : GeoPoint.fromJson(_m(j['location'])!),
     );
   }
@@ -334,7 +357,8 @@ class MyProvider {
   final int completeness;
   final List<TodoItem> todo;
   final int views;
-  final int contactClicks;
+  final int? contactClicks;
+  final String? policyVersion;
   final GeoPoint? location;
 }
 
@@ -398,9 +422,9 @@ class Work {
   final bool recommended;
   final bool canContact;
 
-  Work copyWith({bool? saved, bool? recommended, int? recs}) => Work(
+  Work copyWith({ProviderMini? provider, bool? saved, bool? recommended, int? recs}) => Work(
         id: id,
-        provider: provider,
+        provider: provider ?? this.provider,
         category: category,
         title: title,
         text: text,
@@ -436,6 +460,8 @@ class ServiceRequest {
     this.zoneLabel = '',
     this.distanceText = '',
     this.imageUrl,
+    this.imageUrls = const [],
+    this.contact = 'chat',
     this.status = 'open',
     this.interestCount = 0,
     this.interestedPreview = const [],
@@ -444,6 +470,7 @@ class ServiceRequest {
     this.picked,
     this.ago = '',
     this.iAmInterested = false,
+    this.interestKnown = true,
     this.inMyRadius = true,
     this.matchesMyService = false,
     this.clientName = '',
@@ -466,6 +493,8 @@ class ServiceRequest {
       zoneLabel: _sd(j['zoneLabel']),
       distanceText: _sd(j['distanceText']),
       imageUrl: _s(j['imageUrl']),
+      imageUrls: _ls(j['imageUrls']),
+      contact: _sd(j['contact'], 'chat'),
       status: _sd(j['status'], 'open'),
       interestCount: _i(j['interestCount']),
       interestedPreview: _lo(j['interestedPreview'], ProviderMini.fromJson),
@@ -474,6 +503,8 @@ class ServiceRequest {
       picked: pick == null ? null : ProviderMini.fromJson(pick),
       ago: _sd(j['ago']),
       iAmInterested: _b(j['iAmInterested']),
+      interestKnown:
+          j['interestSummaryAvailable'] != false && (!j.containsKey('iAmInterested') || j['iAmInterested'] != null),
       inMyRadius: j['inMyRadius'] == null ? true : _b(j['inMyRadius']),
       matchesMyService: _b(j['matchesMyService']),
       clientName: _sd(client?['displayName']),
@@ -493,6 +524,13 @@ class ServiceRequest {
   final String zoneLabel;
   final String distanceText;
   final String? imageUrl;
+  final List<String> imageUrls;
+  final String contact;
+  List<String> get photos => imageUrls.isNotEmpty
+      ? imageUrls
+      : imageUrl == null
+          ? const []
+          : [imageUrl!];
   final String status;
   final int interestCount;
   final List<ProviderMini> interestedPreview;
@@ -501,6 +539,7 @@ class ServiceRequest {
   final ProviderMini? picked;
   final String ago;
   final bool iAmInterested;
+  final bool interestKnown;
   final bool inMyRadius;
   final bool matchesMyService;
   final String clientName;
@@ -559,7 +598,7 @@ class Counterpart {
       this.providerId});
   factory Counterpart.fromJson(Json? j) => Counterpart(
         id: _sd(j?['accountId'] ?? j?['id']),
-        providerId: _s(j?['providerId'] ?? (_sd(j?['kind']) == 'provider' ? (j?['id']) : null)),
+        providerId: _s(j?['providerId'] ?? (_sd(j?['kind']) == 'provider' ? (j?['id'] ?? j?['accountId']) : null)),
         displayName: _sd(j?['displayName'] ?? j?['name']),
         photoUrl: _s(j?['photoUrl']),
         kind: _sd(j?['kind'], 'client'),
@@ -587,7 +626,8 @@ class Money {
 String formatMoney(int cents) {
   final pesos = cents ~/ 100;
   final s = pesos.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
-  return '\$$s';
+  final remainder = cents.abs() % 100;
+  return '\$$s${remainder == 0 ? '' : '.${remainder.toString().padLeft(2, '0')}'}';
 }
 
 class TimelineEvent {
@@ -908,6 +948,7 @@ class AccountScreen {
   const AccountScreen({
     required this.name,
     this.email = '',
+    this.emailVerified = false,
     this.photoUrl,
     this.phone,
     this.phoneVerified = false,
@@ -934,7 +975,7 @@ class AccountScreen {
   });
 
   factory AccountScreen.fromJson(Json j) {
-    final a = _m(j['account']);
+    final a = _m(j['account']) ?? j;
     final m = _m(j['mode']);
     final p = _m(j['provider']);
     final st = _m(j['stats']);
@@ -943,15 +984,16 @@ class AccountScreen {
     final search = _m(j['search']);
     final links = _m(j['links']);
     return AccountScreen(
-      name: _sd(a?['name']),
-      email: _sd(a?['email']),
-      photoUrl: _s(a?['photoUrl']),
-      phone: _s(a?['phone']),
-      phoneVerified: _b(a?['phoneVerified']),
-      status: _sd(a?['status'], 'active'),
-      deletionRequestedAt: _s(a?['deletionRequestedAt']),
-      mode: _sd(m?['current'], 'client'),
-      hasProvider: _b(m?['hasProvider']),
+      name: _sd(a['name']),
+      email: _sd(a['email']),
+      emailVerified: a['emailVerifiedAt'] != null,
+      photoUrl: _s(a['photoUrl']),
+      phone: _s(a['phone']),
+      phoneVerified: _b(a['phoneVerified']),
+      status: _sd(a['status'], 'active'),
+      deletionRequestedAt: _s(a['deletionRequestedAt']),
+      mode: _sd(j['currentMode'] ?? m?['current'], 'client'),
+      hasProvider: _b(j['hasProvider'] ?? m?['hasProvider']),
       providerId: _s(p?['providerId']),
       providerName: _s(p?['name']),
       completeness: _i(p?['completeness']),
@@ -973,6 +1015,7 @@ class AccountScreen {
 
   final String name;
   final String email;
+  final bool emailVerified;
   final String? photoUrl;
   final String? phone;
   final bool phoneVerified;
@@ -1023,6 +1066,13 @@ class MapNearby {
 }
 
 class LocationResult {
+  factory LocationResult.fromJson(Map<String, dynamic> j) {
+    final point = Map<String, dynamic>.from(j['searchLocation'] as Map);
+    return LocationResult(
+        point: GeoPoint((point['lat'] as num).toDouble(), (point['lng'] as num).toDouble()),
+        zoneLabel: j['zoneLabel'] as String,
+        radiusKm: (j['radiusKm'] as num).toInt());
+  }
   const LocationResult({required this.point, required this.zoneLabel, required this.radiusKm, this.summary = ''});
   final GeoPoint point;
   final String zoneLabel;
@@ -1127,13 +1177,13 @@ class SearchFilters {
 
 /// Filtros del prestador sobre solicitudes (`GET /requests/opportunities`).
 class OppFilters {
-  const OppFilters({this.q = '', this.cat, this.today = false, this.inRadius = true, this.myServiceOnly = false});
+  const OppFilters({this.q = '', this.cat, this.today = false, this.inRadius = true, this.myServiceOnly = true});
   final String q;
   final String? cat;
   final bool today;
   final bool inRadius;
   final bool myServiceOnly;
-  int get count => (cat != null ? 1 : 0) + (today ? 1 : 0) + (inRadius ? 0 : 1) + (myServiceOnly ? 1 : 0);
+  int get count => (cat != null ? 1 : 0) + (today ? 1 : 0) + (inRadius ? 0 : 1) + (myServiceOnly ? 0 : 1);
   OppFilters copyWith({String? q, Object? cat = _keep, bool? today, bool? inRadius, bool? myServiceOnly}) => OppFilters(
         q: q ?? this.q,
         cat: identical(cat, _keep) ? this.cat : cat as String?,
@@ -1151,4 +1201,17 @@ class SearchResult {
   final int total;
   final bool outOfZone;
   final String? notice;
+}
+
+/// Real geocoding result returned by Discovery, never seeded from demo data.
+class GeoPlace {
+  const GeoPlace({required this.point, required this.label, required this.zoneLabel});
+  factory GeoPlace.fromJson(Map<String, dynamic> j) => GeoPlace(
+        point: GeoPoint((j['lat'] as num).toDouble(), (j['lng'] as num).toDouble()),
+        label: j['label'] as String,
+        zoneLabel: j['zoneLabel'] as String,
+      );
+  final GeoPoint point;
+  final String label;
+  final String zoneLabel;
 }

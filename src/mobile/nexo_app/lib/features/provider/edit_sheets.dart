@@ -9,11 +9,14 @@ import '../../app/theme/typography.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_field.dart';
 import '../../core/widgets/nexo_sheet.dart';
-import '../../core/widgets/pick_image.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/photo_feedback.dart';
 import '../../data/api_provider.dart';
+import '../../core/widgets/catalog_status.dart';
 import '../../data/models.dart';
+import '../../core/widgets/pick_image.dart';
+import '../../data/provider_contract.dart';
 import '../account/phone_sheet.dart';
 import '../location/location_picker_page.dart';
 
@@ -24,6 +27,7 @@ Future<bool> _patch(WidgetRef ref, String section, Json body) async {
     ref.invalidate(myProviderProvider);
     ref.invalidate(providerProfileProvider);
     ref.invalidate(accountProvider);
+    ref.invalidate(compareResultProvider);
     showNexoToast('Perfil actualizado');
     return true;
   } catch (e) {
@@ -42,8 +46,12 @@ Future<void> openTodo(BuildContext context, WidgetRef ref, String key, MyProvide
   final p = me.profile;
   switch (key) {
     case 'photo':
-    case 'bio':
       return showBasicSheet(context, ref, p);
+    case 'cover':
+      return showBasicSheet(context, ref, p);
+    case 'bio':
+      return showServicesSheet(context, ref, p);
+    case 'schedule':
     case 'hours':
       return showHoursSheet(context, ref, p);
     case 'prices':
@@ -93,29 +101,46 @@ class _BasicSheet extends ConsumerStatefulWidget {
 
 class _BasicSheetState extends ConsumerState<_BasicSheet> {
   late final _name = TextEditingController(text: widget.p.name);
-  late final _bio = TextEditingController(text: widget.p.bio);
-  String? _photo;
-  String? _photoId;
   bool _busy = false;
 
   @override
   void dispose() {
     _name.dispose();
-    _bio.dispose();
     super.dispose();
   }
 
-  Future<void> _pick() async {
-    final img = await pickOneImage(context);
-    if (img == null) return;
-    setState(() => _busy = true);
+  String? _photoLocal;
+  String? _coverLocal;
+  String? _pendingPhoto;
+  bool _loadingCover = false;
+  Future<void> _pick({bool cover = false}) async {
+    final image = await pickOneImage(context);
+    if (image == null || !mounted) return;
+    setState(() {
+      _busy = true;
+      _loadingCover = cover;
+      _pendingPhoto = 'file://${image.path}';
+    });
     try {
-      _photoId = await ref.read(apiProvider).upload(img, purpose: 'avatar');
-      setState(() => _photo = 'file://${img.path}');
+      final id = await ref.read(apiProvider).upload(image, purpose: cover ? 'cover' : 'avatar');
+      final ok = await _patch(ref, 'basic', {cover ? 'coverUploadId' : 'photoUploadId': id});
+      if (ok && mounted)
+        setState(() {
+          if (cover) {
+            _coverLocal = 'file://${image.path}';
+          } else {
+            _photoLocal = 'file://${image.path}';
+          }
+        });
+      if (ok) showNexoToast(cover ? 'Portada actualizada' : 'Foto actualizada');
     } catch (e) {
       showNexoToast(apiErrorMessage(e));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted)
+        setState(() {
+          _busy = false;
+          _pendingPhoto = null;
+        });
     }
   }
 
@@ -125,33 +150,55 @@ class _BasicSheetState extends ConsumerState<_BasicSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SheetHeader('Tu perfil', subtitle: 'Así te verán quienes busquen un servicio.'),
+        SizedBox(
+            height: 110,
+            child: Stack(children: [
+              Positioned.fill(
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: _busy && _loadingCover && _pendingPhoto != null
+                          ? NexoImage(_pendingPhoto!)
+                          : (_coverLocal ?? widget.p.coverUrl) != null
+                              ? NexoImage((_coverLocal ?? widget.p.coverUrl)!)
+                              : const DecoratedBox(
+                                  decoration: BoxDecoration(
+                                      gradient:
+                                          LinearGradient(colors: [NexoColors.brandSoft, NexoColors.accentSoft]))))),
+              if (_busy && _loadingCover) const Positioned.fill(child: PhotoProcessingOverlay()),
+              Positioned(
+                  right: 8,
+                  bottom: 4,
+                  child: TextButton.icon(
+                      onPressed: _busy ? null : () => _pick(cover: true),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: Text(
+                          widget.p.coverUrl == null && _coverLocal == null ? 'Agregar portada' : 'Cambiar portada'))),
+            ])),
+        const SizedBox(height: 12),
         InkWell(
-          onTap: _busy ? null : _pick,
+          onTap: _busy ? null : () => _pick(),
           borderRadius: BorderRadius.circular(16),
           child: Row(children: [
-            NexoAvatar(
-                name: widget.p.name,
-                url: _photo ?? widget.p.photoUrl,
-                size: 72,
-                icon: _photo == null && widget.p.photoUrl == null ? 'camera' : null),
+            SizedBox(
+                width: 72,
+                height: 72,
+                child: Stack(children: [
+                  NexoAvatar(
+                      name: widget.p.name,
+                      url: _busy && !_loadingCover ? _pendingPhoto : _photoLocal ?? widget.p.photoUrl,
+                      size: 72,
+                      icon: widget.p.photoUrl == null ? 'camera' : null),
+                  if (_busy && !_loadingCover) const Positioned.fill(child: PhotoProcessingOverlay(circular: true)),
+                ])),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(widget.p.photoUrl == null && _photo == null ? 'Agregar foto o logotipo' : 'Cambiar foto',
+              child: Text(widget.p.photoUrl == null ? 'Agregar foto o logotipo' : 'Cambiar foto',
                   style: NexoText.body(15, weight: FontWeight.w700, color: NexoColors.brand)),
             ),
-            if (_busy) const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
           ]),
         ),
         const SizedBox(height: 12),
         NexoField(label: widget.p.isBusiness ? 'Nombre comercial' : 'Tu nombre', controller: _name, maxLength: 80),
-        _lbl('Acerca de ti'),
-        TextField(
-          controller: _bio,
-          maxLines: 4,
-          maxLength: 500,
-          style: NexoText.body(15),
-          decoration: nexoInputDecoration(hint: 'Qué haces, cómo trabajas y desde cuándo.'),
-        ),
         const SizedBox(height: 8),
         NexoButton(
           label: 'Guardar',
@@ -161,8 +208,6 @@ class _BasicSheetState extends ConsumerState<_BasicSheet> {
             final nav = Navigator.of(context);
             final ok = await _patch(ref, 'basic', {
               'name': _name.text.trim(),
-              'bio': _bio.text.trim(),
-              if (_photoId != null) 'photoUploadId': _photoId,
             });
             if (ok) {
               nav.pop();
@@ -190,7 +235,17 @@ class _ServicesSheet extends ConsumerStatefulWidget {
 
 class _ServicesSheetState extends ConsumerState<_ServicesSheet> {
   late final Set<String> _cats = widget.p.categories.toSet();
-  late final Set<String> _specs = widget.p.specialties.toSet();
+  late final Set<String> _specs =
+      widget.p.specialties.map((s) => providerSpecialtyLabel(widget.p.categories, s)).toSet();
+  late final _bio = TextEditingController(text: widget.p.bio);
+  late final _activity = TextEditingController(text: widget.p.activity ?? '');
+  @override
+  void dispose() {
+    _bio.dispose();
+    _activity.dispose();
+    super.dispose();
+  }
+
   bool _busy = false;
 
   @override
@@ -199,34 +254,50 @@ class _ServicesSheetState extends ConsumerState<_ServicesSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SheetHeader('Servicios que ofreces', subtitle: 'Elige hasta 3 categorías y tus especialidades.'),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final c in allCats)
-            ToggleChip(
-              label: c.name,
-              icon: c.icon,
-              selected: _cats.contains(c.id),
-              onTap: () => setState(() {
-                if (_cats.contains(c.id)) {
-                  _cats.remove(c.id);
-                  _specs.removeAll(c.specs);
-                } else if (_cats.length < 3) {
-                  _cats.add(c.id);
-                } else {
-                  showNexoToast('Máximo 3 categorías');
-                }
-              }),
-            ),
-        ]),
-        for (final c in allCats.where((c) => _cats.contains(c.id) && c.specs.isNotEmpty)) ...[
-          _lbl('Especialidades en ${c.name.toLowerCase()}'),
+        NexoField(label: 'Descripción (mínimo 20 caracteres)', controller: _bio, maxLength: 600),
+        if (widget.p.isBusiness) NexoField(label: 'Actividad del negocio', controller: _activity, maxLength: 80),
+        if (widget.p.isBusiness)
+          Text('Las categorías se calculan a partir de tu actividad y descripción.', style: NexoText.body(14)),
+        if (!widget.p.isBusiness) ...[
           Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final s in c.specs)
+            const CatalogStatus(),
+            for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
               ToggleChip(
-                label: s,
-                selected: _specs.contains(s),
-                onTap: () => setState(() => _specs.contains(s) ? _specs.remove(s) : _specs.add(s)),
+                label: c.name,
+                icon: c.icon,
+                selected: _cats.contains(c.id),
+                onTap: () => setState(() {
+                  if (_cats.contains(c.id)) {
+                    _cats.remove(c.id);
+                    _specs.removeAll(c.specs);
+                  } else if (_cats.length < 3) {
+                    _cats.add(c.id);
+                  } else {
+                    showNexoToast('Máximo 3 categorías');
+                  }
+                }),
               ),
           ]),
+          for (final c in (ref.watch(catalogProvider).asData?.value ?? [])
+              .where((c) => _cats.contains(c.id) && c.specs.isNotEmpty)) ...[
+            _lbl('Especialidades en ${c.name.toLowerCase()}'),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final s in c.specs)
+                ToggleChip(
+                  label: s,
+                  selected: _specs.contains(s),
+                  onTap: () => setState(() {
+                    if (_specs.contains(s)) {
+                      _specs.remove(s);
+                    } else if (_specs.length < 5) {
+                      _specs.add(s);
+                    } else {
+                      showNexoToast('Máximo 5 especialidades');
+                    }
+                  }),
+                ),
+            ]),
+          ],
         ],
         const SizedBox(height: 18),
         NexoButton(
@@ -237,8 +308,13 @@ class _ServicesSheetState extends ConsumerState<_ServicesSheet> {
               : () async {
                   setState(() => _busy = true);
                   final nav = Navigator.of(context);
-                  final ok =
-                      await _patch(ref, 'services', {'categories': _cats.toList(), 'specialties': _specs.toList()});
+                  final ok = await _patch(ref, 'services', {
+                    'bio': _bio.text.trim(),
+                    if (widget.p.isBusiness) 'activity': _activity.text.trim(),
+                    if (!widget.p.isBusiness) 'categories': _cats.toList(),
+                    'specialties':
+                        widget.p.isBusiness ? <String>[] : providerSpecialtySlugs(_cats.toList(), _specs.toList()),
+                  });
                   if (ok) {
                     nav.pop();
                   } else if (mounted) {
@@ -262,13 +338,23 @@ Future<void> showZoneSheet(BuildContext context, WidgetRef ref, ProviderProfile 
       subtitle: shop
           ? 'Mueve el mapa hasta la entrada de tu local. Los clientes verán cómo llegar.'
           : 'Mueve el punto base y elige hasta dónde llegas. Verás solicitudes dentro de ese radio.',
-      initial: p.shopLocation ?? p.zonePoint ?? ref.read(searchLocationProvider).point,
+      initial: ref.read(myProviderProvider).asData?.value?.location ??
+          p.shopLocation ??
+          ref.read(searchLocationProvider).point,
       radiusKm: p.radiusKm == 0 ? 5 : p.radiusKm,
       showRadius: !shop,
       button: 'Guardar zona',
     ),
   );
   if (r == null) return;
+  try {
+    await ref
+        .read(searchLocationProvider.notifier)
+        .set(r.point, r.radiusKm == 0 ? 5 : r.radiusKm, source: r.source, zoneLabel: r.zoneLabel);
+  } catch (e) {
+    showNexoToast(apiErrorMessage(e));
+    return;
+  }
   await _patch(
       ref, 'zone', {'location': r.point.toJson(), 'radiusKm': shop ? 0 : r.radiusKm, 'attention': p.attention});
 }
@@ -392,10 +478,10 @@ Future<void> showPricesSheet(BuildContext context, WidgetRef ref, ProviderProfil
     showNexoSheet<void>(context, builder: (_) => _PricesSheet(p: p));
 
 class _PriceRow {
-  _PriceRow(String s, int? pesos, this.suffix)
+  _PriceRow(String s, int? cents, this.suffix)
       : service = TextEditingController(text: s),
-        amount = TextEditingController(text: pesos == null ? '' : '$pesos'),
-        quote = pesos == null && s.isNotEmpty;
+        amount = TextEditingController(text: cents == null ? '' : centsInput(cents)),
+        quote = cents == null && s.isNotEmpty;
   final TextEditingController service;
   final TextEditingController amount;
   final String suffix;
@@ -411,11 +497,10 @@ class _PricesSheet extends ConsumerStatefulWidget {
 
 class _PricesSheetState extends ConsumerState<_PricesSheet> {
   late String _visit = widget.p.visitMode;
-  late final _visitAmt = TextEditingController(
-      text: widget.p.visitMode == 'paid' ? (widget.p.visitText ?? '').replaceAll(RegExp(r'[^0-9]'), '') : '');
+  late final _visitAmt =
+      TextEditingController(text: widget.p.visitAmountCents == null ? '' : centsInput(widget.p.visitAmountCents!));
   late final List<_PriceRow> _rows = [
-    for (final x in widget.p.prices.take(3))
-      _PriceRow(x.service, x.fromCents == null ? null : x.fromCents! ~/ 100, x.suffix),
+    for (final x in widget.p.prices.take(3)) _PriceRow(x.service, x.fromCents, x.suffix),
     if (widget.p.prices.isEmpty) _PriceRow('', null, ''),
   ];
   bool _busy = false;
@@ -450,8 +535,8 @@ class _PricesSheetState extends ConsumerState<_PricesSheet> {
           const SizedBox(height: 8),
           TextField(
             controller: _visitAmt,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
             style: NexoText.body(15),
             decoration: _dec('Costo de la visita').copyWith(prefixText: '\$ '),
           ),
@@ -468,8 +553,8 @@ class _PricesSheetState extends ConsumerState<_PricesSheet> {
               child: TextField(
                 controller: r.amount,
                 enabled: !r.quote,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
                 style: NexoText.body(15),
                 decoration: _dec(r.quote ? 'A cotizar' : 'Desde').copyWith(prefixText: r.quote ? null : '\$ '),
               ),
@@ -493,12 +578,19 @@ class _PricesSheetState extends ConsumerState<_PricesSheet> {
           onPressed: () async {
             setState(() => _busy = true);
             final nav = Navigator.of(context);
+            if ((_visit == 'paid' && parseProviderMoney(_visitAmt.text) == null) ||
+                _rows.any(
+                    (r) => r.service.text.trim().isNotEmpty && !r.quote && parseProviderMoney(r.amount.text) == null)) {
+              showNexoToast('Escribe importes válidos con hasta dos decimales.');
+              setState(() => _busy = false);
+              return;
+            }
             final prices = [
               for (final r in _rows)
                 if (r.service.text.trim().isNotEmpty)
                   {
                     'service': r.service.text.trim(),
-                    'fromCents': r.quote ? null : (int.tryParse(r.amount.text) ?? 0) * 100,
+                    'fromCents': r.quote ? null : parseProviderMoney(r.amount.text)!,
                     'unit': r.quote ? 'quote' : 'from',
                     'suffix': r.suffix,
                   }
@@ -506,7 +598,7 @@ class _PricesSheetState extends ConsumerState<_PricesSheet> {
             final ok = await _patch(ref, 'prices', {
               'visit': {
                 'mode': _visit,
-                if (_visit == 'paid') 'amountCents': (int.tryParse(_visitAmt.text) ?? 0) * 100,
+                if (_visit == 'paid') 'amountCents': parseProviderMoney(_visitAmt.text)!,
               },
               'prices': prices,
             });
@@ -535,17 +627,23 @@ class _TermsSheet extends ConsumerStatefulWidget {
 }
 
 class _TermsSheetState extends ConsumerState<_TermsSheet> {
-  static const _payNames = {'cash': 'Efectivo', 'transfer': 'Transferencia', 'card': 'Tarjeta'};
+  static const _payNames = {
+    'cash': 'Efectivo',
+    'transfer': 'Transferencia',
+    'card': 'Tarjeta',
+    'deposit': 'Depósito',
+    'other': 'Otro'
+  };
   static const _resp = [('sameDay', 'Mismo día'), ('h24', '24 h'), ('h48', '48 h'), ('week', 'Semana')];
 
   late final Set<String> _pay = {
     for (final e in _payNames.entries)
-      if (widget.p.payment.contains(e.value)) e.key
+      if (widget.p.payment.contains(e.key) || widget.p.payment.contains(e.value)) e.key
   };
   late String _response = switch (widget.p.responseTime) {
-    'Mismo día' || 'Menos de 1 hora' || 'Menos de 30 minutos' => 'sameDay',
-    'Menos de 2 días' => 'h48',
-    'Esta semana' => 'week',
+    'sameDay' || 'Mismo día' || 'Menos de 1 hora' || 'Menos de 30 minutos' => 'sameDay',
+    'h48' || 'Menos de 2 días' => 'h48',
+    'week' || 'Esta semana' => 'week',
     _ => 'h24',
   };
   late final _warranty = TextEditingController(text: widget.p.warranty ?? '');
@@ -584,11 +682,12 @@ class _TermsSheetState extends ConsumerState<_TermsSheet> {
           style: NexoText.body(15),
           decoration: nexoInputDecoration(hint: 'Ej. 30 días en mano de obra'),
         ),
-        OptRow(
-            icon: _invoice ? 'check' : 'info',
-            label: 'Emito factura',
-            selected: _invoice,
-            onTap: () => setState(() => _invoice = !_invoice)),
+        if (widget.p.isBusiness)
+          OptRow(
+              icon: _invoice ? 'check' : 'info',
+              label: 'Emito factura',
+              selected: _invoice,
+              onTap: () => setState(() => _invoice = !_invoice)),
         const SizedBox(height: 8),
         OptRow(
             icon: _call ? 'check' : 'phone',

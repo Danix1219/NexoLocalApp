@@ -7,6 +7,7 @@ import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/nexo_navigation.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../common/actions.dart';
@@ -25,6 +26,7 @@ class SavedPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final v = ref.watch(savedProvider);
     return NexoPage(
+      bottom: const NexoNavigation(current: 4),
       child: Column(children: [
         const SubBar('Guardados'),
         Expanded(

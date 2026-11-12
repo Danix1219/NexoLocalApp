@@ -4,12 +4,19 @@ import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
 import 'nexo_button.dart';
 import 'nexo_icon.dart';
+import 'nexo_motion.dart';
+
+Widget _pressFeedback(Widget child) => NexoPressFeedback(child: child);
 
 /// Hoja inferior de la maqueta (`.sheet`): radio 28, barra para arrastrar y X.
 Future<T?> showNexoSheet<T>(BuildContext context, {required WidgetBuilder builder}) {
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
+    sheetAnimationStyle: AnimationStyle(
+        duration: NexoMotion.duration(context, NexoMotion.enter),
+        reverseDuration: NexoMotion.duration(context, NexoMotion.enter)),
     useSafeArea: true,
     backgroundColor: Colors.transparent,
     barrierColor: const Color(0x80141F1C),
@@ -126,7 +133,7 @@ class ChoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = BorderRadius.circular(18);
-    return Semantics(
+    return _pressFeedback(Semantics(
       button: true,
       child: Material(
         color: NexoColors.surface,
@@ -168,7 +175,7 @@ class ChoiceCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -202,7 +209,7 @@ class OptRow extends StatelessWidget {
             ? NexoColors.brand
             : NexoColors.ink;
     final r = BorderRadius.circular(14);
-    return Semantics(
+    return _pressFeedback(Semantics(
       button: selected == null,
       checked: selected,
       child: Material(
@@ -239,7 +246,7 @@ class OptRow extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

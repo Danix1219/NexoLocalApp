@@ -7,6 +7,73 @@ import '../support/mock_adapter.dart';
 
 /// Specs 035/038/036 · grupos `solicitudes`, `interes` y `trabajos`.
 void main() {
+  test('mine, oportunidades y trabajos recorren todos los cursores', () async {
+    for (final path in [
+      '/v1/discovery/requests/mine',
+      '/v1/discovery/requests/opportunities',
+      '/v1/discovery/providers/p/works'
+    ]) {
+      final adapter = MockAdapter();
+      adapter.onRaw(
+          'GET',
+          path,
+          (o) => o.queryParameters['cursor'] == null
+              ? jsonBody({
+                  'items': [path.endsWith('works') ? Fx.work(id: 'one') : Fx.request(id: 'one')],
+                  'hasMore': true,
+                  'nextCursor': 'next'
+                })
+              : jsonBody({
+                  'items': [path.endsWith('works') ? Fx.work(id: 'two') : Fx.request(id: 'two')],
+                  'hasMore': false
+                }));
+      final api = HttpNexoApi(testDio(adapter));
+      final ids = path.endsWith('works')
+          ? (await api.providerWorks('p')).map((w) => w.id)
+          : path.endsWith('mine')
+              ? (await api.myRequests()).map((r) => r.id)
+              : (await api.opportunities(const OppFilters())).map((r) => r.id);
+      expect(ids, ['one', 'two']);
+      expect(adapter.calls.length, 2);
+      expect(adapter.calls.last.query['cursor'], 'next');
+    }
+  });
+  test('cursor repetido falla en lugar de devolver lista truncada', () async {
+    final adapter = MockAdapter()
+      ..on('GET', '/v1/discovery/requests/mine', {'items': [], 'hasMore': true, 'nextCursor': 'same'});
+    await expectLater(HttpNexoApi(testDio(adapter)).myRequests(), throwsA(isA<Exception>()));
+    expect(adapter.calls.length, 2);
+  });
+  test('trabajo conserva clave enviada al reintentar y lee contrato real', () async {
+    final adapter = MockAdapter()
+      ..on('POST', '/v1/discovery/works', {'workId': 'real', 'category': 'plomeria', 'title': 'Trabajo real'},
+          status: 201);
+    final api = HttpNexoApi(testDio(adapter));
+    for (var i = 0; i < 2; i++) {
+      expect(
+          (await api.createWork(
+                  category: 'plomeria',
+                  title: 'Trabajo real',
+                  text: 'Trabajo terminado en cocina',
+                  location: const GeoPoint(20, -99),
+                  idempotencyKey: 'same-key'))
+              .id,
+          'real');
+    }
+    expect(adapter.calls.map((c) => c.header('Idempotency-Key')), ['same-key', 'same-key']);
+  });
+  test('resumen degradado no convierte interés desconocido en false conocido', () async {
+    final adapter = MockAdapter()
+      ..on('GET', '/v1/discovery/requests/opportunities', {
+        'items': [
+          {...Fx.request(), 'iAmInterested': null}
+        ],
+        'interestSummaryAvailable': false
+      });
+    final r = (await HttpNexoApi(testDio(adapter)).opportunities(const OppFilters())).single;
+    expect(r.interestKnown, isFalse);
+  });
+
   late MockAdapter a;
   late HttpNexoApi api;
   setUp(() {

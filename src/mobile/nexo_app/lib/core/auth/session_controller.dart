@@ -14,6 +14,7 @@ class SessionState {
     this.accountId,
     this.mode = 'client',
     this.hasProvider = false,
+    this.recoveryOnly = false,
     this.name,
   });
 
@@ -28,6 +29,7 @@ class SessionState {
       accountId: c.sub,
       mode: modeOverride ?? c.mode,
       hasProvider: c.hasProvider,
+      recoveryOnly: c.recoveryOnly,
       name: name,
     );
   }
@@ -38,6 +40,7 @@ class SessionState {
   /// `client` | `provider`.
   final String mode;
   final bool hasProvider;
+  final bool recoveryOnly;
 
   /// Se conoce al registrarse o al cargar Cuenta (`/v1/screens/account`).
   final String? name;
@@ -48,6 +51,7 @@ class SessionState {
 
   SessionState copyWith({String? mode, bool? hasProvider, String? name}) => SessionState(
         status: status,
+        recoveryOnly: recoveryOnly,
         accountId: accountId,
         mode: mode ?? this.mode,
         hasProvider: hasProvider ?? this.hasProvider,

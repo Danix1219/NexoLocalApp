@@ -7,6 +7,8 @@ import 'package:nexo_app/data/nexo_api.dart';
 import '../support/fixtures.dart';
 import '../support/mock_adapter.dart';
 
+const testIdempotencyKey = 'profile-test';
+
 /// Specs 031/032/033/044 · grupo `perfil`.
 void main() {
   late MockAdapter a;
@@ -104,5 +106,67 @@ void main() {
           .having((e) => e.code, 'code', 'provider.prices_limit')
           .having((e) => e.detail, 'detail', 'Máximo 3 precios')),
     );
+  });
+  test('404 sin código de perfil no se convierte en ausencia', () async {
+    a.on('GET', '/v1/discovery/providers/me', {'title': 'Not found'}, status: 404);
+    await expectLater(api.myProvider(), throwsA(isA<ApiException>().having((e) => e.code, 'code', 'http_404')));
+  });
+
+  test('alta traduce especialidades y excluye campos de negocio en persona', () async {
+    a.on('POST', '/v1/discovery/providers', {'providerId': '019400d4-9e5a-7b23-8c91-4f6a7b8c9d01'}, status: 201);
+    final draft = ProviderDraft()
+      ..kind = 'trade'
+      ..activity = 'Dato residual del negocio'
+      ..categories = ['plomeria']
+      ..specialties = ['Fugas y reparaciones']
+      ..location = const GeoPoint(20, -99);
+    await api.createProvider(draft, idempotencyKey: testIdempotencyKey);
+
+    final body = a.last('POST', '/v1/discovery/providers').body as Map;
+    expect(body['specialties'], ['fugas']);
+    expect(body.containsKey('activity'), isFalse);
+    expect(body['experience'], 0);
+    expect(body['attention'], 'home');
+  });
+
+  test('perfil real conserva política, importes y métricas ausentes', () async {
+    a.on('GET', '/v1/discovery/providers/me', {
+      ...Fx.provider(),
+      'policyVersion': 'provider-completeness/1',
+      'location': {'lat': 20.0539, 'lng': -99.3403},
+      'visit': {'mode': 'paid', 'amountCents': 12050},
+      'minPrice': {'fromCents': 15075},
+      'stats': {'views': 2, 'contactClicks': null, 'interestsGiven': null},
+    });
+    final own = (await api.myProvider())!;
+    expect(own.policyVersion, 'provider-completeness/1');
+    expect(own.contactClicks, isNull);
+    expect(own.location!.lat, 20.0539);
+    expect(own.profile.visitAmountCents, 12050);
+    expect(own.profile.visitText, r'$120.50');
+    expect(own.profile.minPriceText, r'Desde $150.75');
+  });
+
+  test('comparación conserva null explícito y coordenadas', () async {
+    a.on('GET', '/v1/discovery/providers/compare', {
+      'providers': [Fx.provider(), Fx.provider(id: 'prv_2')],
+      'rows': [
+        {
+          'key': 'payment',
+          'label': 'Pago',
+          'values': ['Efectivo', 'Tarjeta'],
+          'best': null
+        }
+      ],
+    });
+    final result = await api.compare(['prv_1', 'prv_2'], at: const GeoPoint(20, -99));
+    expect(result.rows.single.best, isNull);
+    expect(a.last('GET', '/v1/discovery/providers/compare').query['lat'], '20.0');
+  });
+
+  test('moderación no disponible permanece como fallo real', () async {
+    a.on('POST', '/v1/discovery/providers', problem('server.dependency_unavailable', 503), status: 503);
+    await expectLater(api.createProvider(ProviderDraft(), idempotencyKey: testIdempotencyKey),
+        throwsA(isA<ApiException>().having((e) => e.code, 'code', 'server.dependency_unavailable')));
   });
 }

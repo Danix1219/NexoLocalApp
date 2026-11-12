@@ -75,6 +75,10 @@ class PickedImage {
 /// `HttpNexoApi` llama al backend; `FakeNexoApi` responde con los datos de la
 /// maqueta para poder usar toda la app mientras se publican los endpoints.
 abstract class NexoApi {
+  Future<List<GeoPlace>> searchPlaces(String query, {GeoPoint? at}) => throw UnimplementedError();
+  Future<GeoPlace?> reversePlace(GeoPoint point) => throw UnimplementedError();
+  Future<LocationResult?> getLocation() async => null;
+
   // ---- 02 cuenta ----
   Future<AccountScreen> accountScreen();
   Future<void> updateMe({String? name, String? photoUploadId});
@@ -109,7 +113,10 @@ abstract class NexoApi {
     String? tag,
     GeoPoint? location,
     List<String> imageUploadIds = const [],
+    String? idempotencyKey,
   });
+  Future<Work> editWork(Work original,
+      {required String title, required String text, String? tag, required List<String> imageUploadIds});
   Future<void> deleteWork(String id);
   Future<Work> recommend(Work w, bool on);
   Future<List<Work>> providerWorks(String providerId);
@@ -122,9 +129,15 @@ abstract class NexoApi {
     required String urgency,
     required String contact,
     required GeoPoint location,
-    String? imageUploadId,
+    List<String> imageUploadIds = const [],
     required String idempotencyKey,
   });
+  Future<ServiceRequest> editRequest(String id,
+      {required String title,
+      required String description,
+      required String urgency,
+      required String contact,
+      required List<String> imageUploadIds});
   Future<List<ServiceRequest>> myRequests();
   Future<List<ServiceRequest>> opportunities(OppFilters f);
   Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId});
@@ -181,6 +194,8 @@ abstract class NexoApi {
   // ---- 14 imágenes ----
   /// Sube la foto y devuelve el `uploadId` para mandarlo en el alta.
   Future<String> upload(PickedImage img, {required String purpose});
+  Future<String?> myCover() async => null;
+  Future<String> setMyCover(String uploadId) => throw UnimplementedError();
 
   // ---- 15 asistente (IA generativa) ----
   /// `kind`: `request` | `work`. [userText] ya va sin datos de contacto
@@ -237,6 +252,13 @@ typedef DemoListener = void Function(ApiGroup group, bool usingDemo);
 /// esperar un tiempo de espera en cada pantalla. Los errores de negocio
 /// (409, 412, 403, 400 con código de Nexo…) siempre llegan a la pantalla.
 class HybridNexoApi implements NexoApi {
+  @override
+  Future<List<GeoPlace>> searchPlaces(String query, {GeoPoint? at}) => http.searchPlaces(query, at: at);
+  @override
+  Future<GeoPlace?> reversePlace(GeoPoint point) => http.reversePlace(point);
+  @override
+  Future<LocationResult?> getLocation() => http.getLocation();
+
   HybridNexoApi({
     required this.modes,
     required this.http,
@@ -254,13 +276,25 @@ class HybridNexoApi implements NexoApi {
   final DateTime Function() _now;
   final Map<ApiGroup, DateTime> _downUntil = {};
 
+  static const remoteGroups = {
+    ApiGroup.cuenta,
+    ApiGroup.perfil,
+    ApiGroup.dispositivos,
+    ApiGroup.descubrimiento,
+    ApiGroup.trabajos,
+    ApiGroup.solicitudes,
+    ApiGroup.interes,
+    ApiGroup.guardados,
+    ApiGroup.imagenes,
+  };
+
   GroupMode modeOf(ApiGroup g) => modes[g] ?? GroupMode.auto;
 
   /// true si el grupo está respondiendo con datos de ejemplo ahora mismo.
   bool usingDemo(ApiGroup g) {
     final m = modeOf(g);
     if (m == GroupMode.fake) return true;
-    if (m == GroupMode.live) return false;
+    if (m == GroupMode.live || remoteGroups.contains(g)) return false;
     final until = _downUntil[g];
     return until != null && _now().isBefore(until);
   }
@@ -272,6 +306,7 @@ class HybridNexoApi implements NexoApi {
 
   Future<T> _run<T>(ApiGroup g, String op, Future<T> Function(NexoApi api) call) async {
     final m = modeOf(g);
+    if (m != GroupMode.fake && (remoteGroups.contains(g) || op == 'setLocation')) return call(http);
     if (m == GroupMode.live) return call(http);
     if (m == GroupMode.fake || (usingDemo(g) && !alwaysTryLive.contains(op))) return call(fake);
     try {
@@ -285,7 +320,7 @@ class HybridNexoApi implements NexoApi {
       // se espera el tiempo de conexión una vez por pantalla.
       final all = e is ApiException && e.isNetwork;
       for (final x in all ? ApiGroup.values : [g]) {
-        if (modeOf(x) != GroupMode.auto) continue;
+        if (modeOf(x) != GroupMode.auto || remoteGroups.contains(x)) continue;
         final wasUp = !usingDemo(x);
         _downUntil[x] = until;
         if (wasUp) onDemo?.call(x, true);
@@ -352,6 +387,7 @@ class HybridNexoApi implements NexoApi {
     String? tag,
     GeoPoint? location,
     List<String> imageUploadIds = const [],
+    String? idempotencyKey,
   }) =>
       _run(
           ApiGroup.trabajos,
@@ -362,7 +398,13 @@ class HybridNexoApi implements NexoApi {
               text: text,
               tag: tag,
               location: location,
-              imageUploadIds: imageUploadIds));
+              imageUploadIds: imageUploadIds,
+              idempotencyKey: idempotencyKey));
+  @override
+  Future<Work> editWork(Work original,
+          {required String title, required String text, String? tag, required List<String> imageUploadIds}) =>
+      _run(ApiGroup.trabajos, 'editWork',
+          (a) => a.editWork(original, title: title, text: text, tag: tag, imageUploadIds: imageUploadIds));
   @override
   Future<void> deleteWork(String id) => _run(ApiGroup.trabajos, 'deleteWork', (a) => a.deleteWork(id));
   @override
@@ -379,7 +421,7 @@ class HybridNexoApi implements NexoApi {
     required String urgency,
     required String contact,
     required GeoPoint location,
-    String? imageUploadId,
+    List<String> imageUploadIds = const [],
     required String idempotencyKey,
   }) =>
       _run(
@@ -392,9 +434,25 @@ class HybridNexoApi implements NexoApi {
                 urgency: urgency,
                 contact: contact,
                 location: location,
-                imageUploadId: imageUploadId,
+                imageUploadIds: imageUploadIds,
                 idempotencyKey: idempotencyKey,
               ));
+  @override
+  Future<ServiceRequest> editRequest(String id,
+          {required String title,
+          required String description,
+          required String urgency,
+          required String contact,
+          required List<String> imageUploadIds}) =>
+      _run(
+          ApiGroup.solicitudes,
+          'editRequest',
+          (a) => a.editRequest(id,
+              title: title,
+              description: description,
+              urgency: urgency,
+              contact: contact,
+              imageUploadIds: imageUploadIds));
   @override
   Future<List<ServiceRequest>> myRequests() => _run(ApiGroup.solicitudes, 'myRequests', (a) => a.myRequests());
   @override
@@ -512,6 +570,10 @@ class HybridNexoApi implements NexoApi {
   Future<void> markNotificationsRead(List<String> ids) =>
       _run(ApiGroup.notificaciones, 'markNotificationsRead', (a) => a.markNotificationsRead(ids));
 
+  @override
+  Future<String?> myCover() => _run(ApiGroup.imagenes, 'myCover', (a) => a.myCover());
+  @override
+  Future<String> setMyCover(String id) => _run(ApiGroup.imagenes, 'setMyCover', (a) => a.setMyCover(id));
   @override
   Future<String> upload(PickedImage img, {required String purpose}) =>
       _run(ApiGroup.imagenes, 'upload', (a) => a.upload(img, purpose: purpose));

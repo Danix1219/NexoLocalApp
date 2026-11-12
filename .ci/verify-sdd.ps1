@@ -61,7 +61,8 @@ foreach ($dir in Get-ChildItem -LiteralPath (Join-Path $repoRoot 'specs') -Direc
     $all = $spec + "`n" + $tasks + "`n" + (Get-Content -LiteralPath (Join-Path $dir.FullName 'plan.md') -Raw -Encoding UTF8) + "`n" + (Get-Content -LiteralPath (Join-Path $dir.FullName $checkName) -Raw -Encoding UTF8)
     $taskIds = @([regex]::Matches($tasks,'(?m)^- \[ \] (T-\d{3}) ') | ForEach-Object { $_.Groups[1].Value })
     $requirements = @([regex]::Matches($spec,'(?m)^- ((?:FR|NFR)-\d{3}):') | ForEach-Object { $_.Groups[1].Value })
-    $criteria = @([regex]::Matches($spec,'(?m)^- \[ \] (AC-\d{3})') | ForEach-Object { $_.Groups[1].Value })
+    $acceptance = [regex]::Match($spec,'(?ms)^## 6\..*?(?=^## |\z)').Value
+    $criteria = @([regex]::Matches($acceptance,'\b(AC-\d{3})\b') | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
     foreach ($values in @(@{name='tasks';items=$taskIds},@{name='requirements';items=$requirements},@{name='criteria';items=$criteria})) {
         if (@($values.items | Select-Object -Unique).Count -ne @($values.items).Count) { throw "$($dir.Name): duplicate $($values.name)." }
     }

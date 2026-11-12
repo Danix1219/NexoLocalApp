@@ -8,6 +8,7 @@ import '../../app/theme/typography.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/nexo_navigation.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../common/actions.dart';
@@ -30,6 +31,7 @@ class _InterestedPageState extends ConsumerState<InterestedPage> {
     final v = ref.watch(interestedProvider((widget.requestId, _sort)));
     final req = ref.watch(myRequestsProvider).asData?.value.where((r) => r.id == widget.requestId).firstOrNull;
     return NexoPage(
+      bottom: const NexoNavigation(current: 0),
       child: Column(
         children: [
           const SubBar('Interesados'),
@@ -42,15 +44,17 @@ class _InterestedPageState extends ConsumerState<InterestedPage> {
                   return ListView(
                     padding: const EdgeInsets.only(bottom: 100),
                     children: [
-                      Container(
-                        color: NexoColors.surface,
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                      NexoCard(
+                        radius: 18,
+                        elevated: false,
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             NBadge(c.name, icon: c.icon, tone: BadgeTone.ink),
                             const SizedBox(height: 8),
-                            Text(page.title.isEmpty ? (req?.title ?? '') : page.title, style: NexoText.display(20)),
+                            Text(page.title.isEmpty ? (req?.title ?? '') : page.title, style: NexoText.display(19)),
                             if (req != null) ...[
                               const SizedBox(height: 4),
                               Text('${req.urgencyText} · ${req.zoneLabel} · ${req.ago}',
@@ -118,13 +122,16 @@ class _IntCard extends ConsumerWidget {
     final p = it.provider;
     final cmp = ref.watch(compareProvider).any((x) => x.id == p.id);
     return NexoCard(
+      radius: 18,
+      elevated: false,
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           InkWell(
             onTap: () => context.push(Routes.provider(p.id)),
             child: Row(children: [
-              NexoAvatar(name: p.name, url: p.photoUrl, size: 46),
+              NexoAvatar(name: p.name, url: p.photoUrl, size: 44),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(

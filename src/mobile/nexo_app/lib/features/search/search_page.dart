@@ -11,6 +11,8 @@ import '../../core/auth/session_controller.dart';
 import '../../core/widgets/map_view.dart';
 import '../../core/widgets/nexo_field.dart';
 import '../../core/widgets/nexo_icon.dart';
+import '../../core/widgets/nexo_sheet.dart';
+import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
@@ -94,18 +96,20 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       if (mp.asData != null && mp.asData!.value == null) return const NoProviderProfile(title: 'Buscar solicitudes');
       return _providerSearch(mp.asData?.value);
     }
-    return Stack(
-      children: [
-        Positioned.fill(child: _clientSearch()),
-        const Positioned(left: 0, right: 0, bottom: 0, child: CompareBar()),
-      ],
-    );
+    return ColoredBox(
+        color: NexoColors.surface,
+        child: Stack(
+          children: [
+            Positioned.fill(child: _clientSearch()),
+            const Positioned(left: 0, right: 0, bottom: 0, child: CompareBar()),
+          ],
+        ));
   }
 
   Widget _field(String hint, int filters, VoidCallback onFilters) {
     return Container(
       color: NexoColors.surface,
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
       child: Row(
         children: [
           Expanded(
@@ -114,8 +118,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               focusNode: _focus,
               onChanged: _changed,
               textInputAction: TextInputAction.search,
-              style: NexoText.body(15.5),
+              style: NexoText.body(15),
               decoration: nexoInputDecoration(hint: hint).copyWith(
+                fillColor: NexoColors.surface,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: NexoColors.line)),
                 prefixIcon: const Padding(
                     padding: EdgeInsets.only(left: 12, right: 8),
                     child: NexoIcon('search', size: 20, color: NexoColors.muted)),
@@ -156,35 +164,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final f = ref.watch(searchFiltersProvider);
     final res = ref.watch(searchResultsProvider);
     final loc = ref.watch(searchLocationProvider);
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 90),
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      children: [
-        const ScreenTitleBar('Buscar', trailing: LocationChip(), border: false),
-        _field('Fuga, chapa, pintar, closet…', f.count, () => showSearchFiltersSheet(context, ref)),
-        if (_sugs.isNotEmpty) _Suggestions(items: _sugs, query: _q.text, onPick: _pick),
-        _ActiveChips(f: f),
-        if (f.q.isEmpty && f.cat == null) ...[
-          const Sect('Explora por servicio'),
-          SizedBox(
-            height: 96,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                for (final c in allCats)
-                  _CatRing(
-                    slug: c.id,
-                    onTap: () => ref.read(searchFiltersProvider.notifier).set(f.copyWith(cat: c.id)),
-                  ),
-              ],
-            ),
-          ),
-        ],
-        _mapToggle(),
-        if (_map)
-          _NearbyMap(kind: 'providers', center: loc.point, radiusKm: loc.radiusKm)
-        else
+    return PinnedHeaderList(
+        padding: const EdgeInsets.only(bottom: 90),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        children: [
+          const ScreenTitleBar('Buscar', trailing: LocationChip(), border: false),
+          _field('Fuga, chapa, pintar, closet…', f.count, () => showSearchFiltersSheet(context, ref)),
+          if (_sugs.isNotEmpty) _Suggestions(items: _sugs, query: _q.text, onPick: _pick),
+          _ActiveChips(f: f),
           asyncView(res, (r) {
             if (r.items.isEmpty) {
               return EmptyState(
@@ -226,8 +213,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ],
             );
           }, onRetry: () => ref.invalidate(searchResultsProvider)),
-      ],
-    );
+        ]);
   }
 
   // ----------------------------------------------------------- prestador
@@ -235,7 +221,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final f = ref.watch(oppFiltersProvider);
     final res = ref.watch(opportunitiesProvider);
     final p = me?.profile;
-    return ListView(
+    return PinnedHeaderList(
       padding: const EdgeInsets.only(bottom: 24),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
@@ -249,7 +235,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           _NearbyMap(
               kind: 'requests',
               center: me.location ?? me.profile.zonePoint ?? ref.read(searchLocationProvider).point,
-              radiusKm: p!.radiusKm == 0 ? 5 : p.radiusKm)
+              radiusKm: p!.radiusKm == 0 ? 10 : p.radiusKm)
         else
           asyncView(res, (list) {
             if (list.isEmpty) {
@@ -358,55 +344,6 @@ class _ActiveChips extends ConsumerWidget {
   }
 }
 
-/// Aro de categoría (`catRing`).
-class _CatRing extends StatelessWidget {
-  const _CatRing({required this.slug, required this.onTap});
-  final String slug;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = catInfo(slug);
-    return Semantics(
-      button: true,
-      label: c.name,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: SizedBox(
-          width: 76,
-          child: Column(
-            children: [
-              Container(
-                width: 62,
-                height: 62,
-                padding: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: SweepGradient(
-                      colors: [NexoColors.accent, NexoColors.accent2, NexoColors.brand, NexoColors.accent]),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: NexoColors.surface, width: 3),
-                    gradient: LinearGradient(
-                        begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [hexColor(c.c1), hexColor(c.c2)]),
-                  ),
-                  child: Center(child: NexoIcon(c.icon, size: 24, color: Colors.white)),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(c.name.replaceAll(' servicios', ''),
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: NexoText.body(12, weight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Vista de mapa (`provMapHTML` / `reqMapHTML`).
 class _NearbyMap extends ConsumerStatefulWidget {
   const _NearbyMap({required this.kind, required this.center, required this.radiusKm});
@@ -424,10 +361,37 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
   Future<MapNearby> _load() =>
       ref.read(apiProvider).mapNearby(at: widget.center, radiusKm: widget.radiusKm, kind: widget.kind);
 
+  Future<void> _openRequest() async {
+    final selected = _sel;
+    if (selected == null) return;
+    try {
+      final list = await ref
+          .read(apiProvider)
+          .opportunities(OppFilters(q: selected.title, inRadius: false, myServiceOnly: false));
+      if (!mounted) return;
+      final matches = list.where((r) => r.id == selected.id).toList();
+      if (matches.isEmpty) {
+        showNexoToast('La solicitud ya no está disponible. Actualiza el mapa.');
+        setState(() {
+          _sel = null;
+          _f = _load();
+        });
+        return;
+      }
+      await showNexoSheet<void>(context, builder: (_) => RequestCard(r: matches.first));
+    } catch (e) {
+      showNexoToast(apiErrorMessage(e));
+    }
+  }
+
   @override
   void didUpdateWidget(_NearbyMap old) {
     super.didUpdateWidget(old);
-    if (old.center.lat != widget.center.lat || old.radiusKm != widget.radiusKm || old.kind != widget.kind) {
+    if (old.center.lat != widget.center.lat ||
+        old.center.lng != widget.center.lng ||
+        old.radiusKm != widget.radiusKm ||
+        old.kind != widget.kind) {
+      _sel = null;
       _f = _load();
     }
   }
@@ -440,6 +404,7 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
         if (snap.hasError) {
           return ErrorView(snap.error!,
               onRetry: () => setState(() {
+                    _sel = null;
                     _f = _load();
                   }));
         }
@@ -462,7 +427,7 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
               if (_sel != null)
                 NexoCard(
                   margin: const EdgeInsets.only(top: 10),
-                  onTap: widget.kind == 'providers' ? () => context.push(Routes.provider(_sel!.id)) : null,
+                  onTap: widget.kind == 'providers' ? () => context.push(Routes.provider(_sel!.id)) : _openRequest,
                   child: Row(children: [
                     NexoIcon(widget.kind == 'providers' ? 'user' : 'search', size: 22, color: NexoColors.brand),
                     const SizedBox(width: 10),
