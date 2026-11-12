@@ -10,6 +10,7 @@ import '../local/local_store.dart';
 import '../network/api_exception.dart';
 import 'nexo_button.dart';
 import 'nexo_icon.dart';
+import 'nexo_motion.dart';
 
 Color hexColor(String hex) {
   final h = hex.replaceAll('#', '');
@@ -32,11 +33,24 @@ String apiErrorMessage(Object e) {
     if (e.code == 'content.inappropriate') {
       return 'No pudimos publicarlo: el texto o la foto no cumplen las reglas de la comunidad. Revísalo y vuelve a intentarlo.';
     }
+    if (e.code == 'upload.too_large') return 'La foto supera los 5 MB. Elige una más pequeña.';
+    if (e.code == 'upload.content_type_invalid') return 'Elige una imagen JPEG, PNG o WebP.';
+    if (e.code == 'upload.dimensions_too_large') return 'La imagen supera la resoluci?n permitida. Elige otra foto.';
+    if (e.code == 'upload.processing_timeout')
+      return 'La foto sigue en revisión. Espera un momento antes de reintentar.';
     if (e.code == 'upload.rejected_by_moderation') {
       return 'Esa foto no cumple las reglas de la comunidad. Elige otra.';
     }
+    if (e.code == 'server.dependency_unavailable') {
+      return 'El servicio necesario para validar o guardar tu perfil no está disponible. Tus cambios no se confirmaron; inténtalo más tarde.';
+    }
+    if (e.code == 'account.concurrent_update') {
+      return 'El perfil cambió mientras editabas. Vuelve a abrir esta sección y revisa los datos.';
+    }
+    if (e.code == 'provider.not_found') return 'Todavía no tienes un perfil profesional.';
     if (e.code == 'content.images_limit') return 'Puedes subir hasta 6 fotos.';
     if (e.code == kQueuedOffline) return 'Sin señal: lo guardamos y se publicará en cuanto vuelva la conexión.';
+    if (e.status == 401) return 'Tu sesi?n no es v?lida para este servidor. Vuelve a iniciar sesi?n.';
     if (e.status == 429) return 'Hiciste muchos intentos. Espera un momento.';
     if (e.detail != null && e.detail!.isNotEmpty) return e.detail!;
     if (e.status == 404) return 'Esto ya no existe.';
@@ -69,6 +83,14 @@ class NexoImage extends StatelessWidget {
       fit: fit,
       errorBuilder: (_, __, ___) => const _Broken(),
       loadingBuilder: (c, child, p) => p == null ? child : const ColoredBox(color: NexoColors.surface2),
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) => wasSynchronouslyLoaded || frame == null
+          ? child
+          : TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 180),
+              builder: (_, value, image) => Opacity(opacity: value, child: image),
+              child: child,
+            ),
     );
   }
 }
@@ -138,7 +160,9 @@ class NexoAvatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       alignment: Alignment.center,
       child: url != null && url!.isNotEmpty
-          ? SizedBox.expand(child: NexoImage(url!))
+          ? SizedBox.expand(
+              child:
+                  NexoImage(url!.contains('/v1/discovery/media/') && !url!.endsWith('/thumb') ? '${url!}/thumb' : url!))
           : icon != null
               ? NexoIcon(icon!, size: size * .42, color: NexoColors.brand)
               : Text(initialsOf(name), style: NexoText.display(size * .36, color: NexoColors.brand, letterSpacing: 0)),
@@ -204,7 +228,7 @@ class ScreenTitleBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Semantics(header: true, child: Text(title, style: NexoText.display(24)))),
+          Expanded(child: Semantics(header: true, child: Text(title, style: NexoText.display(22, height: 1.15)))),
           if (trailing != null) trailing!,
         ],
       ),
@@ -222,7 +246,7 @@ class SubBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
+      height: 65,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: const BoxDecoration(
         color: NexoColors.surface,
@@ -235,7 +259,7 @@ class SubBar extends StatelessWidget {
             label: 'Volver',
             onTap: onBack ?? () => Navigator.of(context).maybePop(),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
               child:
                   Text(title, style: NexoText.display(17, weight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
@@ -256,7 +280,7 @@ class Sect extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -435,7 +459,7 @@ class SegControl<T> extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onChanged(o.$1),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
+                    duration: NexoMotion.duration(context, NexoMotion.press),
                     padding: EdgeInsets.symmetric(vertical: small ? 10 : 10, horizontal: 6),
                     decoration: BoxDecoration(
                       color: o.$1 == value ? NexoColors.surface : Colors.transparent,
@@ -508,9 +532,13 @@ class NexoCard extends StatelessWidget {
       required this.child,
       this.margin = const EdgeInsets.fromLTRB(12, 10, 12, 0),
       this.padding = const EdgeInsets.all(14),
+      this.radius = 20,
+      this.elevated = true,
       this.onTap,
       this.title});
   final Widget child;
+  final double radius;
+  final bool elevated;
   final EdgeInsets margin;
   final EdgeInsets padding;
   final VoidCallback? onTap;
@@ -518,7 +546,7 @@ class NexoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final r = BorderRadius.circular(20);
+    final r = BorderRadius.circular(radius);
     Widget body = Padding(
       padding: padding,
       child: title == null
@@ -539,7 +567,7 @@ class NexoCard extends StatelessWidget {
         color: NexoColors.surface,
         borderRadius: r,
         border: Border.all(color: NexoColors.line),
-        boxShadow: const [BoxShadow(color: Color(0x0B1F302B), blurRadius: 18, offset: Offset(0, 5))],
+        boxShadow: elevated ? const [BoxShadow(color: Color(0x0B1F302B), blurRadius: 18, offset: Offset(0, 5))] : null,
       ),
       child: Material(type: MaterialType.transparency, child: body),
     );
@@ -722,18 +750,29 @@ class LoadingView extends StatelessWidget {
       );
 }
 
+bool isPendingFeature(Object error) =>
+    error is ApiException && error.code.startsWith('http_') && [404, 405, 501].contains(error.status);
+
 class ErrorView extends StatelessWidget {
   const ErrorView(this.error, {super.key, this.onRetry});
   final Object error;
   final VoidCallback? onRetry;
   @override
-  Widget build(BuildContext context) => EmptyState(
-        icon: 'info',
-        title: 'No pudimos cargar esto',
-        text: apiErrorMessage(error),
-        action: onRetry == null ? null : 'Reintentar',
-        onAction: onRetry,
-      );
+  Widget build(BuildContext context) {
+    if (isPendingFeature(error)) {
+      return const EmptyState(
+          icon: 'info',
+          title: 'Próximamente',
+          text: 'Estamos preparando esta sección. Estará disponible en una siguiente actualización.');
+    }
+    return EmptyState(
+      icon: 'info',
+      title: 'No pudimos cargar esto',
+      text: apiErrorMessage(error),
+      action: onRetry == null ? null : 'Reintentar',
+      onAction: onRetry,
+    );
+  }
 }
 
 /// Pinta un `AsyncValue` con carga y error con reintento.
@@ -759,4 +798,27 @@ class NexoPage extends StatelessWidget {
         body: SafeArea(bottom: bottom == null, child: child),
         bottomNavigationBar: bottom,
       );
+}
+
+/// The prototype keeps its title visible while the page content scrolls.
+class PinnedHeaderList extends StatelessWidget {
+  const PinnedHeaderList(
+      {super.key,
+      required this.children,
+      this.padding,
+      this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual});
+  final List<Widget> children;
+  final EdgeInsetsGeometry? padding;
+  final ScrollViewKeyboardDismissBehavior keyboardDismissBehavior;
+  @override
+  Widget build(BuildContext context) => Column(children: [
+        children.first,
+        Expanded(
+            child: ListView(
+          padding: padding,
+          physics: const AlwaysScrollableScrollPhysics(),
+          keyboardDismissBehavior: keyboardDismissBehavior,
+          children: children.skip(1).toList(),
+        )),
+      ]);
 }

@@ -1,8 +1,11 @@
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/env.dart';
 import '../core/auth/session_controller.dart';
+import '../core/auth/token_storage.dart';
 import '../core/network/api_client.dart';
 import 'fake/fake_nexo_api.dart';
 import 'fake/fake_seed.dart';
@@ -67,7 +70,11 @@ final apiProvider = Provider<NexoApi>((ref) {
   final modes = groupModes();
   final api = HybridNexoApi(
     modes: modes,
-    http: HttpNexoApi(ref.read(dioProvider)),
+    http: HttpNexoApi(ref.read(dioProvider), refreshToken: () async {
+      final tokens = await ref.read(tokenStorageProvider).read();
+      if (tokens == null) throw StateError('Se requiere iniciar sesión');
+      return tokens.refreshToken;
+    }),
     fake: fake,
     // El asistente y el registro de push no muestran datos de ejemplo: no
     // cuentan para el aviso (spec 049/050).
@@ -89,25 +96,70 @@ final apiProvider = Provider<NexoApi>((ref) {
 
 /// Dónde busca la persona (7.13 "Tu ubicación" / selector de mapa).
 class SearchLocation {
-  const SearchLocation(this.point, this.zoneLabel, this.radiusKm);
+  const SearchLocation(this.point, this.zoneLabel, this.radiusKm, {this.hasSelection = true});
   final GeoPoint point;
   final String zoneLabel;
   final int radiusKm;
+  final bool hasSelection;
 }
 
 class SearchLocationController extends Notifier<SearchLocation> {
+  int _revision = 0;
   @override
-  SearchLocation build() =>
-      const SearchLocation(GeoPoint(Env.defaultLat, Env.defaultLng), Env.defaultZone, Env.defaultRadiusKm);
+  SearchLocation build() {
+    final id = ref.watch(sessionProvider.select((s) => s.accountId));
+    final revision = ++_revision;
+    bool current() => ref.mounted && ref.read(sessionProvider).accountId == id && _revision == revision;
+    Future.microtask(() async {
+      if (id == null) return;
+      try {
+        final raw = await const FlutterSecureStorage().read(key: 'nexo.location.$id');
+        if (raw != null && current()) {
+          final j = jsonDecode(raw) as Map<String, dynamic>;
+          final point = GeoPoint((j['lat'] as num).toDouble(), (j['lng'] as num).toDouble());
+          state = SearchLocation(point, j['label'] as String? ?? _coordinates(point), j['radius'] as int);
+        }
+      } catch (_) {/* Corrupt cache cannot block the server read. */}
+      try {
+        final saved = await ref.read(apiProvider).getLocation();
+        if (saved != null && current()) {
+          state = SearchLocation(saved.point, saved.zoneLabel, saved.radiusKm);
+          await _cache(id, state);
+        }
+      } catch (_) {/* Last real cached selection remains available offline. */}
+    });
+    return const SearchLocation(GeoPoint(Env.defaultLat, Env.defaultLng), 'Elige tu ubicación', Env.defaultRadiusKm,
+        hasSelection: false);
+  }
 
-  Future<LocationResult?> set(GeoPoint p, int radiusKm, {String source = 'map'}) async {
-    final s = ref.read(sessionProvider);
-    LocationResult? r;
-    if (s.isSignedIn) {
-      r = await ref.read(apiProvider).setLocation(p, radiusKm: radiusKm, source: source);
+  static String _coordinates(GeoPoint p) => '${p.lat.toStringAsFixed(3)}, ${p.lng.toStringAsFixed(3)}';
+  Future<void> _cache(String id, SearchLocation selected) => const FlutterSecureStorage().write(
+      key: 'nexo.location.$id',
+      value: jsonEncode({
+        'lat': selected.point.lat,
+        'lng': selected.point.lng,
+        'radius': selected.radiusKm,
+        'label': selected.zoneLabel
+      }));
+  Future<void> remember(GeoPoint p, int radiusKm, {String? zoneLabel}) async {
+    _revision++;
+    final id = ref.read(sessionProvider).accountId;
+    state = SearchLocation(p, zoneLabel ?? _coordinates(p), radiusKm);
+    if (id != null) {
+      try {
+        await _cache(id, state);
+      } catch (_) {/* The server is authoritative if secure storage is unavailable. */}
     }
-    state = SearchLocation(p, r?.zoneLabel ?? FakeNexoApi.zoneOf(p), radiusKm);
-    return r;
+  }
+
+  Future<LocationResult?> set(GeoPoint p, int radiusKm, {String source = 'map', String? zoneLabel}) async {
+    final accountId = ref.read(sessionProvider).accountId;
+    LocationResult? result;
+    if (ref.read(sessionProvider).isSignedIn)
+      result = await ref.read(apiProvider).setLocation(p, radiusKm: radiusKm, source: source);
+    if (!ref.mounted || ref.read(sessionProvider).accountId != accountId) return result;
+    await remember(p, radiusKm, zoneLabel: result?.zoneLabel ?? zoneLabel);
+    return result;
   }
 }
 
@@ -176,6 +228,8 @@ final myRequestsProvider = FutureProvider<List<ServiceRequest>>((ref) {
 });
 
 final opportunitiesProvider = FutureProvider<List<ServiceRequest>>((ref) {
+  ref.watch(sessionProvider);
+  ref.watch(myProviderProvider);
   final f = ref.watch(oppFiltersProvider);
   return ref.watch(apiProvider).opportunities(f);
 });
@@ -215,8 +269,20 @@ final providerProfileProvider = FutureProvider.autoDispose.family<ProviderProfil
   return ref.watch(apiProvider).provider(id, at: loc.point);
 });
 
-final providerWorksProvider =
-    FutureProvider.autoDispose.family<List<Work>, String>((ref, id) => ref.watch(apiProvider).providerWorks(id));
+final myCoverProvider = FutureProvider.autoDispose<String?>((ref) {
+  ref.watch(sessionProvider);
+  return ref.watch(apiProvider).myCover();
+});
+
+final catalogProvider = FutureProvider<List<FCat>>((ref) async => (await ref.watch(apiProvider).categories())
+    .map((c) => FCat(
+        c.slug, c.name, c.c1, c.c2, c.icon, c.specialties.map((s) => s.name).toList(), c.businessLabel, c.tradeLabel))
+    .toList());
+
+final providerWorksProvider = FutureProvider.autoDispose.family<List<Work>, String>((ref, id) {
+  ref.watch(sessionProvider);
+  return ref.watch(apiProvider).providerWorks(id);
+});
 
 final reviewsProvider =
     FutureProvider.autoDispose.family<ReviewsPage, String>((ref, id) => ref.watch(apiProvider).reviews(id));
@@ -244,6 +310,7 @@ void refreshActivity(WidgetRef ref) {
   ref.invalidate(notificationsProvider);
   ref.invalidate(accountProvider);
   ref.invalidate(feedProvider);
+  ref.invalidate(providerWorksProvider);
 }
 
 /// Info visual de una categoría (nombre, ícono y degradado del catálogo).

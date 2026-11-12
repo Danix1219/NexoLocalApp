@@ -15,6 +15,7 @@ import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_sheet.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/nexo_navigation.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../common/actions.dart';
@@ -55,6 +56,7 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   Widget build(BuildContext context) {
     final v = ref.watch(orderProvider(widget.id));
     return NexoPage(
+      bottom: const NexoNavigation(current: 3),
       child: Column(children: [
         const SubBar('Pedido'),
         Expanded(
@@ -97,7 +99,7 @@ class _OrderPageState extends ConsumerState<OrderPage> {
     } else if (client) {
       head = '${o.counterpart.displayName} irá a tu domicilio';
       line = o.address ?? o.placeZone;
-      if (o.can('updateAddress')) {
+      if (o.can('changeAddress')) {
         cta = 'Cambiar';
         act = () => _changeAddress(o);
       }

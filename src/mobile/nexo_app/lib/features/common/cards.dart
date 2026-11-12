@@ -10,11 +10,14 @@ import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/nexo_motion.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../shell/gate.dart';
 import 'actions.dart';
 import 'carousel.dart';
+import 'request_editor.dart';
+import 'work_editor.dart';
 
 /// Botón de acción redondo de la publicación (`.act`).
 class ActIcon extends StatelessWidget {
@@ -27,7 +30,8 @@ class ActIcon extends StatelessWidget {
   final bool fill;
 
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => NexoPressFeedback(
+          child: Semantics(
         button: true,
         label: label,
         selected: on,
@@ -45,10 +49,59 @@ class ActIcon extends StatelessWidget {
             ),
           ),
         ),
-      );
+      ));
 }
 
 /// Publicación de trabajo en el feed (`postHTML`).
+/// Expands long posts without hiding their original text.
+class ExpandablePublicationText extends StatefulWidget {
+  const ExpandablePublicationText(this.text, {super.key, this.style});
+  final String text;
+  final TextStyle? style;
+
+  @override
+  State<ExpandablePublicationText> createState() => _ExpandablePublicationTextState();
+}
+
+class _ExpandablePublicationTextState extends State<ExpandablePublicationText> {
+  bool expanded = false;
+
+  @override
+  void didUpdateWidget(ExpandablePublicationText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) expanded = false;
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
+        final style = widget.style ?? NexoText.body(14, height: 1.45);
+        final painter = TextPainter(
+          text: TextSpan(text: widget.text, style: style),
+          maxLines: 3,
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: constraints.maxWidth);
+        final overflows = painter.didExceedMaxLines;
+        painter.dispose();
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(widget.text,
+              style: style,
+              maxLines: expanded ? null : 3,
+              overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis),
+          if (overflows)
+            TextButton(
+              onPressed: () => setState(() => expanded = !expanded),
+              style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                  minimumSize: const Size(48, 36),
+                  alignment: Alignment.centerLeft),
+              child: Text(expanded ? 'Ver menos' : 'Ver m\u00e1s',
+                  style: NexoText.body(13, color: NexoColors.brand, weight: FontWeight.w700)),
+            ),
+        ]);
+      });
+}
+
 class WorkCard extends ConsumerStatefulWidget {
   const WorkCard({super.key, required this.work, this.own = false});
   final Work work;
@@ -67,16 +120,21 @@ class _WorkCardState extends ConsumerState<WorkCard> {
     if (old.work != widget.work) w = widget.work;
   }
 
+  bool _recommending = false;
   Future<void> _recommend() async {
+    if (_recommending) return;
     if (!requireAccount(context, ref, why: 'Con una cuenta puedes recomendar los trabajos que te gustan.')) return;
+    _recommending = true;
     final on = !w.recommended;
     setState(() => w = w.copyWith(recommended: on, recs: w.recs + (on ? 1 : -1)));
     try {
-      final r = await ref.read(apiProvider).recommend(widget.work, on);
+      final r = await ref.read(apiProvider).recommend(w, on);
       if (mounted) setState(() => w = r);
     } catch (e) {
       if (mounted) setState(() => w = w.copyWith(recommended: !on, recs: w.recs + (on ? -1 : 1)));
       showNexoToast(apiErrorMessage(e));
+    } finally {
+      _recommending = false;
     }
   }
 
@@ -92,22 +150,24 @@ class _WorkCardState extends ConsumerState<WorkCard> {
     final cmp = ref.watch(compareProvider).any((x) => x.id == p.id);
     final own = widget.own || !w.canContact;
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-      decoration: BoxDecoration(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: const BoxDecoration(
         color: NexoColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: NexoColors.line),
-        boxShadow: const [BoxShadow(color: Color(0x0B1F302B), blurRadius: 18, offset: Offset(0, 5))],
+        border: Border(bottom: BorderSide(color: NexoColors.line)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 13, 6, 13),
+            padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
             child: Row(
               children: [
-                NexoAvatar(name: p.name, url: p.photoUrl),
+                InkWell(
+                  onTap: () => context.push(Routes.provider(p.id)),
+                  customBorder: const CircleBorder(),
+                  child: NexoAvatar(name: p.name, url: p.photoUrl),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: InkWell(
@@ -118,9 +178,9 @@ class _WorkCardState extends ConsumerState<WorkCard> {
                         Row(children: [
                           Flexible(
                             child: Text(p.name,
-                                overflow: TextOverflow.ellipsis, style: NexoText.body(15, weight: FontWeight.w800)),
+                                overflow: TextOverflow.ellipsis, style: NexoText.body(14.5, weight: FontWeight.w700)),
                           ),
-                          if (p.phoneVerified) ...[
+                          if (p.emailVerified) ...[
                             const SizedBox(width: 4),
                             const NexoIcon('shield', size: 15, color: NexoColors.ok),
                           ],
@@ -131,36 +191,46 @@ class _WorkCardState extends ConsumerState<WorkCard> {
                     ),
                   ),
                 ),
-                ActIcon(
-                    icon: 'dots',
-                    label: 'Reportar publicación',
-                    onTap: () => showReportSheet(context, ref, targetType: 'work', targetId: w.id)),
+                if (own)
+                  ActIcon(
+                      icon: 'dots',
+                      label: 'Editar trabajo',
+                      onTap: () async {
+                        final updated = await showWorkEditor(context, ref, w);
+                        if (updated != null && mounted) setState(() => w = updated);
+                      })
+                else
+                  ActIcon(
+                      icon: 'dots',
+                      label: 'Reportar publicación',
+                      onTap: () => showReportSheet(context, ref, targetType: 'work', targetId: w.id)),
               ],
             ),
           ),
-          PhotoCarousel(images: w.images, category: w.category, tag: w.tag, onTap: () => showWorkSheet(context, w)),
+          PhotoCarousel(
+              aspect: 1, images: w.images, category: w.category, tag: w.tag, onTap: () => showWorkSheet(context, w)),
           if (!own)
             Material(
-              color: NexoColors.brandSoft,
+              color: NexoColors.brand,
               child: InkWell(
                 onTap: () => showContactSheet(context, ref, p),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
-                      const NexoIcon('chat', size: 19, color: NexoColors.brandDeep),
+                      const NexoIcon('chat', size: 19, color: Colors.white),
                       const SizedBox(width: 8),
                       Expanded(
                           child: Text('Contactar',
-                              style: NexoText.body(14.5, weight: FontWeight.w800, color: NexoColors.brandDeep))),
-                      const NexoIcon('chevron', size: 18, color: NexoColors.brandDeep),
+                              style: NexoText.body(14, weight: FontWeight.w700, color: Colors.white))),
+                      const NexoIcon('chevron', size: 18, color: Colors.white),
                     ],
                   ),
                 ),
               ),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(7, 5, 7, 0),
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
             child: Row(
               children: [
                 ActIcon(icon: 'thumb', label: 'Recomendar', on: w.recommended, fill: true, onTap: _recommend),
@@ -179,16 +249,17 @@ class _WorkCardState extends ConsumerState<WorkCard> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text('${w.recs} ${plural(w.recs, 'recomendación', 'recomendaciones')}',
-                style: NexoText.body(13.5, weight: FontWeight.w800)),
+                style: NexoText.body(14, weight: FontWeight.w800)),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(w.title, style: NexoText.display(16, weight: FontWeight.w700)),
+                Text(w.title, style: NexoText.display(15, weight: FontWeight.w700)),
                 const SizedBox(height: 2),
-                Text(w.text, style: NexoText.body(14, color: NexoColors.ink.withValues(alpha: .86), height: 1.45)),
+                ExpandablePublicationText(w.text,
+                    style: NexoText.body(14, color: NexoColors.ink.withValues(alpha: .86), height: 1.45)),
                 const SizedBox(height: 4),
                 Text(w.ago, style: NexoText.body(12, color: NexoColors.muted)),
               ],
@@ -224,44 +295,70 @@ class RequestCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = catInfo(r.category);
+    final me = ref.watch(accountProvider).asData?.value;
+    final displayName = r.mine && me != null ? me.name : r.clientName;
+    final displayPhoto = r.mine && me != null ? me.photoUrl : r.clientPhoto;
     final hot = r.urgency == 'today' && !r.closed;
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       decoration: BoxDecoration(
         color: NexoColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: hot ? NexoColors.accent2.withValues(alpha: .6) : NexoColors.line),
-        boxShadow: const [BoxShadow(color: Color(0x0B1F302B), blurRadius: 18, offset: Offset(0, 5))],
+        boxShadow: r.mine ? const [BoxShadow(color: Color(0x101C2926), blurRadius: 18, offset: Offset(0, 5))] : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (r.mine)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+              child: Row(children: [
+                Text('TU SOLICITUD',
+                    style: NexoText.body(11, weight: FontWeight.w800, color: NexoColors.brand, letterSpacing: .8)),
+                const Spacer(),
+                NBadge(r.closed ? 'Resuelta' : 'Publicada', icon: r.closed ? 'check' : 'clock', tone: BadgeTone.ok),
+              ]),
+            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 13, 6, 6),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 2),
             child: Row(
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                        begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [hexColor(c.c1), hexColor(c.c2)]),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  alignment: Alignment.center,
-                  child: r.clientPhoto != null
-                      ? SizedBox.expand(child: NexoImage(r.clientPhoto!))
-                      : Text(initialsOf(r.clientName.isEmpty ? '?' : r.clientName),
-                          style: NexoText.display(15, color: Colors.white, letterSpacing: 0)),
-                ),
+                GestureDetector(
+                    onTap: r.mine && me != null
+                        ? () => context.push(Routes.myProfile, extra: me)
+                        : () => context.push(Routes.requestAuthor(r.id), extra: r),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [hexColor(c.c1), hexColor(c.c2)]),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      alignment: Alignment.center,
+                      child: displayPhoto != null
+                          ? SizedBox.expand(child: NexoImage(displayPhoto))
+                          : Text(initialsOf(displayName.isEmpty ? '?' : displayName),
+                              style: NexoText.display(15, color: Colors.white, letterSpacing: 0)),
+                    )),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(r.mine ? 'Tú' : r.clientName,
-                          overflow: TextOverflow.ellipsis, style: NexoText.body(15, weight: FontWeight.w800)),
+                      InkWell(
+                        onTap: r.mine && me != null
+                            ? () => context.push(Routes.myProfile, extra: me)
+                            : () => context.push(Routes.requestAuthor(r.id), extra: r),
+                        child: Text(displayName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: NexoText.body(15, weight: FontWeight.w800)),
+                      ),
                       Text(
                           '${r.zoneLabel}${r.distanceText.isNotEmpty && !r.mine ? ' · ${r.distanceText}' : ''} · ${r.ago}',
                           overflow: TextOverflow.ellipsis,
@@ -269,36 +366,43 @@ class RequestCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                UrgencyPill(r.urgency, r.urgencyText),
+                if (!r.mine) UrgencyPill(r.urgency, r.urgencyText),
                 if (!r.mine)
                   ActIcon(
                       icon: 'dots',
                       label: 'Reportar solicitud',
                       onTap: () => showReportSheet(context, ref, targetType: 'request', targetId: r.id))
                 else
-                  const SizedBox(width: 8),
+                  ActIcon(icon: 'dots', label: 'Editar solicitud', onTap: () => showRequestEditor(context, ref, r)),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(r.title, style: NexoText.display(16, weight: FontWeight.w700)),
+                if (r.mine) ...[
+                  const SizedBox(height: 7),
+                  Wrap(spacing: 7, runSpacing: 7, children: [
+                    UrgencyPill(r.urgency, r.urgencyText),
+                    NBadge(c.name, icon: c.icon, tone: BadgeTone.ink),
+                  ]),
+                ],
                 const SizedBox(height: 3),
-                Text(r.description,
+                ExpandablePublicationText(r.description,
                     style: NexoText.body(14, color: NexoColors.ink.withValues(alpha: .86), height: 1.45)),
-                if (r.imageUrl != null) ...[
+                if (r.photos.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: AspectRatio(aspectRatio: 16 / 9, child: NexoImage(r.imageUrl!)),
-                  ),
+                      borderRadius: BorderRadius.circular(14),
+                      child: PhotoCarousel(
+                          images: [for (final url in r.photos) Img(url)], category: r.category, aspect: 1)),
                 ],
                 const SizedBox(height: 9),
                 Wrap(spacing: 6, runSpacing: 6, children: [
-                  NBadge(c.name, icon: c.icon, tone: BadgeTone.ink),
+                  if (!r.mine) NBadge(c.name, icon: c.icon, tone: BadgeTone.ink),
                   if (r.matchesMyService && !r.mine)
                     const NBadge('Coincide con tu perfil', icon: 'check', tone: BadgeTone.ok),
                   if (!r.inMyRadius && !r.mine) const NBadge('Fuera de tu radio', icon: 'pin', tone: BadgeTone.warn),
@@ -337,7 +441,11 @@ class _OpportunityFootState extends ConsumerState<_OpportunityFoot> {
       cta = Center(child: Text('Eligió a otro prestador', style: NexoText.body(13, color: NexoColors.muted)));
     } else {
       cta = NexoButton(
-        label: r.iAmInterested ? 'Interés enviado' : 'Me interesa',
+        label: !r.interestKnown
+            ? 'Interés no disponible'
+            : r.iAmInterested
+                ? 'Interés enviado'
+                : 'Me interesa',
         icon: r.iAmInterested ? 'check' : 'thumb',
         loading: _busy,
         variant: r.iAmInterested ? NexoButtonVariant.line : NexoButtonVariant.primary,
@@ -347,7 +455,11 @@ class _OpportunityFootState extends ConsumerState<_OpportunityFoot> {
             return;
           }
           setState(() => _busy = true);
-          await toggleInterest(context, ref, r);
+          if (!r.interestKnown) {
+            showNexoToast('No pudimos comprobar tu interés. Actualiza las solicitudes.');
+          } else {
+            await toggleInterest(context, ref, r);
+          }
           if (mounted) setState(() => _busy = false);
         },
       );
@@ -565,7 +677,7 @@ class _ProvRowMini extends StatelessWidget {
           NexoAvatar(name: p.name, url: p.photoUrl, size: 38),
           const SizedBox(width: 10),
           Expanded(child: Text(p.name, style: NexoText.body(14.5, weight: FontWeight.w800))),
-          if (p.phoneVerified) const NexoIcon('shield', size: 16, color: NexoColors.ok),
+          if (p.emailVerified) const NexoIcon('shield', size: 16, color: NexoColors.ok),
         ]),
       );
 }
@@ -701,6 +813,10 @@ class ProviderRow extends ConsumerWidget {
     final cmp = ref.watch(compareProvider).any((x) => x.id == p.id);
     final cats = p.categories.map((c) => catInfo(c).name).join(', ');
     return NexoCard(
+      radius: 18,
+      elevated: false,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -709,7 +825,7 @@ class ProviderRow extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                NexoAvatar(name: p.name, url: p.photoUrl, size: 48),
+                NexoAvatar(name: p.name, url: p.photoUrl, size: 54),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -718,19 +834,21 @@ class ProviderRow extends ConsumerWidget {
                       Row(children: [
                         Flexible(
                             child: Text(p.name,
-                                overflow: TextOverflow.ellipsis, style: NexoText.body(15.5, weight: FontWeight.w800))),
-                        if (p.phoneVerified) ...[
+                                overflow: TextOverflow.ellipsis, style: NexoText.display(16, weight: FontWeight.w700))),
+                        if (p.emailVerified) ...[
                           const SizedBox(width: 4),
                           const NexoIcon('shield', size: 15, color: NexoColors.ok),
                         ],
                       ]),
                       Text('$cats · ${p.attentionText}${p.distanceText.isEmpty ? '' : ' · ${p.distanceText}'}',
-                          style: NexoText.body(12.5, color: NexoColors.muted)),
+                          style: NexoText.body(13, color: NexoColors.muted)),
                       const SizedBox(height: 6),
                       Wrap(spacing: 6, runSpacing: 4, children: [
                         NBadge(p.status.short, icon: 'clock', tone: p.status.open ? BadgeTone.ok : BadgeTone.plain),
                         if (p.rating.count > 0) NBadge('${p.rating.avg}', icon: 'star', tone: BadgeTone.hot),
-                        NBadge('${p.recs} recomiendan', tone: BadgeTone.plain),
+                        Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text('${p.recs} recomiendan', style: NexoText.body(12.5, color: NexoColors.muted))),
                         if (p.minPriceText != null) NBadge(p.minPriceText!, tone: BadgeTone.ink),
                         if (p.isNew) const NBadge('Perfil nuevo', tone: BadgeTone.brand),
                       ]),
@@ -743,6 +861,7 @@ class ProviderRow extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(children: [
             Expanded(
+              flex: 10,
               child: NexoButton(
                 label: cmp ? 'Agregado' : 'Comparar',
                 icon: cmp ? 'check' : 'compare',
@@ -753,6 +872,7 @@ class ProviderRow extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
+              flex: 14,
               child: NexoButton(
                 label: 'Contactar',
                 icon: 'chat',

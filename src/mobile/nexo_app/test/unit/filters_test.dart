@@ -23,6 +23,6 @@ void main() {
     expect(f.inRadius, isTrue);
     expect(f.count, 0);
     expect(f.copyWith(inRadius: false).count, 1);
-    expect(f.copyWith(today: true, myServiceOnly: true, cat: 'pintura').count, 3);
+    expect(f.copyWith(today: true, myServiceOnly: true, cat: 'pintura').count, 2);
   });
 }

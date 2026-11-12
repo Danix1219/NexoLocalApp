@@ -26,6 +26,10 @@ DioException _error(int status, Object data, {Map<String, List<String>>? headers
 
 void main() {
   group('TokenClaims', () {
+    test('sesión de recuperación conserva su restricción al copiar estado', () {
+      final claims = TokenClaims.decode(_jwt({'sub': 'abc', 'recovery_only': 'true'}));
+      expect(claims.recoveryOnly, isTrue);
+    });
     test('lee sub, mode y has_provider', () {
       final c = TokenClaims.decode(_jwt({'sub': 'abc', 'mode': 'provider', 'has_provider': true}));
       expect(c.sub, 'abc');

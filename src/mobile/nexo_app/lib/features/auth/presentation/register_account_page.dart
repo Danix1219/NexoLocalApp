@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/env.dart';
+import '../../../data/api_provider.dart';
+import '../../../core/widgets/toast.dart';
+import '../../location/location_picker_page.dart';
 import '../../../app/router.dart';
-import '../../../app/theme/tokens.dart';
 import '../../../app/theme/typography.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/validation.dart';
 import '../../../core/widgets/nexo_button.dart';
 import '../../../core/widgets/nexo_field.dart';
-import '../../../core/widgets/nexo_icon.dart';
 import '../../../core/widgets/nexo_sheet.dart';
 import '../../../core/widgets/ob_scaffold.dart';
 import '../application/email_flow.dart';
@@ -33,6 +33,7 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
   final _name = TextEditingController();
   final _p1 = TextEditingController();
   final _p2 = TextEditingController();
+  LocationPick? _location;
   bool _terms = false;
   bool _loading = false;
   String? _error;
@@ -58,15 +59,22 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
     super.dispose();
   }
 
-  bool get _valid => personNameOk(_name.text) && pwOk(_p1.text) && _p1.text == _p2.text && _terms;
+  bool get _valid => personNameOk(_name.text) && pwOk(_p1.text) && _p1.text == _p2.text && _terms && _location != null;
 
   Future<void> _submit() async {
     final flow = ref.read(signupFlowProvider);
     if (!_valid || _loading || flow.ticket == null) return;
     FocusScope.of(context).unfocus();
+    final signup = ref.read(signupFlowProvider.notifier);
+    final auth = ref.read(authRepositoryProvider);
+    final session = ref.read(sessionProvider.notifier);
+    final selectedLocation = ref.read(searchLocationProvider.notifier);
+    final router = GoRouter.of(context);
     setState(() => _loading = true);
     try {
       final a = await ref.read(authRepositoryProvider).createAccount(
+            location: _location!.point,
+            radiusKm: _location!.radiusKm,
             ticket: flow.ticket!,
             name: _name.text,
             password: _p1.text,
@@ -74,13 +82,26 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
             idempotencyKey: flow.idempotencyKey,
           );
       final name = a.name.isEmpty ? _name.text.trim() : a.name;
-      ref
-          .read(signupFlowProvider.notifier)
-          .accountCreated(CreatedAccount(name: name, nextStep: a.nextStep, tokens: a.tokens));
-      // El registro no devuelve sesión (contrato): se inicia con lo recién creado.
-      final tokens = a.tokens ?? await ref.read(authRepositoryProvider).login(flow.email, _p1.text);
-      // Al iniciar sesión, el router lleva de aquí a "Tu cuenta está lista".
-      await ref.read(sessionProvider.notifier).signIn(tokens, name: name);
+      signup.accountCreated(CreatedAccount(name: name, nextStep: a.nextStep, tokens: a.tokens));
+      try {
+        final tokens = a.tokens ?? await auth.login(flow.email, _p1.text);
+        await session.signIn(tokens, name: name);
+      } on ApiException {
+        router.go(Routes.registerDone);
+        return;
+      }
+      await selectedLocation.remember(_location!.point, _location!.radiusKm, zoneLabel: _location!.zoneLabel);
+      // Account creation succeeded. A later location error must never repeat it.
+      try {
+        await selectedLocation.set(_location!.point, _location!.radiusKm,
+            source: _location!.source, zoneLabel: _location!.zoneLabel);
+        signup.locationStored();
+      } catch (_) {
+        await selectedLocation.remember(_location!.point, _location!.radiusKm, zoneLabel: _location!.zoneLabel);
+        showNexoToast(
+            'Tu cuenta está creada. Puedes volver a guardar la ubicación desde la confirmación o desde Cuenta.');
+      }
+      router.go(Routes.registerDone);
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -117,7 +138,19 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
           children: [
             Text('¿Dónde buscas servicios?', style: NexoText.body(14, weight: FontWeight.w700)),
             const SizedBox(height: 7),
-            const _DefaultLocation(),
+            NexoButton(
+              label: _location == null ? 'Elegir mi ubicacion' : 'Cambiar ubicacion seleccionada',
+              icon: 'pin',
+              variant: NexoButtonVariant.line,
+              onPressed: () async {
+                final selected = await context.push<LocationPick>(Routes.location,
+                    extra: LocationPickerArgs(initial: _location?.point, radiusKm: _location?.radiusKm ?? 10));
+                if (selected != null && mounted) setState(() => _location = selected);
+              },
+            ),
+            if (_location != null)
+              Text(
+                  '${_location!.label ?? _location!.zoneLabel ?? '${_location!.point.lat.toStringAsFixed(3)}, ${_location!.point.lng.toStringAsFixed(3)}'} · ${_location!.radiusKm} km'),
           ],
         ),
         Text('Crea tu contraseña', style: NexoText.body(14, weight: FontWeight.w700)),
@@ -190,102 +223,3 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
 
 /// Ubicación por defecto (la maqueta la toma de `S.loc`, zona Centro). El
 /// selector de mapa con radio es de otra spec; aquí solo se muestra.
-class _DefaultLocation extends StatelessWidget {
-  const _DefaultLocation();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Semantics(
-          label: 'Ubicación: ${Env.defaultZone}',
-          child: Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: NexoColors.brandSoft,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: NexoColors.line, width: 1.5),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-                Center(
-                  child: Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: NexoColors.brand.withValues(alpha: .16),
-                      border: Border.all(color: NexoColors.brand, width: 2),
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment(0, -.15),
-                  child: NexoIcon('pin', size: 38, color: Colors.white, fillColor: NexoColors.accent),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 10,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: NexoColors.surface,
-                        borderRadius: BorderRadius.circular(99),
-                        boxShadow: const [
-                          BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 2)),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const NexoIcon('pin', size: 15, color: NexoColors.brand),
-                          const SizedBox(width: 6),
-                          Text('${Env.defaultZone} · hasta ${Env.defaultRadiusKm} km',
-                              style: NexoText.body(13, weight: FontWeight.w700)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            const NexoIcon('pin', size: 14, color: NexoColors.brand),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text('Ubicación predeterminada. Podrás cambiarla después en Cuenta.',
-                  style: NexoText.body(12.5, color: NexoColors.muted)),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// Cuadrícula tenue que imita el fondo del mapa sin cargar mosaicos.
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = const Color(0x2E788C8C)
-      ..strokeWidth = 1;
-    for (double x = 0; x < size.width; x += 32) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), p);
-    }
-    for (double y = 0; y < size.height; y += 32) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), p);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GridPainter old) => false;
-}

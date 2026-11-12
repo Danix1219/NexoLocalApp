@@ -18,10 +18,14 @@ class ApiException implements Exception {
 
   factory ApiException.fromDio(DioException e) {
     final res = e.response;
+    final locationRequest = e.requestOptions.uri.path.startsWith('/v1/discovery/') ||
+        e.requestOptions.uri.queryParameters.keys.any((k) => k.toLowerCase() == 'sig');
+    final safeUri = locationRequest ? e.requestOptions.uri.path : e.requestOptions.uri;
+
     if (res == null) {
       if (kDebugMode) {
-        debugPrint('[API] ${e.requestOptions.method} ${e.requestOptions.uri} -> '
-            'sin respuesta (${e.type.name}): ${e.message}');
+        debugPrint('[API] ${e.requestOptions.method} $safeUri -> '
+            'sin respuesta (${e.type.name}): ${locationRequest ? 'ubicación omitida' : e.message}');
       }
       return const ApiException(code: 'network');
     }
@@ -50,8 +54,8 @@ class ApiException implements Exception {
     if (kDebugMode) {
       // Solo en debug y solo la respuesta de error: nunca el cuerpo enviado
       // (podría traer contraseñas).
-      debugPrint('[API] ${e.requestOptions.method} ${e.requestOptions.uri} -> '
-          '${res.statusCode} ${data is Map ? jsonEncode(data) : data}');
+      debugPrint('[API] ${e.requestOptions.method} $safeUri -> '
+          '${res.statusCode} ${locationRequest ? 'ubicación omitida' : data is Map ? jsonEncode(data) : data}');
     }
     final secs = int.tryParse(res.headers.value('retry-after') ?? '');
     return ApiException(

@@ -12,17 +12,17 @@ import '../../core/network/api_exception.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_sheet.dart';
-import '../../core/widgets/pick_image.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
+import '../../core/widgets/pick_image.dart';
 import '../../data/nexo_api.dart';
 import '../intelligence/assist_sheet.dart';
 import '../intelligence/category_suggester.dart';
-import '../intelligence/ml_kit_suggester.dart';
 import '../location/location_picker_page.dart';
 import '../shell/gate.dart';
+import 'publish_option_row.dart';
 
 /// Título a partir del texto (`autoTitle`): la primera frase, máx. 90.
 String autoTitle(String text) {
@@ -32,6 +32,35 @@ String autoTitle(String text) {
   final s = cut.length < 5 ? t : cut;
   return s.length <= 90 ? s : '${s.substring(0, 87).trimRight()}…';
 }
+
+Future<bool> _publishedSheet(BuildContext context, {required String title, required String detail}) async =>
+    await showNexoSheet<bool>(context,
+        builder: (sheet) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                    child: Container(
+                  width: 66,
+                  height: 66,
+                  decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
+                  child: const Center(child: NexoIcon('check', size: 30, color: NexoColors.brand)),
+                )),
+                const SizedBox(height: 16),
+                Text(title, textAlign: TextAlign.center, style: NexoText.display(23, weight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Text(detail,
+                    textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
+                const SizedBox(height: 22),
+                NexoButton(label: 'Ver publicación', onPressed: () => Navigator.of(sheet).pop(true)),
+                const SizedBox(height: 8),
+                NexoButton(
+                    label: 'Volver a Inicio',
+                    variant: NexoButtonVariant.ghost,
+                    onPressed: () => Navigator.of(sheet).pop(false)),
+              ],
+            )) ??
+    false;
 
 /// 7.10 Publicar (`V.publish`): "Busco un servicio" y "Mi experiencia" para
 /// el cliente; "Publicar un trabajo" para el prestador.
@@ -130,44 +159,6 @@ class _CompUser extends StatelessWidget {
 }
 
 /// Fila de opción del compositor (`optRow` → `.crow`).
-class _ORow extends StatelessWidget {
-  const _ORow({required this.icon, required this.label, required this.value, required this.onTap, this.empty = false});
-  final String icon;
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-  final bool empty;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 56),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: NexoColors.line))),
-          child: Row(children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: NexoColors.brandSoft, borderRadius: BorderRadius.circular(11)),
-              child: Center(child: NexoIcon(icon, size: 18, color: NexoColors.brand)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(label, style: NexoText.body(14.5, weight: FontWeight.w600))),
-            Flexible(
-              child: Text(value,
-                  textAlign: TextAlign.right,
-                  overflow: TextOverflow.ellipsis,
-                  style: NexoText.body(14,
-                      weight: FontWeight.w700, color: empty ? NexoColors.accent : NexoColors.brandDeep)),
-            ),
-            const SizedBox(width: 4),
-            const NexoIcon('chevron', size: 16, color: NexoColors.muted),
-          ]),
-        ),
-      );
-}
-
 Widget _composeBox({required List<Widget> children}) => Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       padding: const EdgeInsets.all(14),
@@ -227,17 +218,12 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
   String _contact = 'chat';
   GeoPoint? _loc;
   String? _zone;
-  PickedImage? _img;
+  final List<PickedImage> _imgs = [];
+  final Map<PickedImage, String> _uploaded = {};
   bool _busy = false;
   String _idem = const Uuid().v4();
+  String? _lastPayload;
   CategoryGuess? _guess;
-
-  /// ML en el teléfono: sugiere la categoría por la foto (spec 049).
-  Future<void> _suggestFrom(PickedImage p) async {
-    if (_cat != null) return;
-    final g = await ref.read(categorySuggesterProvider).suggest(p.path);
-    if (mounted && _cat == null && _img == p) setState(() => _guess = g);
-  }
 
   Future<void> _assist() async {
     final r = await showAssistSheet(context, kind: 'request', category: _cat!, userText: _text.text);
@@ -254,15 +240,31 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
     super.dispose();
   }
 
-  bool get _ok => _cat != null && _text.text.trim().length >= 10;
+  bool get _ok =>
+      !_busy &&
+      _cat != null &&
+      _text.text.trim().length >= 10 &&
+      (_loc != null || ref.read(searchLocationProvider).hasSelection);
 
   Future<void> _publish() async {
     setState(() => _busy = true);
     final api = ref.read(apiProvider);
     final loc = ref.read(searchLocationProvider);
+    if (_loc == null && !loc.hasSelection) {
+      setState(() => _busy = false);
+      showNexoToast('Elige la ubicación real del servicio antes de publicar.');
+      return;
+    }
+    final payload =
+        '$_cat|${_text.text.trim()}|$_urg|$_contact|${(_loc ?? loc.point).lat}|${(_loc ?? loc.point).lng}|${_imgs.map((i) => i.path).join(',')}';
+    if (_lastPayload != null && _lastPayload != payload) _idem = const Uuid().v4();
+    _lastPayload = payload;
     try {
-      String? up;
-      if (_img != null) up = await api.upload(_img!, purpose: 'request');
+      final ids = <String>[];
+      for (final image in _imgs) {
+        _uploaded[image] ??= await api.upload(image, purpose: 'request');
+        ids.add(_uploaded[image]!);
+      }
       await api.createRequest(
         category: _cat!,
         title: autoTitle(_text.text),
@@ -270,18 +272,26 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
         urgency: _urg,
         contact: _contact,
         location: _loc ?? loc.point,
-        imageUploadId: up,
+        imageUploadIds: ids,
         idempotencyKey: _idem,
       );
       refreshActivity(ref);
-      showNexoToast('Publicado. Te avisaremos cuando un prestador se interese.');
+      final showPost = mounted &&
+          await _publishedSheet(context,
+              title: 'Tu solicitud ya está publicada',
+              detail: 'Los prestadores de tu zona pueden verla e interesarse. Podrás editarla desde Mis solicitudes.');
       _reset();
-      if (mounted) context.go(Routes.home);
+      if (mounted) {
+        context.go(Routes.home);
+        if (showPost) context.push(Routes.myProfile, extra: ref.read(accountProvider).asData?.value);
+      }
     } on ApiException catch (e) {
       if (e.code == kQueuedOffline) {
         // Sin señal: quedó en la cola y se publica al volver la conexión.
         showNexoToast(apiErrorMessage(e));
         _reset();
+      } else if (e.code == 'server.dependency_unavailable') {
+        showNexoToast('No se pudo validar o guardar tu solicitud. Tu texto sigue aquí; inténtalo más tarde.');
       } else {
         showNexoToast(apiErrorMessage(e));
       }
@@ -295,9 +305,11 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
   void _reset() => setState(() {
         _text.clear();
         _cat = null;
-        _img = null;
+        _imgs.clear();
+        _uploaded.clear();
         _guess = null;
         _idem = const Uuid().v4();
+        _lastPayload = null;
       });
 
   @override
@@ -306,47 +318,51 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
     final loc = ref.watch(searchLocationProvider);
     final first = (s.name ?? '').split(' ').first;
     final zone = _zone ?? loc.zoneLabel;
-    return ListView(
+    return PinnedHeaderList(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _CompTop(enabled: _ok, loading: _busy, onPublish: _publish),
         _KindTabs(value: 'req', onChanged: widget.onKind),
         _composeBox(children: [
-          _CompUser(name: s.name ?? 'Tú', sub: 'Visible para prestadores de $zone'),
+          _CompUser(
+              name: s.name ?? 'Tú',
+              photo: ref.watch(accountProvider).asData?.value?.photoUrl,
+              sub: 'Visible para prestadores de $zone'),
           _bigText(_text, '¿Qué necesitas resolver${first.isEmpty ? '' : ', $first'}?', 600, () => setState(() {})),
-          if (_img != null)
-            Stack(children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: AspectRatio(aspectRatio: 16 / 9, child: NexoImage('file://${_img!.path}')),
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: NexoIconButton(
-                    icon: 'close',
-                    label: 'Quitar foto',
-                    size: 34,
-                    circle: true,
-                    onTap: () => setState(() {
-                          _img = null;
-                          _guess = null;
-                        })),
-              ),
-            ])
-          else
+          if (_imgs.isNotEmpty)
+            SizedBox(
+                height: 116,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _imgs.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => SizedBox(
+                      width: 116,
+                      child: Stack(children: [
+                        ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: SizedBox.expand(child: NexoImage('file://${_imgs[i].path}'))),
+                        Positioned(
+                            right: 2,
+                            top: 2,
+                            child: NexoIconButton(
+                                icon: 'close',
+                                label: 'Quitar foto ${i + 1}',
+                                size: 34,
+                                circle: true,
+                                onTap: () => setState(() => _imgs.removeAt(i)))),
+                      ])),
+                )),
+          if (_imgs.length < 6)
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () async {
-                  final p = await pickOneImage(context);
-                  if (p != null && mounted) {
-                    setState(() => _img = p);
-                    _suggestFrom(p);
-                  }
+                  final images = await pickImages(max: 6 - _imgs.length);
+                  if (mounted) setState(() => _imgs.addAll(images));
                 },
                 icon: const NexoIcon('camera', size: 18, color: NexoColors.brand),
-                label: Text('Agregar una foto (opcional)',
+                label: Text('Agregar fotos (${_imgs.length}/6)',
                     style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
               ),
             ),
@@ -376,18 +392,25 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
           child: Material(
             type: MaterialType.transparency,
             child: Column(children: [
-              _ORow(
+              PublishOptionRow(
                 icon: _cat == null ? 'hammer' : catInfo(_cat!).icon,
                 label: 'Servicio',
                 value: _cat == null ? 'Elegir' : catInfo(_cat!).name,
                 empty: _cat == null,
                 onTap: () async {
-                  final c = await _choose<String>(
-                      context, '¿Qué servicio necesitas?', [for (final c in allCats) (c.id, c.name, c.icon)], _cat);
-                  if (c != null) setState(() => _cat = c);
+                  try {
+                    final cats = await ref.read(catalogProvider.future);
+                    if (!context.mounted) return;
+                    final c = await _choose<String>(
+                        context, '¿Qué servicio necesitas?', [for (final c in cats) (c.id, c.name, c.icon)], _cat);
+                    if (c != null && mounted) setState(() => _cat = c);
+                  } catch (e) {
+                    ref.invalidate(catalogProvider);
+                    showNexoToast(apiErrorMessage(e));
+                  }
                 },
               ),
-              _ORow(
+              PublishOptionRow(
                 icon: 'pin',
                 label: 'Ubicación',
                 value: zone,
@@ -403,12 +426,12 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
                   if (r != null) {
                     setState(() {
                       _loc = r.point;
-                      _zone = null;
+                      _zone = r.zoneLabel;
                     });
                   }
                 },
               ),
-              _ORow(
+              PublishOptionRow(
                 icon: 'clock',
                 label: '¿Para cuándo?',
                 value: _urgs.firstWhere((u) => u.$1 == _urg).$2,
@@ -417,7 +440,7 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
                   if (u != null) setState(() => _urg = u);
                 },
               ),
-              _ORow(
+              PublishOptionRow(
                 icon: 'chat',
                 label: 'Te contactan por',
                 value: _contact == 'chat' ? 'Solo chat' : 'Chat y llamada',
@@ -499,7 +522,7 @@ class _ExperienceComposerState extends ConsumerState<_ExperienceComposer> {
     final s = ref.watch(sessionProvider);
     final orders = ref.watch(ordersProvider('client')).asData?.value.items ?? const <Order>[];
     final pending = orders.where((o) => o.status == 'resolved' && o.canReview).toList();
-    return ListView(
+    return PinnedHeaderList(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _CompTop(enabled: _ok, loading: _busy, onPublish: _publish),
@@ -533,7 +556,7 @@ class _ExperienceComposerState extends ConsumerState<_ExperienceComposer> {
             child: Material(
               type: MaterialType.transparency,
               child: Column(children: [
-                _ORow(
+                PublishOptionRow(
                   icon: 'user',
                   label: 'Prestador',
                   value: _order == null ? 'Etiquetar' : '@${_order!.counterpart.displayName}',
@@ -598,6 +621,9 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
   final _tag = TextEditingController();
   late String _cat = widget.me.profile.categories.isEmpty ? 'otros' : widget.me.profile.categories.first;
   final List<PickedImage> _imgs = [];
+  final Map<PickedImage, String> _uploaded = {};
+  String _idem = const Uuid().v4();
+  String? _lastPayload;
   bool _busy = false;
 
   @override
@@ -607,7 +633,7 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
     super.dispose();
   }
 
-  bool get _ok => _text.text.trim().length >= 20;
+  bool get _ok => !_busy && _text.text.trim().length >= 20 && widget.me.location != null;
 
   Future<void> _assist() async {
     final r = await showAssistSheet(context, kind: 'work', category: _cat, userText: _text.text);
@@ -624,31 +650,48 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
     setState(() => _busy = true);
     final api = ref.read(apiProvider);
     final p = widget.me.profile;
+    final payload =
+        '$_cat|${_text.text.trim()}|${_tag.text.trim()}|${widget.me.location?.lat}|${widget.me.location?.lng}|${_imgs.map((i) => i.path).join(',')}';
+    if (_lastPayload != null && _lastPayload != payload) _idem = const Uuid().v4();
+    _lastPayload = payload;
     try {
       final ids = <String>[];
       for (final i in _imgs) {
-        ids.add(await api.upload(i, purpose: 'work'));
+        _uploaded[i] ??= await api.upload(i, purpose: 'work');
+        ids.add(_uploaded[i]!);
       }
       await api.createWork(
         category: _cat,
         title: autoTitle(_text.text),
         text: _text.text.trim(),
         tag: _tag.text.trim().isEmpty ? null : _tag.text.trim(),
-        location: widget.me.location ?? p.zonePoint ?? ref.read(searchLocationProvider).point,
+        location: widget.me.location,
+        idempotencyKey: _idem,
         imageUploadIds: ids,
       );
       ref.invalidate(providerWorksProvider(p.id));
       ref.invalidate(myProviderProvider);
       ref.invalidate(feedProvider);
-      showNexoToast('Trabajo publicado. Ya aparece en tu perfil.');
+      final showPost = mounted &&
+          await _publishedSheet(context,
+              title: 'Tu trabajo ya está publicado',
+              detail: 'Ya forma parte de tu perfil profesional. Puedes revisarlo y editarlo cuando lo necesites.');
       setState(() {
         _text.clear();
         _tag.clear();
         _imgs.clear();
+        _uploaded.clear();
+        _idem = const Uuid().v4();
+        _lastPayload = null;
       });
-      if (mounted) context.push(Routes.provider(p.id));
+      if (mounted) {
+        context.go(Routes.home);
+        if (showPost) context.push(Routes.provider(p.id));
+      }
     } catch (e) {
-      showNexoToast(apiErrorMessage(e));
+      showNexoToast(e is ApiException && e.code == 'server.dependency_unavailable'
+          ? 'No se pudo validar o guardar el trabajo. Conservamos tu borrador; inténtalo más tarde.'
+          : apiErrorMessage(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -659,7 +702,7 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
     final p = widget.me.profile;
     final first = (p.owner ?? p.name).split(' ').first;
     final len = _text.text.trim().length;
-    return ListView(
+    return PinnedHeaderList(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _CompTop(enabled: _ok, loading: _busy, onPublish: _publish),
@@ -727,8 +770,8 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
               if (_imgs.length < 6)
                 TextButton.icon(
                   onPressed: () async {
-                    final add = await pickImages(max: 6 - _imgs.length);
-                    if (add.isNotEmpty && mounted) setState(() => _imgs.addAll(add));
+                    final images = await pickImages(max: 6 - _imgs.length);
+                    if (mounted) setState(() => _imgs.addAll(images));
                   },
                   icon: const NexoIcon('camera', size: 18, color: NexoColors.brand),
                   label:

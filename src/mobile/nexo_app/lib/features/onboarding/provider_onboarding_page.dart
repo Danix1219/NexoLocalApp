@@ -1,3 +1,4 @@
+import '../../core/widgets/pick_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,16 +8,18 @@ import '../../app/router.dart';
 import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
 import '../../core/auth/session_controller.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/widgets/map_view.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_field.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_sheet.dart';
 import '../../core/widgets/ob_scaffold.dart';
-import '../../core/widgets/pick_image.dart';
 import '../../core/widgets/toast.dart';
 import '../../core/widgets/ui.dart';
+import '../../core/widgets/photo_feedback.dart';
 import '../../data/api_provider.dart';
+import '../../core/widgets/catalog_status.dart';
 import '../../data/nexo_api.dart';
 import '../auth/presentation/done_view.dart';
 import '../auth/presentation/legal_sheets.dart';
@@ -48,13 +51,17 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
 
   int _i = 0;
   final _d = ProviderDraft();
-  final _idem = const Uuid().v4();
+  String _idem = const Uuid().v4();
+  String? _createdProviderId;
   final _name = TextEditingController();
   final _owner = TextEditingController();
   final _bio = TextEditingController();
   final _activity = TextEditingController();
   String? _exp;
   String? _photoLocal;
+  String? _coverLocal;
+  String? _pendingImage;
+  bool _uploadingCover = false;
   bool _busy = false;
   bool _done = false;
 
@@ -63,7 +70,11 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
     super.initState();
     final s = ref.read(sessionProvider);
     _owner.text = s.name ?? '';
-    _d.location = ref.read(searchLocationProvider).point;
+    final selected = ref.read(searchLocationProvider);
+    if (selected.hasSelection) {
+      _d.location = selected.point;
+      _d.zoneLabel = selected.zoneLabel;
+    }
     for (final c in [_name, _owner, _bio, _activity]) {
       c.addListener(() => setState(() {}));
     }
@@ -86,7 +97,7 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
             (!_biz || _owner.text.trim().length >= 3) &&
             _exp != null &&
             _bio.text.trim().length >= 20,
-        'services' => _d.categories.isNotEmpty && (!_biz || _activity.text.trim().length >= 3),
+        'services' => _biz ? _activity.text.trim().length >= 3 : _d.categories.isNotEmpty,
         'zones' => _d.location != null,
         'ready' => _d.acceptedRules,
         _ => false,
@@ -124,33 +135,58 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
       ..activity = _activity.text.trim()
       ..experience = _exps.firstWhere((e) => e.$1 == _exp).$3
       ..trades = _biz ? [] : [for (final c in _d.categories) catInfo(c).oficio];
+    if (_biz) {
+      _d.categories = [];
+      _d.specialties = [];
+    }
     if (_d.attention == 'shop') _d.radiusKm = 0;
     try {
       final api = ref.read(apiProvider);
-      await api.createProvider(_d, idempotencyKey: _idem);
+      _createdProviderId ??= await api.createProvider(_d, idempotencyKey: _idem);
       final tokens = await api.switchMode('provider');
       await ref.read(sessionProvider.notifier).setMode('provider', tokens: tokens, hasProvider: true);
       ref.invalidate(myProviderProvider);
       refreshActivity(ref);
       if (mounted) setState(() => _done = true);
     } catch (e) {
+      if (e is ApiException && e.status != null && e.status! >= 400 && e.status! < 500 && _createdProviderId == null) {
+        _idem = const Uuid().v4();
+      }
       showNexoToast(apiErrorMessage(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _pickPhoto() async {
-    final img = await pickOneImage(context);
-    if (img == null) return;
-    setState(() => _busy = true);
+  Future<void> _pickPhoto({bool cover = false}) async {
+    final image = await pickOneImage(context);
+    if (image == null || !mounted) return;
+    setState(() {
+      _busy = true;
+      _uploadingCover = cover;
+      _pendingImage = 'file://${image.path}';
+    });
     try {
-      _d.photoUploadId = await ref.read(apiProvider).upload(img, purpose: 'avatar');
-      setState(() => _photoLocal = 'file://${img.path}');
+      final id = await ref.read(apiProvider).upload(image, purpose: cover ? 'cover' : 'avatar');
+      if (mounted) {
+        setState(() {
+          if (cover) {
+            _d.coverUploadId = id;
+            _coverLocal = 'file://${image.path}';
+          } else {
+            _d.photoUploadId = id;
+            _photoLocal = 'file://${image.path}';
+          }
+        });
+      }
     } catch (e) {
       showNexoToast(apiErrorMessage(e));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted)
+        setState(() {
+          _busy = false;
+          _pendingImage = null;
+        });
     }
   }
 
@@ -168,9 +204,19 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
           button: 'Usar esta zona',
         ));
     if (r != null) {
+      try {
+        await ref
+            .read(searchLocationProvider.notifier)
+            .set(r.point, r.radiusKm == 0 ? 5 : r.radiusKm, source: r.source, zoneLabel: r.zoneLabel);
+      } catch (e) {
+        showNexoToast(apiErrorMessage(e));
+        return;
+      }
+      if (!mounted) return;
       setState(() {
         _d.location = r.point;
         _d.radiusKm = r.radiusKm;
+        _d.zoneLabel = r.zoneLabel ?? _d.zoneLabel;
       });
     }
   }
@@ -242,15 +288,47 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
         ];
       case 'basic':
         return [
+          SizedBox(
+              height: 132,
+              child: Stack(children: [
+                Positioned.fill(
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: _coverLocal == null
+                            ? const ColoredBox(color: NexoColors.brandSoft)
+                            : NexoImage(_coverLocal!))),
+                if (_busy && _uploadingCover && _pendingImage != null)
+                  Positioned.fill(
+                      child: ClipRRect(borderRadius: BorderRadius.circular(18), child: NexoImage(_pendingImage!))),
+                if (_busy && _uploadingCover)
+                  const Positioned.fill(
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(18)), child: PhotoProcessingOverlay())),
+                Positioned(
+                    right: 12,
+                    bottom: 10,
+                    child: TextButton.icon(
+                      onPressed: _busy ? null : () => _pickPhoto(cover: true),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: Text(_coverLocal == null ? 'Agregar portada' : 'Cambiar portada'),
+                    )),
+              ])),
+          const SizedBox(height: 12),
           InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: _busy ? null : _pickPhoto,
+            onTap: _busy ? null : () => _pickPhoto(),
             child: Row(children: [
-              NexoAvatar(
-                  name: _name.text.isEmpty ? '?' : _name.text,
-                  url: _photoLocal,
-                  size: 72,
-                  icon: _photoLocal == null ? 'camera' : null),
+              SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: Stack(children: [
+                    NexoAvatar(
+                        name: _name.text.isEmpty ? '?' : _name.text,
+                        url: _busy && !_uploadingCover ? _pendingImage : _photoLocal,
+                        size: 72,
+                        icon: _photoLocal == null ? 'camera' : null),
+                    if (_busy && !_uploadingCover) const Positioned.fill(child: PhotoProcessingOverlay(circular: true)),
+                  ])),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -335,43 +413,52 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
               maxLength: 80,
             ),
           ],
-          _lbl(_biz ? 'Servicios principales (hasta 3)' : '¿Qué oficio tienes? (hasta 3)'),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final c in allCats)
-              ToggleChip(
-                label: _biz ? c.name : c.oficio,
-                icon: c.icon,
-                selected: _d.categories.contains(c.id),
-                onTap: () => setState(() {
-                  if (_d.categories.contains(c.id)) {
-                    _d.categories.remove(c.id);
-                    _d.specialties.removeWhere(c.specs.contains);
-                  } else if (_d.categories.length < 3) {
-                    _d.categories.add(c.id);
-                  } else {
-                    showNexoToast('Máximo 3');
-                  }
-                }),
-              ),
-          ]),
-          for (final c in allCats.where((c) => _d.categories.contains(c.id) && c.specs.isNotEmpty)) ...[
-            _lbl('Especialidades en ${c.name.toLowerCase()} (opcional)'),
+          if (_biz)
+            Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text('Las categorías se asignarán a partir de tu actividad y descripción.',
+                    style: NexoText.body(14))),
+          if (!_biz) ...[
+            _lbl('¿Qué oficio tienes? (hasta 3)'),
             Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final s in c.specs)
+              const CatalogStatus(),
+              for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
                 ToggleChip(
-                  label: s,
-                  selected: _d.specialties.contains(s),
+                  label: _biz ? c.name : c.oficio,
+                  icon: c.icon,
+                  selected: _d.categories.contains(c.id),
                   onTap: () => setState(() {
-                    if (_d.specialties.contains(s)) {
-                      _d.specialties.remove(s);
-                    } else if (_d.specialties.length < 5) {
-                      _d.specialties.add(s);
+                    if (_d.categories.contains(c.id)) {
+                      _d.categories.remove(c.id);
+                      _d.specialties.removeWhere(c.specs.contains);
+                    } else if (_d.categories.length < 3) {
+                      _d.categories.add(c.id);
                     } else {
-                      showNexoToast('Máximo 5 especialidades');
+                      showNexoToast('Máximo 3');
                     }
                   }),
                 ),
             ]),
+            for (final c in (ref.watch(catalogProvider).asData?.value ?? [])
+                .where((c) => _d.categories.contains(c.id) && c.specs.isNotEmpty)) ...[
+              _lbl('Especialidades en ${c.name.toLowerCase()} (opcional)'),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final s in c.specs)
+                  ToggleChip(
+                    label: s,
+                    selected: _d.specialties.contains(s),
+                    onTap: () => setState(() {
+                      if (_d.specialties.contains(s)) {
+                        _d.specialties.remove(s);
+                      } else if (_d.specialties.length < 5) {
+                        _d.specialties.add(s);
+                      } else {
+                        showNexoToast('Máximo 5 especialidades');
+                      }
+                    }),
+                  ),
+              ]),
+            ],
           ],
         ];
       case 'zones':
@@ -394,13 +481,22 @@ class _ProviderOnboardingPageState extends ConsumerState<ProviderOnboardingPage>
               onChanged: (v) => setState(() => _d.radiusKm = v),
             ),
           ],
-          const OneNote(icon: 'shield', text: 'Tu punto exacto no se publica: los clientes ven una zona aproximada.'),
+          OneNote(
+              icon: 'shield',
+              text: shop || _d.attention == 'both'
+                  ? 'La ubicación de tu local será pública para que puedan llegar.'
+                  : 'Tu punto exacto no se publica: los clientes ven una zona aproximada.'),
         ];
       default:
         return [
           CheckList(items: [
             (true, _biz ? 'Negocio: ${_name.text.trim()}' : 'Tu nombre: ${_name.text.trim()}'),
-            (true, 'Servicios: ${_d.categories.map((c) => catInfo(c).name).join(', ')}'),
+            (
+              true,
+              _biz
+                  ? 'Actividad: ${_activity.text.trim()}'
+                  : 'Servicios: ${_d.categories.map((c) => catInfo(c).name).join(', ')}'
+            ),
             (true, _d.attention == 'shop' ? 'Atención en tu local' : 'Zona: hasta ${_d.radiusKm} km'),
             (false, 'Horario, precios y fotos (después, desde tu perfil)'),
           ]),

@@ -19,6 +19,7 @@ android {
     compileSdk = 36
     ndkVersion = "27.0.12077973"  // la mas alta que piden los plugins
 
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -67,7 +68,7 @@ flutter {
 }
 
 // Push (spec 050): solo si existe google-services.json (lo escribe el CI desde
-// el secreto, o lo copias tú de la consola de Firebase; no se sube al repo).
+// el secreto, o lo copias tÃº de la consola de Firebase; no se sube al repo).
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }

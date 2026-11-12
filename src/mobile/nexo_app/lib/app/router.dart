@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../core/auth/session_controller.dart';
 import '../features/account/account_page.dart';
+import '../features/account/my_profile_page.dart';
+import '../data/models.dart' show AccountScreen, ServiceRequest;
 import '../features/account/saved_page.dart';
 import '../features/auth/application/email_flow.dart';
 import '../features/auth/presentation/code_page.dart';
@@ -26,6 +28,7 @@ import '../features/provider/compare_page.dart';
 import '../features/provider/provider_page.dart';
 import '../features/publish/publish_page.dart';
 import '../features/requests/interested_page.dart';
+import '../features/requests/request_author_page.dart';
 import '../features/search/search_page.dart';
 import '../features/shell/shell_page.dart';
 
@@ -54,9 +57,11 @@ class Routes {
   static String provider(String id) => '/provider/$id';
   static const compare = '/compare';
   static String interested(String requestId) => '/requests/$requestId/interested';
+  static String requestAuthor(String requestId) => '/requests/$requestId/author';
   static String order(String id) => '/orders/$id';
   static String chat(String id) => '/chat/$id';
   static const saved = '/saved';
+  static const myProfile = '/my-profile';
   static const proOnboarding = '/pro/new';
   static const location = '/location';
 
@@ -99,7 +104,8 @@ class Routes {
 /// Avisa a go_router cuando cambia la sesión para re-evaluar redirect.
 class _SessionRefresh extends ChangeNotifier {
   _SessionRefresh(Ref ref) {
-    ref.listen<SessionStatus>(sessionProvider.select((s) => s.status), (_, __) => notifyListeners());
+    ref.listen<SessionState>(sessionProvider, (_, __) => notifyListeners());
+    ref.listen(signupFlowProvider.select((s) => s.createdName), (_, __) => notifyListeners());
   }
 }
 
@@ -125,12 +131,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (loc == Routes.splash) return signedIn || guest ? Routes.home : Routes.welcome;
 
       if (signedIn) {
-        // Recién creada la cuenta: primero "Tu cuenta está lista".
-        if (loc == Routes.registerAccount) return Routes.registerDone;
+        if (ref.read(sessionProvider).recoveryOnly && loc != Routes.account) return Routes.account;
+        // The successful account remains visible until the user continues.
+        if (ref.read(signupFlowProvider).createdName != null && loc != Routes.registerDone) return Routes.registerDone;
         if (Routes.authPaths.contains(loc)) return Routes.home;
         return null;
       }
       if (guest) return loc == Routes.registerDone ? Routes.home : null;
+      // El registro permite elegir ubicacion antes de crear la cuenta.
+      if (loc == Routes.location) return null;
+      if (loc == Routes.registerDone && ref.read(signupFlowProvider).createdName != null) return null;
       // Sin sesión: solo el flujo de entrada.
       if (Routes.authPaths.contains(loc)) return null;
       return Routes.welcome;
@@ -168,6 +178,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(parentNavigatorKey: _rootKey, path: Routes.compare, builder: (_, __) => const ComparePage()),
       GoRoute(
         parentNavigatorKey: _rootKey,
+        path: '/requests/:id/author',
+        builder: (_, s) => s.extra is ServiceRequest
+            ? RequestAuthorPage(request: s.extra! as ServiceRequest)
+            : const Scaffold(body: Center(child: Text('Abre el perfil desde una solicitud.'))),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootKey,
         path: '/requests/:id/interested',
         builder: (_, s) => InterestedPage(requestId: s.pathParameters['id']!),
       ),
@@ -183,6 +200,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(parentNavigatorKey: _rootKey, path: Routes.saved, builder: (_, __) => const SavedPage()),
       GoRoute(
+          parentNavigatorKey: _rootKey,
+          path: Routes.myProfile,
+          builder: (context, state) => MyProfilePage(
+                initial: state.extra is AccountScreen ? state.extra as AccountScreen : const AccountScreen(name: ''),
+                onEdit: (account) => showAccountEditSheet(context, account),
+              )),
+      GoRoute(
         parentNavigatorKey: _rootKey,
         path: Routes.proOnboarding,
         builder: (_, __) => const ProviderOnboardingPage(),
@@ -190,7 +214,35 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         parentNavigatorKey: _rootKey,
         path: Routes.location,
-        builder: (_, s) => LocationPickerPage(args: s.extra as LocationPickerArgs? ?? const LocationPickerArgs()),
+        pageBuilder: (context, s) => CustomTransitionPage<LocationPick>(
+          key: s.pageKey,
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: const Color(0x660F201B),
+          barrierLabel: 'Cerrar ubicación',
+          transitionDuration: const Duration(milliseconds: 240),
+          reverseTransitionDuration: const Duration(milliseconds: 180),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) => MediaQuery.disableAnimationsOf(context)
+              ? child
+              : SlideTransition(
+                  position: Tween(begin: const Offset(0, 1), end: Offset.zero)
+                      .chain(CurveTween(curve: Curves.easeOutCubic))
+                      .animate(animation),
+                  child: child,
+                ),
+          child: Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                heightFactor: .86,
+                widthFactor: 1,
+                child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    child: MediaQuery.removePadding(
+                        context: context,
+                        removeTop: true,
+                        child: LocationPickerPage(args: s.extra as LocationPickerArgs? ?? const LocationPickerArgs()))),
+              )),
+        ),
       ),
     ],
   );

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
 import 'nexo_icon.dart';
+import 'nexo_motion.dart';
+
+Widget _pressFeedback(Widget child) => NexoPressFeedback(child: child);
 
 enum NexoButtonVariant { primary, line, ghost, danger }
 
@@ -109,15 +112,17 @@ class NexoButton extends StatelessWidget {
       ),
     );
 
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: loading ? '$label, cargando' : null,
-      child: Opacity(
-        opacity: enabled || loading ? 1 : .45,
-        child: block ? SizedBox(width: double.infinity, child: button) : button,
-      ),
-    );
+    return NexoPressFeedback(
+        enabled: enabled,
+        child: Semantics(
+          button: true,
+          enabled: enabled,
+          label: loading ? '$label, cargando' : null,
+          child: Opacity(
+            opacity: enabled || loading ? 1 : .45,
+            child: block ? SizedBox(width: double.infinity, child: button) : button,
+          ),
+        ));
   }
 }
 
@@ -131,7 +136,7 @@ class NexoLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
+    return _pressFeedback(Semantics(
       button: true,
       child: InkWell(
         onTap: onTap,
@@ -151,7 +156,7 @@ class NexoLink extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -175,7 +180,7 @@ class NexoIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(circle ? size : 14);
-    return Semantics(
+    return _pressFeedback(Semantics(
       button: true,
       label: label,
       child: Material(
@@ -193,6 +198,6 @@ class NexoIconButton extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
