@@ -167,7 +167,6 @@ void main() {
   test('moderación no disponible permanece como fallo real', () async {
     a.on('POST', '/v1/discovery/providers', problem('server.dependency_unavailable', 503), status: 503);
     await expectLater(api.createProvider(ProviderDraft(), idempotencyKey: testIdempotencyKey),
-
         throwsA(isA<ApiException>().having((e) => e.code, 'code', 'server.dependency_unavailable')));
   });
 }
