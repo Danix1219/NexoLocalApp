@@ -45,14 +45,14 @@ void main() {
   test('sin señal → grupos pendientes pasan a ejemplo y perfiles permanece remoto', () async {
     a.offline();
     final api = build(all(GroupMode.auto));
-    // Notificaciones aún no existe en la API: sigue siendo un grupo con datos de ejemplo.
-    final r = await api.notifications();
-    expect(r.$1, isNotEmpty);
+    // El asistente aún no existe en la API: sigue siendo un grupo con datos de ejemplo.
+    final r = await api.assistDraft(kind: 'request', category: 'plomeria', userText: 'Fuga en el baño');
+    expect(r.text, isNotEmpty);
     for (final g in ApiGroup.values) {
       expect(api.usingDemo(g), HybridNexoApi.remoteGroups.contains(g) ? isFalse : isTrue, reason: g.name);
     }
     final before = a.calls.length;
-    await api.notifications();
+    await api.assistDraft(kind: 'request', category: 'plomeria', userText: 'Fuga en el baño');
     expect(a.calls.length, before, reason: 'durante la espera no se vuelve a intentar la red');
   });
 
