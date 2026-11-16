@@ -2,9 +2,11 @@
 
 Flujo: `release/*` → pista **internal** (pruebas internas); `main` → pista **production** con aprobación del entorno `production`. Ambos solo después de «CI · todo verde».
 
+Para subir una version **a mano**, sin el pipeline, ver [publicar-a-mano.md](publicar-a-mano.md).
+
 ## 1. Una sola vez en Play Console
 
-1. Crea la app con el paquete `mx.nexolocal.nexo_app` (el `applicationId` de `android/app/build.gradle.kts`).
+1. Crea la app con el paquete `mx.nexolocal.app` (el `applicationId` de `android/app/build.gradle.kts`).
 2. Activa **Play App Signing** (Google guarda la llave de la app; tú usas una llave de subida).
 3. Sube a mano el primer AAB a *Pruebas internas*: la API de Play no puede crear la primera versión.
 4. Completa lo mínimo de la ficha, clasificación de contenido y política de privacidad (spec 024) cuando vayas a producción.
@@ -86,7 +88,7 @@ El job «Seguridad · AndroidManifest y build» exige en `android/app/src/main/A
 ## Producción 0.3.0: push, landing y Android
 
 1. Prepara la carpeta Android una vez (idempotente): `python3 tools/android/preparar_android.py src/mobile/nexo_app`. Agrega `allowBackup=false`, sin tráfico en claro, permisos INTERNET/ubicación/POST_NOTIFICATIONS, `<queries>`, enlace `nexolocal://`, minSdk 24, firma con `key.properties` y Google Services condicionado a `google-services.json`. Haz commit de `android/`.
-2. Firebase: crea el proyecto, registra la app Android `mx.nexolocal.nexo_app`, descarga `google-services.json` y guárdalo como secreto `GOOGLE_SERVICES_JSON` del entorno `firma` (Terraform: `TF_VAR_google_services_json`). Nunca lo subas al repositorio. El backend envía los avisos con FirebaseAdmin del mismo proyecto.
+2. Firebase: crea el proyecto, registra la app Android `mx.nexolocal.app`, descarga `google-services.json` y guárdalo como secreto `GOOGLE_SERVICES_JSON` del entorno `firma` (Terraform: `TF_VAR_google_services_json`). Nunca lo subas al repositorio. El backend envía los avisos con FirebaseAdmin del mismo proyecto.
 3. Landing: publica `/privacidad`, `/terminos` y `/eliminar-cuenta` y pon su base en la variable `LANDING_URL` (HTTPS). Play Console pide además la URL de la política de privacidad y la de eliminación de cuenta: usa esas mismas páginas.
 4. Versión: antes de abrir `release/x.y.z`, sube `version:` en `pubspec.yaml` y agrega la fila en [versionamiento](versionamiento.md).
 5. El job «Construir · AAB firmado» falla si falta la firma, `GOOGLE_SERVICES_JSON`, o si `API_BASE_URL`/`LANDING_URL` no son HTTPS.
