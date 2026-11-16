@@ -284,7 +284,11 @@ class HybridNexoApi implements NexoApi {
     ApiGroup.trabajos,
     ApiGroup.solicitudes,
     ApiGroup.interes,
+    ApiGroup.pedidos,
+    ApiGroup.opiniones,
+    ApiGroup.mensajes,
     ApiGroup.guardados,
+    ApiGroup.contacto,
     ApiGroup.imagenes,
   };
 

@@ -320,7 +320,12 @@ class _OrderPageState extends ConsumerState<OrderPage> {
 
   Future<void> _copyPhone(Order o) async {
     try {
-      final r = await ref.read(apiProvider).revealPhone(targetId: o.id, targetType: 'order', context: 'order');
+      // The API accepts provider (profile id) or client (account id); the order id is not a phone target.
+      final asProvider = o.role == 'provider';
+      final target = asProvider ? o.counterpart.id : (o.counterpart.providerId ?? o.providerId ?? '');
+      final r = await ref
+          .read(apiProvider)
+          .revealPhone(targetId: target, targetType: asProvider ? 'client' : 'provider', context: 'order');
       await Clipboard.setData(ClipboardData(text: r.displayPhone));
       showNexoToast('Número copiado: ${r.displayPhone}');
     } catch (e) {
