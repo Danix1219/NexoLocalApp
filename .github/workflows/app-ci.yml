@@ -101,7 +101,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-almacen-local.lcov --reporter=expanded test/unit/almacen_local_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-almacen-local
           path: ${{ env.APP_DIR }}/coverage/unidad-almacen-local.lcov
@@ -126,7 +126,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-api-modes.lcov --reporter=expanded test/unit/api_modes_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-api-modes
           path: ${{ env.APP_DIR }}/coverage/unidad-api-modes.lcov
@@ -151,7 +151,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-asistente-y-dispositivos-fake.lcov --reporter=expanded test/unit/asistente_y_dispositivos_fake_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-asistente-y-dispositivos-fake
           path: ${{ env.APP_DIR }}/coverage/unidad-asistente-y-dispositivos-fake.lcov
@@ -176,7 +176,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-auth-parsing.lcov --reporter=expanded test/unit/auth_parsing_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-auth-parsing
           path: ${{ env.APP_DIR }}/coverage/unidad-auth-parsing.lcov
@@ -201,7 +201,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-diseno-maqueta.lcov --reporter=expanded test/unit/diseno_maqueta_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-diseno-maqueta
           path: ${{ env.APP_DIR }}/coverage/unidad-diseno-maqueta.lcov
@@ -226,7 +226,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-fake-account.lcov --reporter=expanded test/unit/fake_account_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-fake-account
           path: ${{ env.APP_DIR }}/coverage/unidad-fake-account.lcov
@@ -251,7 +251,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-fake-discovery.lcov --reporter=expanded test/unit/fake_discovery_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-fake-discovery
           path: ${{ env.APP_DIR }}/coverage/unidad-fake-discovery.lcov
@@ -276,7 +276,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-fake-messages.lcov --reporter=expanded test/unit/fake_messages_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-fake-messages
           path: ${{ env.APP_DIR }}/coverage/unidad-fake-messages.lcov
@@ -301,7 +301,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-fake-orders.lcov --reporter=expanded test/unit/fake_orders_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-fake-orders
           path: ${{ env.APP_DIR }}/coverage/unidad-fake-orders.lcov
@@ -326,7 +326,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-fake-requests.lcov --reporter=expanded test/unit/fake_requests_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-fake-requests
           path: ${{ env.APP_DIR }}/coverage/unidad-fake-requests.lcov
@@ -351,7 +351,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-filters.lcov --reporter=expanded test/unit/filters_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-filters
           path: ${{ env.APP_DIR }}/coverage/unidad-filters.lcov
@@ -376,7 +376,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-ml-categoria.lcov --reporter=expanded test/unit/ml_categoria_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-ml-categoria
           path: ${{ env.APP_DIR }}/coverage/unidad-ml-categoria.lcov
@@ -401,7 +401,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-models.lcov --reporter=expanded test/unit/models_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-models
           path: ${{ env.APP_DIR }}/coverage/unidad-models.lcov
@@ -426,7 +426,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-publish-rules.lcov --reporter=expanded test/unit/publish_rules_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-publish-rules
           path: ${{ env.APP_DIR }}/coverage/unidad-publish-rules.lcov
@@ -451,7 +451,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-push-mensajes.lcov --reporter=expanded test/unit/push_mensajes_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-push-mensajes
           path: ${{ env.APP_DIR }}/coverage/unidad-push-mensajes.lcov
@@ -476,7 +476,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/unidad-validation.lcov --reporter=expanded test/unit/validation_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-unidad-validation
           path: ${{ env.APP_DIR }}/coverage/unidad-validation.lcov
@@ -501,7 +501,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-cache-sin-conexion.lcov --reporter=expanded test/integration/cache_sin_conexion_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-cache-sin-conexion
           path: ${{ env.APP_DIR }}/coverage/integracion-cache-sin-conexion.lcov
@@ -526,7 +526,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-asistente-dispositivos.lcov --reporter=expanded test/integration/http_asistente_dispositivos_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-asistente-dispositivos
           path: ${{ env.APP_DIR }}/coverage/integracion-http-asistente-dispositivos.lcov
@@ -551,7 +551,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-cuenta.lcov --reporter=expanded test/integration/http_cuenta_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-cuenta
           path: ${{ env.APP_DIR }}/coverage/integracion-http-cuenta.lcov
@@ -576,7 +576,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-descubrimiento.lcov --reporter=expanded test/integration/http_descubrimiento_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-descubrimiento
           path: ${{ env.APP_DIR }}/coverage/integracion-http-descubrimiento.lcov
@@ -601,7 +601,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-guardados-contacto.lcov --reporter=expanded test/integration/http_guardados_contacto_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-guardados-contacto
           path: ${{ env.APP_DIR }}/coverage/integracion-http-guardados-contacto.lcov
@@ -626,7 +626,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-imagenes.lcov --reporter=expanded test/integration/http_imagenes_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-imagenes
           path: ${{ env.APP_DIR }}/coverage/integracion-http-imagenes.lcov
@@ -651,7 +651,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-mensajes.lcov --reporter=expanded test/integration/http_mensajes_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-mensajes
           path: ${{ env.APP_DIR }}/coverage/integracion-http-mensajes.lcov
@@ -676,7 +676,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-pedidos.lcov --reporter=expanded test/integration/http_pedidos_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-pedidos
           path: ${{ env.APP_DIR }}/coverage/integracion-http-pedidos.lcov
@@ -701,7 +701,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-perfil.lcov --reporter=expanded test/integration/http_perfil_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-perfil
           path: ${{ env.APP_DIR }}/coverage/integracion-http-perfil.lcov
@@ -726,7 +726,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-http-solicitudes-interes.lcov --reporter=expanded test/integration/http_solicitudes_interes_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-http-solicitudes-interes
           path: ${{ env.APP_DIR }}/coverage/integracion-http-solicitudes-interes.lcov
@@ -751,7 +751,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-push-controlador.lcov --reporter=expanded test/integration/push_controlador_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-push-controlador
           path: ${{ env.APP_DIR }}/coverage/integracion-push-controlador.lcov
@@ -776,7 +776,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-resiliencia.lcov --reporter=expanded test/integration/resiliencia_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-resiliencia
           path: ${{ env.APP_DIR }}/coverage/integracion-resiliencia.lcov
@@ -801,7 +801,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-sesion.lcov --reporter=expanded test/integration/sesion_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-sesion
           path: ${{ env.APP_DIR }}/coverage/integracion-sesion.lcov
@@ -826,7 +826,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/integracion-sincronizacion.lcov --reporter=expanded test/integration/sincronizacion_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-integracion-sincronizacion
           path: ${{ env.APP_DIR }}/coverage/integracion-sincronizacion.lcov
@@ -851,7 +851,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-cabeceras-y-subidas.lcov --reporter=expanded test/security/cabeceras_y_subidas_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-cabeceras-y-subidas
           path: ${{ env.APP_DIR }}/coverage/seguridad-cabeceras-y-subidas.lcov
@@ -876,7 +876,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-cache-local-seguro.lcov --reporter=expanded test/security/cache_local_seguro_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-cache-local-seguro
           path: ${{ env.APP_DIR }}/coverage/seguridad-cache-local-seguro.lcov
@@ -901,7 +901,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-enlaces-profundos.lcov --reporter=expanded test/security/enlaces_profundos_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-enlaces-profundos
           path: ${{ env.APP_DIR }}/coverage/seguridad-enlaces-profundos.lcov
@@ -926,7 +926,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-ia-sin-datos-personales.lcov --reporter=expanded test/security/ia_sin_datos_personales_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-ia-sin-datos-personales
           path: ${{ env.APP_DIR }}/coverage/seguridad-ia-sin-datos-personales.lcov
@@ -951,7 +951,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-privacidad.lcov --reporter=expanded test/security/privacidad_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-privacidad
           path: ${{ env.APP_DIR }}/coverage/seguridad-privacidad.lcov
@@ -976,7 +976,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-push-seguro.lcov --reporter=expanded test/security/push_seguro_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-push-seguro
           path: ${{ env.APP_DIR }}/coverage/seguridad-push-seguro.lcov
@@ -1001,7 +1001,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-registros-sin-datos-sensibles.lcov --reporter=expanded test/security/registros_sin_datos_sensibles_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-registros-sin-datos-sensibles
           path: ${{ env.APP_DIR }}/coverage/seguridad-registros-sin-datos-sensibles.lcov
@@ -1026,7 +1026,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-secretos-en-codigo.lcov --reporter=expanded test/security/secretos_en_codigo_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-secretos-en-codigo
           path: ${{ env.APP_DIR }}/coverage/seguridad-secretos-en-codigo.lcov
@@ -1051,7 +1051,7 @@ jobs:
         run: flutter test --coverage --coverage-path=coverage/seguridad-transporte.lcov --reporter=expanded test/security/transporte_test.dart
       - name: Guardar cobertura
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cov-seguridad-transporte
           path: ${{ env.APP_DIR }}/coverage/seguridad-transporte.lcov
@@ -1188,7 +1188,7 @@ jobs:
           --dart-define=LANDING_URL=${{ vars.LANDING_URL }}
           --dart-define=APP_VERSION=${{ needs.version.outputs.app_version }}
       - name: Guardar APK
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: apk-debug
           path: ${{ env.APP_DIR }}/build/app/outputs/flutter-apk/app-debug.apk
@@ -1265,7 +1265,7 @@ jobs:
         if: always()
         run: rm -f android/key.properties android/app/upload-keystore.jks android/app/google-services.json
       - name: Guardar AAB y símbolos
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: aab-release
           path: |
