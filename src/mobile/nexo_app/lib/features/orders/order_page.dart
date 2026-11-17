@@ -114,138 +114,151 @@ class _OrderPageState extends ConsumerState<OrderPage> {
       act = () => openDirections(place);
     }
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        // ---- héroe y pasos
-        Container(
-          color: NexoColors.surface,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
-          child: Column(children: [
-            AvatarPair(
-              a: (me, null),
-              b: (o.counterpart.displayName, o.counterpart.photoUrl),
-              ok: o.status == 'accepted' || o.status == 'resolved',
-              size: 56,
-            ),
-            const SizedBox(height: 12),
-            Text(_title(o), textAlign: TextAlign.center, style: NexoText.display(20)),
-            const SizedBox(height: 12),
-            if (step < 0)
-              Text('Ya no está activo.', style: NexoText.body(14, color: NexoColors.muted))
-            else
-              _Steps(step: step),
-          ]),
-        ),
-        // ---- dónde
-        NexoCard(
-          title: head,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              MiniMap(
-                point: place,
-                approximate: !exact && !shop,
-                label: shop || exact ? (shop ? o.placeZone : 'Domicilio') : o.placeZone,
-                actionLabel: cta,
-                onAction: act,
+    // Deslizar hacia abajo vuelve a pedir el pedido: los cambios de la otra parte no llegan en vivo.
+    return RefreshIndicator(
+      color: NexoColors.brand,
+      onRefresh: () async {
+        try {
+          final _ = await ref.refresh(orderProvider(o.id).future);
+        } catch (_) {/* asyncView ya muestra el error y el botón de reintentar */}
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          // ---- héroe y pasos
+          Container(
+            color: NexoColors.surface,
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
+            child: Column(children: [
+              AvatarPair(
+                a: (me, null),
+                b: (o.counterpart.displayName, o.counterpart.photoUrl),
+                ok: o.status == 'accepted' || o.status == 'resolved',
+                size: 56,
               ),
-              const SizedBox(height: 8),
-              Text(line, style: NexoText.body(14, weight: FontWeight.w600)),
-              if (!client && !shop && o.status == 'pending') ...[
-                const SizedBox(height: 6),
-                const Notice('Solo verás la dirección exacta cuando aceptes el pedido.', icon: 'shield'),
-              ],
-            ],
-          ),
-        ),
-        // ---- con quién
-        NexoCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              InkWell(
-                onTap: o.counterpart.providerId == null
-                    ? null
-                    : () => context.push(Routes.provider(o.counterpart.providerId!)),
-                child: Row(children: [
-                  NexoAvatar(name: o.counterpart.displayName, url: o.counterpart.photoUrl),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(o.counterpart.displayName, style: NexoText.body(15, weight: FontWeight.w800)),
-                        Text(client ? catInfo(o.category).name : 'Cliente',
-                            style: NexoText.body(12.5, color: NexoColors.muted)),
-                      ],
-                    ),
-                  ),
-                  if (o.counterpart.providerId != null) const NexoIcon('chevron', size: 18, color: NexoColors.muted),
-                ]),
-              ),
-              if (o.status == 'pending' && !client) ...[
-                const SizedBox(height: 10),
-                const Notice('¿Dudas? Pregúntale antes de aceptar.'),
-              ],
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: NexoButton(
-                    label: 'Mensaje',
-                    icon: 'chat',
-                    variant: o.status == 'pending' && !client ? NexoButtonVariant.line : NexoButtonVariant.primary,
-                    onPressed: () => _chat(o),
-                  ),
+              Text(_title(o), textAlign: TextAlign.center, style: NexoText.display(20)),
+              const SizedBox(height: 12),
+              if (step < 0)
+                Text('Ya no está activo.', style: NexoText.body(14, color: NexoColors.muted))
+              else
+                _Steps(step: step),
+            ]),
+          ),
+          // ---- dónde
+          NexoCard(
+            title: head,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MiniMap(
+                  point: place,
+                  approximate: !exact && !shop,
+                  label: shop || exact ? (shop ? o.placeZone : 'Domicilio') : o.placeZone,
+                  actionLabel: cta,
+                  onAction: act,
                 ),
-                if (o.can('copyPhone') || o.counterpart.canCopyPhone) ...[
-                  const SizedBox(width: 8),
+                const SizedBox(height: 8),
+                Text(line, style: NexoText.body(14, weight: FontWeight.w600)),
+                if (!client && !shop && o.status == 'pending') ...[
+                  const SizedBox(height: 6),
+                  const Notice('Solo verás la dirección exacta cuando aceptes el pedido.', icon: 'shield'),
+                ],
+              ],
+            ),
+          ),
+          // ---- con quién
+          NexoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InkWell(
+                  onTap: o.counterpart.providerId == null
+                      ? null
+                      : () => context.push(Routes.provider(o.counterpart.providerId!)),
+                  child: Row(children: [
+                    NexoAvatar(name: o.counterpart.displayName, url: o.counterpart.photoUrl),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(o.counterpart.displayName, style: NexoText.body(15, weight: FontWeight.w800)),
+                          Text(client ? catInfo(o.category).name : 'Cliente',
+                              style: NexoText.body(12.5, color: NexoColors.muted)),
+                        ],
+                      ),
+                    ),
+                    if (o.counterpart.providerId != null) const NexoIcon('chevron', size: 18, color: NexoColors.muted),
+                  ]),
+                ),
+                if (o.status == 'pending' && !client) ...[
+                  const SizedBox(height: 10),
+                  const Notice('¿Dudas? Pregúntale antes de aceptar.'),
+                ],
+                const SizedBox(height: 12),
+                Row(children: [
                   Expanded(
                     child: NexoButton(
-                      label: 'Copiar número',
-                      icon: 'copy',
-                      variant: NexoButtonVariant.ghost,
-                      onPressed: () => _copyPhone(o),
+                      label: 'Mensaje',
+                      icon: 'chat',
+                      variant: o.status == 'pending' && !client ? NexoButtonVariant.line : NexoButtonVariant.primary,
+                      onPressed: () => _chat(o),
                     ),
                   ),
-                ],
-              ]),
-            ],
+                  if (o.can('copyPhone') || o.counterpart.canCopyPhone) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: NexoButton(
+                        label: 'Copiar número',
+                        icon: 'copy',
+                        variant: NexoButtonVariant.ghost,
+                        onPressed: () => _copyPhone(o),
+                      ),
+                    ),
+                  ],
+                ]),
+              ],
+            ),
           ),
-        ),
-        // ---- qué acordaron
-        NexoCard(
-          child: Column(children: [
-            InfoRow('Servicio', catInfo(o.category).name),
-            if (o.description.isNotEmpty) InfoRow('Lo que se pidió', o.description),
-            if (o.agreedPrice != null)
-              InfoRow('Precio acordado', o.agreedPrice!.display, sub: o.agreedPrice!.includes, highlight: true)
-            else if (o.status == 'accepted' || o.status == 'resolved')
-              const InfoRow('Precio acordado', 'Sin precio · lo acuerdan en el chat', muted: true),
-            InfoRow(
-              'Cómo llegó',
-              o.requestId != null
-                  ? (client ? 'Se postuló a tu solicitud y le hiciste el pedido' : 'Te postulaste y te hizo el pedido')
-                  : (client ? 'Le hiciste el pedido desde su perfil' : 'Te hizo el pedido desde tu perfil'),
-            ),
-          ]),
-        ),
-        const SizedBox(height: 14),
-        Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _actions(o, client)),
-        if (o.timeline.isNotEmpty) ...[
-          const Sect('Historial'),
-          for (final t in o.timeline)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 16, 4),
-              child: Row(children: [
-                const NexoIcon('check', size: 15, color: NexoColors.brand),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: Text(t.text.isEmpty ? t.type : t.text, style: NexoText.body(13.5, color: NexoColors.muted))),
-              ]),
-            ),
+          // ---- qué acordaron
+          NexoCard(
+            child: Column(children: [
+              InfoRow('Servicio', catInfo(o.category).name),
+              if (o.description.isNotEmpty) InfoRow('Lo que se pidió', o.description),
+              if (o.agreedPrice != null)
+                InfoRow('Precio acordado', o.agreedPrice!.display, sub: o.agreedPrice!.includes, highlight: true)
+              else if (o.status == 'accepted' || o.status == 'resolved')
+                const InfoRow('Precio acordado', 'Sin precio · lo acuerdan en el chat', muted: true),
+              InfoRow(
+                'Cómo llegó',
+                o.requestId != null
+                    ? (client
+                        ? 'Se postuló a tu solicitud y le hiciste el pedido'
+                        : 'Te postulaste y te hizo el pedido')
+                    : (client ? 'Le hiciste el pedido desde su perfil' : 'Te hizo el pedido desde tu perfil'),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 14),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _actions(o, client)),
+          if (o.timeline.isNotEmpty) ...[
+            const Sect('Historial'),
+            for (final t in o.timeline)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 16, 4),
+                child: Row(children: [
+                  const NexoIcon('check', size: 15, color: NexoColors.brand),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child:
+                          Text(t.text.isEmpty ? t.type : t.text, style: NexoText.body(13.5, color: NexoColors.muted))),
+                ]),
+              ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
