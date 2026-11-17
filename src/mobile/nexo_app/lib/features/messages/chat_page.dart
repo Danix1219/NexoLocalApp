@@ -19,6 +19,8 @@ import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../../data/nexo_api.dart';
 import '../common/actions.dart';
+import '../../core/network/api_client.dart';
+import 'chat_live.dart';
 
 /// 7.16 Chat a pantalla completa (`V.chat`). Mientras no hay SignalR, se
 /// consulta el historial cada 4 s.
@@ -36,6 +38,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   ChatThread? _t;
   Object? _error;
   Timer? _poll;
+  ChatLive? _live;
   bool _sending = false;
   String? _lastRead;
 
@@ -43,12 +46,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void initState() {
     super.initState();
     _load();
-    _poll = Timer.periodic(const Duration(seconds: 4), (_) => _load(silent: true));
+    // En vivo por SignalR; la recarga queda como respaldo lento por si el WebSocket no conecta o se cae.
+    _live = ChatLive(ref.read(dioProvider), (id) {
+      if (id == widget.id) _load(silent: true);
+    })
+      ..start();
+    _poll = Timer.periodic(const Duration(seconds: 20), (_) => _load(silent: true));
   }
 
   @override
   void dispose() {
     _poll?.cancel();
+    unawaited(_live?.stop());
     _text.dispose();
     _scroll.dispose();
     super.dispose();
