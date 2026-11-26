@@ -21,3 +21,7 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-FEED-001: `home_page.dart`, `cards.dart`. Estado: implementada; aceptación pendiente.
+
+- [ ] T-FEED-002: feed restaurado. Estado: implementada; aceptación pendiente.

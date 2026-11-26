@@ -81,3 +81,7 @@ Calidad · formato → Calidad · análisis estático → «Integración · push
 ## 7. Orden de implementación
 
 T-001 → T-010 → T-011 → T-012 → T-013 → T-014 → T-015 → T-002 → T-003 → T-004 → T-005 → T-006. El código de las tareas de la fase B ya existe; su cierre depende de la evidencia de la fase C.
+
+
+### Ajuste 2026-11-17: QR y avisos leidos
+FR-009: comprobar visibilidad antes y despues de consultas asincronas; persistir por cuenta el ultimo mensaje leido solo tras confirmacion de API. El historial nunca se marca leido por recibir push.

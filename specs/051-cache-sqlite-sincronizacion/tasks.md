@@ -21,3 +21,6 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-020 →FR-006, FR-007, FR-008, FR-009: `file_cache.dart`, `cached_photo.dart`, `snapshot_cipher.dart`, `offline_interceptor.dart`; pruebas en `cache_local_seguro_test.dart`. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-CACHE-021 Recorrido real en modo avión (abrir, navegar, volver a conectar). Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.

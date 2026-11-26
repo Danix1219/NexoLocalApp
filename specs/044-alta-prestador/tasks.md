@@ -20,3 +20,5 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-ONB-UI-001: `provider_onboarding_page.dart`. Estado: implementada; aceptación pendiente.

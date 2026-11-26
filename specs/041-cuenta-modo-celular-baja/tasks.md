@@ -26,3 +26,12 @@ No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
 ## Incremento de ubicacion/perfil 2026-11-09
 
 Registro y selector GPS/mapa: register_account_page.dart, location_picker_page.dart, auth_repository.dart. Persistencia: api_provider.dart y PUT /v1/discovery/me/location en backend. Mi perfil y edicion separada: account_page.dart. Proximamente: ui.dart, solo rutas sin implementacion. Fotos pendientes de Blob/moderacion confirmados por usuario. Evidencia de pruebas en docs/integracion-identity-cuenta.md; ninguna firma ni aceptacion humana agregada.
+
+- [ ] FR-PROFILE-VIEW: visor oscuro con blur y avatar circular para ambos roles, acciones compartir/copiar/QR para perfil publico de prestador y edicion solo del propietario. Prueba de widget aprobada. Estado: implementada; aceptación pendiente.
+- [ ] Perfil publico cliente: contrato/API no disponible; no publicar nombre completo, contacto ni direccion de cuentas privadas.
+
+
+### Ajuste 2026-11-17: QR y avisos leidos
+- [ ] T-034 (FR-010/AC-010): tarjeta adaptable con identidad, QR sin superposiciones, compartir y copiar; Acepta: contenido, margen y layout verificados localmente; recorrido fisico pendiente.
+
+Implementacion y pruebas locales completadas; recorrido fisico del incremento pendiente.

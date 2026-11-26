@@ -96,3 +96,23 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## Incremento 2026-11-25 · editor de horario
+
+- FR-HOURS-001: Cada día tiene interruptor y un botón con su rango; no se usan menús desplegables flotantes.
+- FR-HOURS-002: El rango se elige en un panel inferior con cuadrícula de horas (apertura 5–22, cierre posterior a la apertura y hasta 23) y puede copiarse a todos los días activos.
+- FR-HOURS-003: Atajos «Lun a vie», «Lun a sáb» y «Todos los días»; urgencias como interruptor; resumen de días abiertos.
+- FR-HOURS-004: Se envía el mismo `schedule` (`days` de 7 posiciones en `HH:00` o `null`, y `urgent`). Si el servidor falla, el editor sigue abierto con los cambios.
+- AC-HOURS: elegir rango, copiarlo y guardar produce los 7 días esperados (`diseno_maqueta_test.dart`).
+
+## 2026-11-26 · edición desde la foto y código QR
+- FR-EDIT-001: En Mi perfil del solicitante no hay botón «Editar datos de mi perfil». Al abrir la foto de perfil, el botón de edición abre «Editar perfil» con foto y nombre.
+- FR-PHOTO-INSTANT: portada y foto propias se precargan y se conservan; mientras no se conoce la portada se ve un fondo neutro, no el decorativo. Al cambiar una foto, la vista local permanece hasta que la nueva está lista.
+- FR-QR-UI: tarjeta con cabecera de marca, foto, nombre, QR enmarcado, compartir y copiar. El QR conserva corrección Q, margen de 4 módulos y sin logo encima.
+
+## 2026-11-26 · hojas «¿Cuánto cobras?» y «Condiciones»
+Se afinan las hojas existentes; no cambian los datos que se envían.
+- FR-PRICE-UI-001: Cada servicio (nombre, precio o «A cotizar») forma una fila dentro de un mismo contorno, con contador «n de 3» y opción de quitarla. El signo de pesos se ve siempre. La visita explica cómo quedará en el perfil.
+- FR-PRICE-UI-002: Los errores aparecen junto al campo y la hoja se desplaza al primero. Una fila con precio o «A cotizar» pero sin nombre pide el nombre; ya no se descarta sin avisar.
+- FR-TERMS-UI-001: Formas de pago en casillas de ancho fijo con ícono y marca. Factura (solo negocio) y llamadas son interruptores que dicen qué verá el cliente.
+- FR-TERMS-UI-002: El tiempo de respuesta es opcional: sin dato guardado no se preselecciona ninguno (se envía `responseTime: null`) y tocar la opción elegida la quita.

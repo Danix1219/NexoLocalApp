@@ -152,3 +152,26 @@ Las historias de EP tienen un único dueño primario en el inventario y mapa bil
 | FR-703 | T-703 | AC-703 |
 
 Cobertura de diseño, no ejecución aprobada. Contratos formales, decisiones y evidencia real siguen pendientes.
+
+## 2026-11-26 · presentación e inicio de sesión
+- FR-SPLASH: presentación animada (aros, nombre, lema, ondas e indicador) visible al menos 2.2 s mientras se restaura la sesión; con animaciones reducidas no hay espera. El arranque nativo de Android usa el mismo verde.
+- FR-LOGIN-UI: encabezado de marca y formulario en panel inferior; mismos campos, validaciones y `POST /connect/token`.
+
+## 2026-11-26 · ajuste de presentación, acceso y registro
+- FR-SPLASH (sustituye la versión anterior de hoy): los dos aros se trazan y se entrelazan, el nombre se descubre con un barrido y una barra fina indica la carga. Mismo fondo que la bienvenida; mínimo 2 s; sin espera con animaciones reducidas.
+- FR-LOGIN-UI (sustituye): se conserva el diseño original de formulario, sin cabecera de marca ni logo. Enlace de recuperación junto a la contraseña y «Crear cuenta» bajo el botón principal.
+- FR-AUTH-LAYOUT: login, recuperación y registro comparten una sola plantilla (icono, título, texto, campos y pie fijo), con progreso por tramos en los flujos por pasos.
+- FR-SIGNUP-UI: código en seis casillas sobre un solo campo; los datos largos van agrupados en bloques con título.
+
+## 2026-11-26 · pulido sin elementos nuevos
+FR-AUTH-POLISH: bienvenida, login y recuperación conservan sus elementos; cambian proporción, espaciado, altura de los botones principales y la entrada de la bienvenida (la hoja sube y el logo se asienta ya armado). Se retiran los añadidos previos: punto del icono, cajas de nota, sombra del pie y progreso del primer paso de recuperación.
+
+## 2026-11-26 · splash solo con el logo
+FR-SPLASH (sustituye las versiones anteriores): muestra únicamente los aros. Se unen, dan un latido corto y «abren»: sin sesión suben y crecen hasta el lugar exacto que ocupan en la bienvenida, que entra por fundido (aparecen el nombre y el panel); con sesión crecen y se desvanecen hacia el inicio. Mínimo 1.9 s; sin animación ni espera con movimiento reducido.
+
+## 2026-11-26 · bienvenida original
+A petición del usuario, la bienvenida vuelve a su versión original: titular en su posición y estilo anteriores, y la animación propia de los aros y del nombre (sustituye FR-AUTH-POLISH solo para la bienvenida). FR-SPLASH se ajusta: el logo aparece ya armado, da un latido y crece mientras se desvanece; no repite la unión de los aros ni busca la posición de la bienvenida.
+
+## 2026-11-26 · splash continuo que entrega a la bienvenida
+FR-SPLASH (sustituye las anteriores): el logo ya armado hace un único movimiento sin pausas, que empieza tras el primer cuadro. Sin sesión termina en la posición y el tamaño de los aros de la bienvenida (sin modificarla), que entra con un fundido de 480 ms mientras su animación une los aros y muestra el nombre. Con sesión se acerca y se desvanece. Mínimo 1.55 s.
+NFR-SPLASH-PERF: la fluidez se valida en compilación profile o release; la compilación debug no es representativa.

@@ -73,3 +73,6 @@ Calidad · formato → Calidad · análisis estático → «Unidad · fake-order
 ## 7. Orden de implementación
 
 T-001 → T-010 → T-011 → T-012 → T-013 → T-014 → T-002 → T-003 → T-004 → T-005 → T-006. El código de las tareas de la fase B ya existe; su cierre depende de la evidencia de la fase C.
+
+### Incremento 2026-11-25
+`lib/data/http_nexo_api.dart`, `lib/data/api_provider.dart`, `lib/core/widgets/ui.dart`, `lib/features/common/actions.dart`. En la API: `OrderService.CounterpartName`. Sin rutas nuevas.

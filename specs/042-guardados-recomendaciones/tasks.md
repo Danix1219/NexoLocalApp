@@ -19,3 +19,5 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+2026-11-21 Ajustes de auditoria: FR/AC-UI-AUDIT: solicitud sin identidad publica muestra etiqueta honesta y avatar neutro, metadatos sin separadores vacios; compartir perfil abre acciones separadas de compartir/copiar/QR; bandeja distribuye nombre y fecha con ancho acotado y contador adaptable. Ver docs/qa/auditoria-dispositivos-2026-11-21.md. No inventar datos ni modificar contratos. Verificar regresiones widgets y analisis.

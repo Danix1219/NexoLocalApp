@@ -100,3 +100,16 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+
+## Ajuste visual de carga (2026-11-16)
+
+Los estados iniciales de datos muestran skeletons adaptados a listas, perfiles, cuenta, mensajes, pedidos y formularios. Las actualizaciones conservan datos previos; los errores mantienen reintento. Los placeholders no aceptan interacci?n y se anuncian como carga; el pulso se detiene con movimiento reducido. Autenticaci?n y acciones de env?o conservan sus indicadores de progreso. Verificaci?n en test/unit/diseno_maqueta_test.dart.
+
+## 2026-11-26 · guía de «Explorar sin cuenta»
+Referencia: maqueta `V1.00.002-Aprovada.html`, «guía contextual para explorar sin cuenta» (mismos 4 pasos y textos).
+- FR-TOUR-001: Cada vez que se entra como visitante, Inicio muestra la guía: (1) zona de búsqueda, (2) buscador y filtros, (3) trabajos de la zona, (4) perfil de quien publica. Nunca con sesión.
+- FR-TOUR-002: La pantalla se atenúa y se ilumina el elemento real del paso con una etiqueta que dice qué hacer. Tocarlo equivale a la acción principal; el resto no responde.
+- FR-TOUR-003: El paso 1 abre el mapa («Primero, elige dónde buscas», «Ver opciones cerca de aquí») y avanza solo si queda una zona elegida. En el paso 4, tocar el nombre termina la guía y abre ese perfil.
+- FR-TOUR-004: «Omitir guía», paso anterior, botón atrás de Android y deslizamiento de la tarjeta. Progreso de 4 tramos. La tarjeta cambia de lado para no tapar lo señalado.
+- NFR-TOUR-001: Con animaciones reducidas no hay transiciones ni pulso. Si el elemento aún no existe (sin trabajos o cargando) se explica el paso sin foco.

@@ -20,3 +20,15 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+Auditoria fisica UI 2026-11-21: conservar contratos; corregir distribucion del encabezado de busqueda con ubicacion en segunda fila y ayuda de publicar debajo de agregar fotos. Regresion de encabezado en ancho reducido y escala de texto. Recorrido Motorola real; Xiaomi limitado por espejo congelado. Reporte en docs/qa/auditoria-dispositivos-2026-11-21.md.
+
+- [ ] T-050 →FR-005, FR-006, FR-007, FR-008. Rediseño en `publish_page.dart`; revisado con capturas generadas en prueba. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-051 →FR-005, FR-006, FR-007, FR-008. Publicación real con fotos en dispositivo. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.
+
+- [ ] T-COMPOSE-001: `publish_page.dart`. Estado: implementada; aceptación pendiente.
+
+- [ ] T-COMPOSE-002: `publish_page.dart`. Estado: implementada; aceptación pendiente.
+
+- [ ] T-PUBMGMT-002: `publication_actions_ui.dart`, `publication_editor_ui.dart`, editores; pruebas de eliminación y descarte. Estado: implementada; aceptación pendiente.
+- [ ] T-PUBMGMT-003: editar y eliminar una publicación real en Android.

@@ -57,6 +57,7 @@ Fuera de alcance:
 | NFR-002 | T-003 | AC-902 | `test/integration/resiliencia_test.dart` |
 | NFR-003 | T-005 | AC-903 | Revisión en dispositivo (T-005) |
 | NFR-004 | T-002 | AC-904 | Pipeline `app-ci.yml` |
+| FR-010 | T-034 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
 
 ## 5. Contratos (rutas, config, env)
 
@@ -85,6 +86,7 @@ Configuración: `API_BASE_URL` (HTTPS en release), `API_MODE` (`auto` por omisi�
 - [ ] AC-902 → NFR-002: Con el backend apagado Cuenta informa un error recuperable y no simula éxito; los otros grupos mantienen auto.
 - [ ] AC-903 → NFR-003: Revisión en Android: cada estado tiene mensaje y acción; TalkBack lee los botones de ícono.
 - [ ] AC-904 → NFR-004: Los jobs listados en el plan aparecen y pasan en el PR; la evidencia queda en el checklist.
+- [ ] AC-010 → FR-010: la tarjeta QR se lee, conserva margen de silencio y codifica solo la ruta publica.
 
 ## 7. Riesgos y deudas documentadas
 
@@ -113,3 +115,9 @@ Registro selecciona punto real con GPS o mapa y envia coordenadas/radio elegidos
 ## Ajuste de medios 2026-11-11
 
 La edición de cuenta conserva la foto ya entregada por la API, pero no inicia una nueva carga ni envía `photoUploadId`. Al tocar el avatar comunica que la carga y revisión de imágenes está próximamente. La pantalla mantiene el catálogo remoto y sus estados de carga/error; no los sustituye por categorías de ejemplo. Este estado depende de la infraestructura de medios de NEX-13 y no equivale a que el endpoint de cuenta esté ausente.
+
+- FR-PROFILE-VIEW: visor de foto de perfil a pantalla completa con fondo oscuro desenfocado, avatar circular, acciones accesibles de compartir/copiar/QR y editar solo al propietario; reutilizado por perfil cliente y prestador. Las acciones publicas requieren una ruta publica real, nunca una pagina ajena o una ruta propia de otra cuenta.
+
+
+### Ajuste 2026-11-17: QR y avisos leidos
+- FR-010: tarjeta QR accesible y adaptable, identidad del perfil fuera del codigo, contraste alto y margen de silencio; el contenido es exactamente la ruta publica validada. No codifica credenciales ni datos de contacto privados. AC-010: verificar contenido, margen y layout estrecho; escaneo fisico pendiente.

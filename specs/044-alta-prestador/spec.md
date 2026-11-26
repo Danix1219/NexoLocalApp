@@ -94,3 +94,6 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## 2026-11-26 · alta de prestador por bloques
+FR-ONB-UI: cada paso agrupa sus campos en bloques (fotos, datos, forma de atención, experiencia y presentación) y la barra muestra 5 tramos. Sin cambios de campos, validaciones ni contrato.

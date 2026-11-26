@@ -20,3 +20,16 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-MYREQ-001: `my_request_card.dart`, `cards.dart`, `my_profile_page.dart`. Estado: implementada; aceptación pendiente.
+- [ ] T-PUBMGMT-001: `publication_actions_ui.dart`, `publication_editor_ui.dart`, editores. Estado: implementada; aceptación pendiente.
+- [ ] T-MYREQ-002: revisión en dispositivo con datos reales.
+
+- [ ] T-COMPOSE-001: `publish_page.dart`. Estado: implementada; aceptación pendiente.
+
+- [ ] T-MYREQ-003: diseño anterior restaurado; retirado `my_request_card.dart`. Estado: implementada; aceptación pendiente.
+
+- [ ] T-COMPOSE-002: `publish_page.dart`. Estado: implementada; aceptación pendiente.
+
+- [ ] T-PUBMGMT-002: `publication_actions_ui.dart`, `publication_editor_ui.dart`, editores; pruebas de eliminación y descarte. Estado: implementada; aceptación pendiente.
+- [ ] T-PUBMGMT-003: editar y eliminar una publicación real en Android.

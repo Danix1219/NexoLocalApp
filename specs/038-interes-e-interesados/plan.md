@@ -55,3 +55,6 @@ Calidad · formato → Calidad · análisis estático → «Unidad · fake-reque
 ## 7. Orden de implementación
 
 T-001 → T-010 → T-011 → T-012 → T-002 → T-003 → T-004 → T-005 → T-006. El código de las tareas de la fase B ya existe; su cierre depende de la evidencia de la fase C.
+
+### Incremento 2026-11-25
+`lib/features/requests/interested_page.dart` (se conserva `toggleCompare`, `compareProvider` y `CompareBar`). API: `InterestService.AllowsChat`.

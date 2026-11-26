@@ -22,3 +22,18 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+## Incremento 2026-11-17
+
+- [ ] T-030 (FR-007/AC-007): notificacion MessagingStyle construida tras consulta autenticada y descifrado local; FCM solo referencias. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-031 (FR-008/AC-007): aislamiento por destinatario, cierre de sesion, fallback discreto y visibilidad privada. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-PUSH-032 (AC-007): recorrido real FCM en primer/segundo plano y toque en Xiaomi y Motorola con API reiniciada. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.
+
+
+### Ajuste 2026-11-17: QR y avisos leidos
+- [ ] T-033 (FR-009/AC-009): supresion por conversacion visible, marca durable de lectura y pruebas. Acepta: pruebas locales aprobadas y recorrido Android en primer y segundo plano; este ultimo pendiente.
+
+Implementacion y pruebas locales completadas; recorrido fisico del incremento pendiente.
+
+- [ ] T-016 →FR-010, FR-011: `push_controlador_test.dart` (2 casos nuevos). Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-PUSH-017 Comprobar en Android cerrando y abriendo sesión. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.

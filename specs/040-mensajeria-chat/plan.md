@@ -62,3 +62,19 @@ Calidad · formato → Calidad · análisis estático → «Unidad · fake-messa
 ## 7. Orden de implementación
 
 T-001 → T-010 → T-011 → T-012 → T-013 → T-014 → T-002 → T-003 → T-004 → T-005 → T-006. El código de las tareas de la fase B ya existe; su cierre depende de la evidencia de la fase C.
+
+
+### Correccion de pendientes 2026-11-19
+Correccion FR-READ-RECONCILE: buscar el ultimo entrante legible sin detenerse por huecos antiguos; primer posicionamiento al final del historial guardado; invalidar inbox tras POST/read confirmado antes del aviso local.
+
+### Gestion de chat 2026-11-19
+FR-CHAT-MANAGE: ListView inversa; fondos vectoriales sin servicios externos. API posee PATCH/DELETE privados documentados en docs/chat-edicion-eliminacion.md del backend; edicion mantiene E2EE con editOf autenticado y claves nuevas de operacion. Sin cambios en mensajes ajenos, eventos de sistema ni claves de sesion.
+
+Tema coordinado (FR/AC-CHAT-THEME): paleta por estilo aplicada a burbujas y audio; acceso en cabecera y opciones; comprobar contraste y selector en suite diseno_maqueta. Validacion fisica pendiente.
+
+
+### Rediseno de mensajes 2026-11-25
+Archivos: inbox_page.dart, chat_page.dart, chat_message_actions.dart, chat_backdrop.dart (ChatStyle compatible con el valor guardado anterior). Sin cambios de contratos ni dependencias.
+
+### Ajustes 2026-11-25
+`inbox_page.dart` y `chat_backdrop.dart`.

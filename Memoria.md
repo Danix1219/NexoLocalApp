@@ -191,3 +191,127 @@ Deuda: el usuario debe repetir una carga con su foto para verificar la clasifica
 
 ### 2026-11-10 — Fotos, zona y navegación 059
 Estado: shimmer localizado durante subida/moderación de avatar y portada en perfiles personales y profesionales, incluido alta profesional; miniaturas para avatar, vista de autor de solicitud con datos públicos y retroceso de pestañas al Inicio. flutter test 275/275; APK debug live compilado. APK instalado en 2201116SG por ADB sin streaming, reverse 5188 activo y aplicación abierta; aceptación visual y prueba de fotos reales pendientes; flutter analyze sin errores ni advertencias, 19 avisos informativos.
+
+### 2026-11-17 - Tarjeta QR y avisos del chat visible
+Estado: tarjeta QR adaptable, identidad fuera del codigo, contraste y margen de cuatro modulos; reutiliza endpoint publico de prestador existente. Flutter analyze sin incidencias, 70 pruebas locales aprobadas. QR renderizado 320/390 px decodificado con ZXing al destino exacto.
+Decisiones: omitir notificacion del chat visible; cancelar al abrir; tras lectura confirmada persistir marcador por cuenta/conversacion para evitar reaparicion por push tardio. Otras conversaciones mantienen avisos. No marcar leido por estar en otra pantalla.
+Deuda: recorrido fisico del nuevo QR/FCM pendiente; perfil publico de cliente no existe en contratos, no se publica su identidad privada. Sin dominio HTTPS propio.
+A evitar: confundir pruebas con dobles/decodificacion local con entrega real FCM o aceptacion productiva.
+
+Chequeo documental check_sdd.ps1: fallo; enlaces legacy a carpetas hermanas ausentes y tareas de incrementos previos marcadas en fase documental. No equivale a fallo de pruebas de Flutter; no se declara SDD aprobado.
+
+
+### Correccion de pendientes 2026-11-19
+Estado 2026-11-19: corregido takeWhile que cortaba confirmaciones por mensaje antiguo no disponible; lectura usa ultimo entrante legible, abre cache en recientes y refresca bandeja tras API sin depender de Android. 67 pruebas locales aprobadas, incluido widget contador uno a cero. API 5188 sin respuesta al verificar; recorrido real pendiente. No se borraron claves ni historial.
+
+Actualizacion de evidencia 2026-11-19: API ready 200 tras iniciarla el usuario; analyze sin incidencias; APK instalado y abierto en Xiaomi sin borrar datos. Segundo telefono fuera de este despliegue por peticion del usuario. Validacion humana pendiente.
+
+### Chat personalizable y gestion 2026-11-19
+Estado: lista inversa en recientes, cinco fondos por cuenta/conversacion, edicion de texto propio y eliminacion para todos con confirmacion y marcas. API valida autoria y emite messageUpdated; editOf viaja cifrado. 87 pruebas Flutter aprobadas. Dos pruebas backend con Mongo real aprobadas antes del ajuste final de reintento; nueva comprobacion en curso. Recorrido fisico pendiente. No purga fisica de blobs ni copias ajenas.
+
+Cierre validacion local 2026-11-19: flutter analyze sin incidencias; 87 pruebas Flutter aprobadas; 2 pruebas de integracion backend aprobadas en Release con MongoDB real, incluyendo reintento de revision antigua. No se reinicio API del usuario; debe recompilarla para cargar endpoints nuevos.
+
+Entrega local 2026-11-19: APK de fondos/edicion/eliminacion compilado, instalado -r y abierto en Xiaomi; no se borraron datos. Usuario recompila/reinicia API para probar endpoints nuevos. Validacion humana pendiente.
+
+### 2026-11-19 - Temas coordinados del chat
+Estado: cinco paletas para fondo/burbujas/audio/metadatos; acceso directo Personalizar chat en cabecera y alternativa en opciones. Decisiones: guardado local existente por cuenta/conversacion; acuses conservan semantica. Validacion: flutter analyze sin incidencias; 51 pruebas de diseno existentes aprobadas y prueba adicional de contraste de cinco paletas aprobada (texto >= 4.5:1). Deuda: revision visual humana en dispositivo pendiente. Sin cambios de API ni nuevas dependencias.
+Validacion documental: scripts/check_sdd.ps1 ejecutado; FAIL por enlaces de contextos hermanos ausentes y observaciones de tareas/fase documental en 040, 041 y 050. No se acredita SDD correcto. APK debug/live compilado correctamente; revision visual de temas pendiente.
+
+### 2026-11-19 - Acciones contextuales de mensajes
+Estado: panel tematizado con vista previa, editor y confirmacion explicita de borrado; teclado adaptativo y guardado vacio/sin cambios deshabilitado. Evidencia: 53/53 pruebas de diseno aprobadas; analyze sin incidencias antes de ampliar prueba; APK compilado e instalado Xiaomi. Deuda: aceptacion visual humana y reinicio API por usuario.
+Cierre de acciones contextuales: flutter analyze final sin incidencias; suite diseno_maqueta 53/53. APK instalado y abierto en Xiaomi sin borrar datos.
+
+2026-11-21 FR/AC-ASRS: ChatLive consume negotiate del ticket; Azure usa negociacion, modo directo Redis permanece compatible. Reconecta con ticket nuevo y descarta inicios obsoletos al salir. API conserva autoridad de grupos e identidad y no entrega claves Azure al cliente. Evidencia: 10/10 http_mensajes_test con dobles; flutter analyze sin incidencias. Validacion fisica pendiente. Contrato: repositorio API specs/endpoints/10-mensajes/ws-hubs-chat.md.
+
+Validacion ASRS cloud: ChatLive real conectado a host aislado 5199 con ChatHub, middleware de ticket y Azure SignalR: 1/1 prueba aprobada al recibir evento privado. API Release 0 errores/advertencias, pruebas de tickets 6/6. No prueba de carga ni recorrido fisico; no se desplego ni reinicio API del usuario.
+
+### 2026-11-21 - Auditoria fisica UI/UX parcial
+Motorola Android 14: recorrido de Inicio, Buscar lista/mapa/filtros, Publicar vacio/teclado, Cuenta, perfil/visor/QR, bandeja/chat/apariencia, Guardados. Xiaomi Android 12: observacion parcial por espejo congelado, usuario confirma navegacion fisica. Hallazgos y limites en docs/qa/auditoria-dispositivos-2026-11-21.md. Correcciones locales: ubicacion debajo de titulo de busqueda y ayuda de publicar debajo de fotos. Regresiones descubrieron timer ChatLive pendiente, ahora cancelable al cerrar/reiniciar. Sin cambios de datos backend. Guardados sin autor pendiente de proyeccion publica; no inventar autor. No se afirma cobertura total ni aceptacion productiva.
+
+Regresion final: diseno_maqueta_test.dart 54/54 aprobadas (incluye 320/390 px con texto 1.3). Analisis completo detecto solo prefer_const_constructors en test nuevo; corregido. Los ajustes nuevos no se han instalado ni vuelto a observar en telefonos.
+Analisis final de cinco archivos UI/chat/test modificados: sin incidencias.
+
+2026-11-21 Ajustes de informe UI: tarjeta de solicitud sin autor usa etiqueta neutra y metadatos sin separadores vacios; perfil prestador ofrece compartir/copiar/QR; bandeja fecha flexible y contador adaptable. 56/56 pruebas de diseno. Proyeccion backend de autor pendiente, no inventada; validacion fisica pendiente. Informe docs/qa/auditoria-dispositivos-2026-11-21.md.
+
+Cierre ajustes UI: 56/56 pruebas de diseno aprobadas; analisis focalizado sin incidencias. APK debug/live generado e instalado con install -r en Xiaomi y Motorola, ambos abiertos; puertos 5188/10000 reversados. No equivale a validacion visual posterior. Validador documental ejecutado: 453 observaciones (incluye tareas/fase y enlaces), no SDD global aprobado.
+
+
+## 2026-11-21 - Spec 060
+Interes real sin bloqueo artificial; paginacion de interesados; cabecera de busqueda adaptable; visor sin edicion duplicada; avatar desde cuenta y experiencias ligadas a pedidos. 82 pruebas locales aprobadas. Ver docs/qa/brechas-funcionales-2026-11-21.md. Aceptacion humana, servicios reales y CI pendientes. Sin publicacion ni cambios de privacidad de clientes.
+
+
+## 2026-11-21 - UX editar/eliminar mensajes
+Menu contextual compacto con vista previa y colores del chat; edicion en compositor con cancelar/restaurar borrador y guardar, sin adjuntos durante edicion. Confirmacion explicita de eliminar para todos, conserva marcador existente. Sin cambios API ni cifrado. Validacion final en curso; no declarar dispositivo verificado.
+
+Validacion UX acciones: flutter analyze de chat_page.dart/chat_message_actions.dart/diseno_maqueta_test.dart sin incidencias; flutter test test/unit/diseno_maqueta_test.dart: 59 aprobadas, incluida cancelacion inline con restauracion de borrador y confirmacion explicita del borrado. Sin instalacion o verificacion visual nueva en dispositivos en este ajuste.
+
+
+## 2026-11-21 - Guardados y funciones de ambos perfiles
+Guardados pagina hasta completar sin ciclos, conserva saved=true y recibe resumen de autor desde API. Visor de solicitante ofrece compartir/copiar/QR con enlace nexolocal://profile/{shareId}; activacion lazy al pulsar accion y no al abrir foto. Perfil compartido muestra solo nombre/foto y no da edicion al visitante. Prestador conserva sus enlaces existentes. Icono y texto de acciones son tocables. 66 pruebas Flutter aprobadas, analisis de nueve archivos limpio. Tres pruebas Mongo reales en API aprobadas; requiere reiniciar API local. Sin validacion visual final ni declaracion productiva.
+
+
+## Continuacion - solicitudes, copiado y mapa
+Menu previo de solicitudes con editar y eliminar confirmado. DELETE propio real e idempotente con tombstone y proteccion de asignacion; requiere reinicio API local. Editores solicitud/trabajo sin titulo independiente; autoTitle compartido y tarjetas sin cabecera redundante. Messenger local del visor muestra copiado visible. Mapas con respaldo OSM y atribucion, sin cambiar coordenadas. 76 pruebas Flutter y analisis de diez archivos limpios; API 67 unitarias y una Mongo aprobadas. HTTP de mosaicos 200 de ambos proveedores en zona del pedido. Renderizado en telefono pendiente.
+
+APK de solicitudes/menu/copiado/mapa compilado e instalado en Xiaomi y Motorola (reintento sin streaming en Motorola). Falta reinicio API y aceptacion visual de mapa; pruebas locales no equivalen a esta aceptacion.
+
+
+## Perfiles y publicaciones consistentes - 2026-11-21
+Estado: trabajos propios usan WorkCard completa, con menu Editar/Eliminar y confirmacion con vista previa, progreso y errores recuperables. Marco redondeado compartido con solicitudes propias. Ya no se infiere propiedad de canContact=false; se comprueba identidad del prestador o contexto propio confirmado.
+Fotos es una pestana independiente: Trabajos, Fotos, Informacion, Opiniones. Galeria de tres columnas con todas las imagenes de publicaciones y portfolio, sin duplicados por URL, apertura individual y estado vacio. Las solicitudes eliminan el banner TU SOLICITUD redundante y conservan estado, categoria, urgencia y acciones.
+Validacion: dart format de 4 archivos; flutter analyze --no-pub de esos archivos sin incidencias; flutter test --no-pub test/unit/diseno_maqueta_test.dart: 65 aprobadas. git diff --check de los archivos modificados sin incidencias. scripts/check_sdd.ps1 sigue fallando por enlaces historicos a API_NexoLocal; no se declara PASS.
+Pendiente: aceptacion visual humana en ambos telefonos. Sin cambios de contratos ni despliegue de API en este incremento.
+
+Entrega del incremento: APK debug live compilado correctamente (assembleDebug 42.3s), API_BASE_URL local 5188. Instalacion --no-streaming -r: Success en Xiaomi 096fd2cc784f y Motorola ZY32JKH7KW; MainActivity iniciada en ambos. Datos conservados. Esto acredita compilacion e instalacion, no aceptacion visual humana.
+
+
+## Cabecera horizontal de busqueda - 2026-11-21
+SearchHeader compartido por solicitante y prestador: titulo izquierdo de 20px con ajuste natural de lineas, ubicacion derecha de 12px, espacios flexibles 5:6 y centros alineados. Ubicacion completa disponible en tooltip; conserva accion para cambiar zona. Prueba focalizada diseno_maqueta_test: aprobada a 320/390px, texto 1.3x, titulo sin superar dos lineas. Analisis de los dos archivos sin incidencias. Aceptacion visual humana pendiente.
+
+Entrega cabecera: APK debug live compilado (23s) e instalado con Success y MainActivity iniciada en Xiaomi y Motorola. git diff --check de ambos archivos correcto.
+
+
+## Interesados y comparacion coherente - 2026-11-21
+Estado: interesados separa resumen de solicitud, propuesta del prestador y acciones. Comparar es un boton con texto y estado En comparacion, tarjeta seleccionada con borde de marca. Reutiliza toggleCompare, compareProvider y CompareBar del feed, sin seleccion paralela. Barra fuera del listado (Column/Expanded) para reservar espacio y evitar superposicion; el mismo CompareBar compartido distribuye seleccion y accion en dos filas, conservando limite de dos y limpieza.
+Ubicacion de SearchHeader: maxLines 1, elipsis y pastilla redondeada; conserva tooltip y cambio de zona en ambos modos.
+Validacion: 79 pruebas aprobadas (diseno_maqueta_test.dart + http_solicitudes_interes_test.dart). Nueva prueba recorre InterestedPage, selecciona/quita, elige dos, navega a ComparePage y verifica GET compare con ids pro-1,pro-2 y respuesta renderizada. Dobles HTTP, no nube real. Analisis de cuatro archivos sin incidencias; dart format y git diff --check correctos. No cambios de API ni contratos. Aceptacion visual humana pendiente. Validador SDD global conserva enlaces historicos rotos ya documentados.
+
+## 2026-11-25 · Mensajes, pedidos, interesados, recuperación, publicar y horarios
+Estado: implementado en local; specs 017, 032, 036, 038, 039 y 040 actualizadas.
+Decisiones: horario con panel de cuadrícula en vez de menús flotantes; la app envía `category` en el pedido porque la API ya la admite (se sustituyó la prueba que exigía omitirla); logo del correo adjunto, nunca remoto.
+Evidencia: con Flutter 3.38.10, `flutter analyze` sin incidencias y `flutter test` 340/340 (dobles, sin nube).
+Deuda: recorrido real en dispositivo de pedidos, recuperación, publicación y horario.
+A evitar: el Flutter de `C:\Dev\flutter` (Dart 3.7) no compila esta app.
+
+## 2026-11-26 · Voz, menú de mensajes, pedidos, publicaciones, acceso y feed
+Estado: implementado en local; specs 004, 017, 027, 035, 039 y 040 actualizadas.
+Decisiones: el resultado de una acción hecha en una hoja se muestra dentro de la hoja, porque los avisos flotantes quedan detrás; la recuperación no lleva logo.
+Evidencia: Flutter 3.38.10, analyze sin incidencias y pruebas con dobles; capturas generadas en prueba. Sin recorrido humano en dispositivo.
+A evitar: confiar en `showNexoToast` con una hoja abierta.
+
+## 2026-11-26 · Publicar en una tarjeta, acceso homogéneo, avisos, carga instantánea y modo sin conexión
+Estado: implementado en local; specs 004, 017, 032, 035, 036, 040, 044, 050 y 051 actualizadas.
+Preferencia confirmada: mejorar sobre el diseño que ya existe; no reemplazar pantallas ni repetir logo o nombre donde la bienvenida ya los muestra.
+Decisiones: la caché sin cifrar mantiene sus exclusiones; lo necesario sin señal va en copia cifrada. Los adjuntos del chat se guardan cifrados.
+Entorno: VS Code analizaba con Dart 3.7.2 y mostraba errores falsos (`ChatStyle`); se fija `dart.flutterSdkPath` local, fuera de git.
+Evidencia: Flutter 3.38.10, analyze sin incidencias y pruebas en verde; capturas generadas en prueba. Sin recorrido humano en dispositivo.
+
+## 2026-11-26 · Marcha atrás en feed y solicitudes, pulido de acceso y pedido
+Estado: feed y solicitudes restaurados; descripción del pedido vacía; bienvenida y acceso pulidos sin elementos nuevos.
+Aprendizaje: no añadir bloques ni rediseñar sin que se pida; el menú inferior ya cubre «Publicar».
+Pedido: causa reproducida (Key Vault sin credencial local). Evidencia: pruebas en verde; falta el envío real desde el teléfono.
+
+## 2026-11-26 · Splash de solo logo, publicar original y pedidos con Key Vault
+Estado: splash animado solo con el logo que enlaza con la bienvenida; publicar restaurado con mejoras mínimas.
+Pedidos: la persona usa su llave de Azure Key Vault; se descartó la llave local. Falta validar la sesión de Azure en el equipo.
+
+## 2026-11-26 · Bienvenida restaurada
+La bienvenida y su animación del logo y el nombre no se modifican. El splash solo muestra el logo y se desvanece al abrir.
+
+## 2026-11-26 · Guía del visitante y gestión de publicaciones
+Estado: guía de 4 pasos según la maqueta aprobada (`Downloads/Nexo-mt2/Nexo-mt/V1.00.002-Aprovada.html`); opciones, edición y eliminación rediseñadas.
+Evidencia: pruebas en verde y capturas generadas. Las pruebas detectaron y se corrigió que un toque instantáneo completaba la eliminación.
+
+## 2026-11-26 · Precios y condiciones del prestador
+Estado: hojas afinadas sobre el diseño existente. Corregido: «24 h» se publicaba sin haberse elegido y una fila de precio sin nombre se perdía sin aviso. Un «24 h» ya guardado por ese motivo permanece hasta que el prestador lo quite.
+Evidencia: análisis sin observaciones, 355 pruebas en verde y capturas generadas a 390 y 360 de ancho. Falta la comprobación en el dispositivo con datos reales.

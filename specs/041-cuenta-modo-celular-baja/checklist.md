@@ -27,3 +27,11 @@
 ## Incremento de ubicacion/perfil 2026-11-09
 
 Registro y selector GPS/mapa: register_account_page.dart, location_picker_page.dart, auth_repository.dart. Persistencia: api_provider.dart y PUT /v1/discovery/me/location en backend. Mi perfil y edicion separada: account_page.dart. Proximamente: ui.dart, solo rutas sin implementacion. Fotos pendientes de Blob/moderacion confirmados por usuario. Evidencia de pruebas en docs/integracion-identity-cuenta.md; ninguna firma ni aceptacion humana agregada.
+
+### Evidencia local 2026-11-17
+- flutter analyze: sin incidencias.
+- 70 pruebas aprobadas: diseno_maqueta, push_seguro, push_controlador, enlaces_profundos y token_storage_isolation. Pruebas con widgets/dobles, no FCM productivo.
+- QR de tarjeta renderizada en 320 y 390 px decodificado con ZXing: nexolocal://provider/profile-id; margen de cuatro modulos verificado.
+- Pendiente: recibir mensaje con chat abierto/cerrado y escanear QR de un perfil real entre telefonos.
+
+Chequeo documental check_sdd.ps1: fallo; enlaces legacy a carpetas hermanas ausentes y tareas de incrementos previos marcadas en fase documental. No equivale a fallo de pruebas de Flutter; no se declara SDD aprobado.

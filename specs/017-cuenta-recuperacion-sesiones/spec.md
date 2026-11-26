@@ -86,3 +86,18 @@ Las historias de EP tienen un único dueño primario en el inventario y mapa bil
 | FR-211 | T-211 | AC-211 |
 
 Cobertura de diseño, no ejecución aprobada. Contratos formales, decisiones y evidencia real siguen pendientes.
+
+## Incremento 2026-11-25 · recuperación de contraseña
+
+Estado verificado en código: correo → `POST /v1/identity/password/forgot` → código por correo (outbox y SMTP) → `POST /v1/identity/email/verification/confirm` → `POST /v1/identity/password/reset`. La lógica ya estaba conectada; no se cambiaron contratos.
+
+- FR-REC-001: Los tres pasos muestran el logo real de la app, progreso «paso N de 3» y, en el primero, una guía del recorrido.
+- FR-REC-002: El código de registro usa el mismo encabezado con logo.
+- FR-REC-003 (autoridad API, `post-password-forgot.md`): correo con identidad corporativa, logo adjunto por Content-ID y pasos según el propósito.
+- AC-REC: pruebas de plantilla en la API; envío real al buzón pendiente de verificación humana.
+
+## 2026-11-26 · ajuste visual de la recuperación
+Sustituye FR-REC-001 y FR-REC-002: las pantallas de recuperación **no muestran el logo de la app**. Usan una ilustración de icono centrada, textos centrados, progreso de 3 pasos y una guía en línea de tiempo con «Volver a iniciar sesión». El registro conserva su encabezado anterior. El logo se mantiene solo en el correo (FR-REC-003).
+
+## 2026-11-26 · recuperación homogénea con el acceso
+Sustituye el ajuste visual anterior: sin logo y sin ilustración centrada. Las tres pantallas usan la misma plantilla que el inicio de sesión (FR-AUTH-LAYOUT, spec 004), con progreso de 3 tramos.

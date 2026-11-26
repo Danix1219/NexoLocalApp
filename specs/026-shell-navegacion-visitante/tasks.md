@@ -21,3 +21,6 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-TOUR-001 →FR-TOUR-001…004, NFR-TOUR-001: `guest_tour.dart`, `shell_page.dart`, `home_page.dart`, `top_bar.dart`; pruebas en `diseno_maqueta_test.dart`. Estado: implementada; aceptación pendiente.
+- [ ] T-TOUR-002 Recorrido en Android con datos reales y lector de pantalla.
