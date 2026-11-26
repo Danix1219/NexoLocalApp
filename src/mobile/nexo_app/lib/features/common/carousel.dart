@@ -7,8 +7,14 @@ import '../../data/models.dart';
 /// Carrusel de fotos estilo Instagram (`carouselHTML`): se desliza, muestra
 /// "2/3" que se actualiza al deslizar y la etiqueta del trabajo.
 class PhotoCarousel extends StatefulWidget {
-  const PhotoCarousel(
-      {super.key, required this.images, required this.category, this.tag, this.onTap, this.aspect = 16 / 10});
+  const PhotoCarousel({
+    super.key,
+    required this.images,
+    required this.category,
+    this.tag,
+    this.onTap,
+    this.aspect = 16 / 10,
+  });
   final List<Img> images;
   final String category;
   final String? tag;
@@ -40,10 +46,13 @@ class _PhotoCarouselState extends State<PhotoCarousel> {
   }
 
   Widget _pill(String t) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-        decoration: BoxDecoration(color: const Color(0xA80A1E22), borderRadius: BorderRadius.circular(99)),
-        child: Text(t, style: NexoText.body(11, weight: FontWeight.w700, color: Colors.white, letterSpacing: .2)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+    decoration: BoxDecoration(color: const Color(0xA80A1E22), borderRadius: BorderRadius.circular(99)),
+    child: Text(
+      t,
+      style: NexoText.body(11, weight: FontWeight.w700, color: Colors.white, letterSpacing: .2),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +79,7 @@ class _PhotoCarouselState extends State<PhotoCarousel> {
             ),
           ),
           if (widget.tag != null) Positioned(left: 10, bottom: 10, child: _pill(widget.tag!)),
-          if (n > 1) ...[
-            Positioned(right: 10, top: 10, child: _pill('${_i + 1}/$n')),
-          ],
+          if (n > 1) ...[Positioned(right: 10, top: 10, child: _pill('${_i + 1}/$n'))],
         ],
       ),
     );

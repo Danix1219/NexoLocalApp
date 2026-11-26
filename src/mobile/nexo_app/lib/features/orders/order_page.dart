@@ -57,12 +57,19 @@ class _OrderPageState extends ConsumerState<OrderPage> {
     final v = ref.watch(orderProvider(widget.id));
     return NexoPage(
       bottom: const NexoNavigation(current: 3),
-      child: Column(children: [
-        const SubBar('Pedido'),
-        Expanded(
-          child: asyncView(v, (o) => _body(o), onRetry: () => ref.invalidate(orderProvider(widget.id))),
-        ),
-      ]),
+      child: Column(
+        children: [
+          const SubBar('Pedido'),
+          Expanded(
+            child: skeletonView(
+              NexoSkeletonKind.order,
+              v,
+              (o) => _body(o),
+              onRetry: () => ref.invalidate(orderProvider(widget.id)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -80,7 +87,12 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   Widget _body(Order o) {
     final me = ref.watch(sessionProvider).name ?? 'Tú';
     final client = !o.iAmProvider;
-    final step = switch (o.status) { 'pending' => 0, 'accepted' => 1, 'resolved' => 2, _ => -1 };
+    final step = switch (o.status) {
+      'pending' => 0,
+      'accepted' => 1,
+      'resolved' => 2,
+      _ => -1,
+    };
     final shop = o.attention == 'shop';
     final exact = client || o.status != 'pending';
     final place = o.location ?? ref.read(searchLocationProvider).point;
@@ -120,7 +132,9 @@ class _OrderPageState extends ConsumerState<OrderPage> {
       onRefresh: () async {
         try {
           final _ = await ref.refresh(orderProvider(o.id).future);
-        } catch (_) {/* asyncView ya muestra el error y el botón de reintentar */}
+        } catch (_) {
+          /* asyncView ya muestra el error y el botón de reintentar */
+        }
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -130,21 +144,23 @@ class _OrderPageState extends ConsumerState<OrderPage> {
           Container(
             color: NexoColors.surface,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
-            child: Column(children: [
-              AvatarPair(
-                a: (me, null),
-                b: (o.counterpart.displayName, o.counterpart.photoUrl),
-                ok: o.status == 'accepted' || o.status == 'resolved',
-                size: 56,
-              ),
-              const SizedBox(height: 12),
-              Text(_title(o), textAlign: TextAlign.center, style: NexoText.display(20)),
-              const SizedBox(height: 12),
-              if (step < 0)
-                Text('Ya no está activo.', style: NexoText.body(14, color: NexoColors.muted))
-              else
-                _Steps(step: step),
-            ]),
+            child: Column(
+              children: [
+                AvatarPair(
+                  a: (me, null),
+                  b: (o.counterpart.displayName, o.counterpart.photoUrl),
+                  ok: o.status == 'accepted' || o.status == 'resolved',
+                  size: 56,
+                ),
+                const SizedBox(height: 12),
+                Text(_title(o), textAlign: TextAlign.center, style: NexoText.display(20)),
+                const SizedBox(height: 12),
+                if (step < 0)
+                  Text('Ya no está activo.', style: NexoText.body(14, color: NexoColors.muted))
+                else
+                  _Steps(step: step),
+              ],
+            ),
           ),
           // ---- dónde
           NexoCard(
@@ -177,69 +193,78 @@ class _OrderPageState extends ConsumerState<OrderPage> {
                   onTap: o.counterpart.providerId == null
                       ? null
                       : () => context.push(Routes.provider(o.counterpart.providerId!)),
-                  child: Row(children: [
-                    NexoAvatar(name: o.counterpart.displayName, url: o.counterpart.photoUrl),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(o.counterpart.displayName, style: NexoText.body(15, weight: FontWeight.w800)),
-                          Text(client ? catInfo(o.category).name : 'Cliente',
-                              style: NexoText.body(12.5, color: NexoColors.muted)),
-                        ],
+                  child: Row(
+                    children: [
+                      NexoAvatar(name: o.counterpart.displayName, url: o.counterpart.photoUrl),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(o.counterpart.displayName, style: NexoText.body(15, weight: FontWeight.w800)),
+                            Text(
+                              client ? catInfo(o.category).name : 'Cliente',
+                              style: NexoText.body(12.5, color: NexoColors.muted),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    if (o.counterpart.providerId != null) const NexoIcon('chevron', size: 18, color: NexoColors.muted),
-                  ]),
+                      if (o.counterpart.providerId != null)
+                        const NexoIcon('chevron', size: 18, color: NexoColors.muted),
+                    ],
+                  ),
                 ),
                 if (o.status == 'pending' && !client) ...[
                   const SizedBox(height: 10),
                   const Notice('¿Dudas? Pregúntale antes de aceptar.'),
                 ],
                 const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(
-                    child: NexoButton(
-                      label: 'Mensaje',
-                      icon: 'chat',
-                      variant: o.status == 'pending' && !client ? NexoButtonVariant.line : NexoButtonVariant.primary,
-                      onPressed: () => _chat(o),
-                    ),
-                  ),
-                  if (o.can('copyPhone') || o.counterpart.canCopyPhone) ...[
-                    const SizedBox(width: 8),
+                Row(
+                  children: [
                     Expanded(
                       child: NexoButton(
-                        label: 'Copiar número',
-                        icon: 'copy',
-                        variant: NexoButtonVariant.ghost,
-                        onPressed: () => _copyPhone(o),
+                        label: 'Mensaje',
+                        icon: 'chat',
+                        variant: o.status == 'pending' && !client ? NexoButtonVariant.line : NexoButtonVariant.primary,
+                        onPressed: () => _chat(o),
                       ),
                     ),
+                    if (o.can('copyPhone') || o.counterpart.canCopyPhone) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: NexoButton(
+                          label: 'Copiar número',
+                          icon: 'copy',
+                          variant: NexoButtonVariant.ghost,
+                          onPressed: () => _copyPhone(o),
+                        ),
+                      ),
+                    ],
                   ],
-                ]),
+                ),
               ],
             ),
           ),
           // ---- qué acordaron
           NexoCard(
-            child: Column(children: [
-              InfoRow('Servicio', catInfo(o.category).name),
-              if (o.description.isNotEmpty) InfoRow('Lo que se pidió', o.description),
-              if (o.agreedPrice != null)
-                InfoRow('Precio acordado', o.agreedPrice!.display, sub: o.agreedPrice!.includes, highlight: true)
-              else if (o.status == 'accepted' || o.status == 'resolved')
-                const InfoRow('Precio acordado', 'Sin precio · lo acuerdan en el chat', muted: true),
-              InfoRow(
-                'Cómo llegó',
-                o.requestId != null
-                    ? (client
-                        ? 'Se postuló a tu solicitud y le hiciste el pedido'
-                        : 'Te postulaste y te hizo el pedido')
-                    : (client ? 'Le hiciste el pedido desde su perfil' : 'Te hizo el pedido desde tu perfil'),
-              ),
-            ]),
+            child: Column(
+              children: [
+                InfoRow('Servicio', catInfo(o.category).name),
+                if (o.description.isNotEmpty) InfoRow('Lo que se pidió', o.description),
+                if (o.agreedPrice != null)
+                  InfoRow('Precio acordado', o.agreedPrice!.display, sub: o.agreedPrice!.includes, highlight: true)
+                else if (o.status == 'accepted' || o.status == 'resolved')
+                  const InfoRow('Precio acordado', 'Sin precio · lo acuerdan en el chat', muted: true),
+                InfoRow(
+                  'Cómo llegó',
+                  o.requestId != null
+                      ? (client
+                            ? 'Se postuló a tu solicitud y le hiciste el pedido'
+                            : 'Te postulaste y te hizo el pedido')
+                      : (client ? 'Le hiciste el pedido desde su perfil' : 'Te hizo el pedido desde tu perfil'),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _actions(o, client)),
@@ -248,13 +273,18 @@ class _OrderPageState extends ConsumerState<OrderPage> {
             for (final t in o.timeline)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 16, 4),
-                child: Row(children: [
-                  const NexoIcon('check', size: 15, color: NexoColors.brand),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child:
-                          Text(t.text.isEmpty ? t.type : t.text, style: NexoText.body(13.5, color: NexoColors.muted))),
-                ]),
+                child: Row(
+                  children: [
+                    const NexoIcon('check', size: 15, color: NexoColors.brand),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        t.text.isEmpty ? t.type : t.text,
+                        style: NexoText.body(13.5, color: NexoColors.muted),
+                      ),
+                    ),
+                  ],
+                ),
               ),
           ],
         ],
@@ -263,7 +293,13 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   }
 
   Widget _actions(Order o, bool client) {
-    Widget two(Widget a, Widget b) => Row(children: [Expanded(child: a), const SizedBox(width: 8), Expanded(child: b)]);
+    Widget two(Widget a, Widget b) => Row(
+      children: [
+        Expanded(child: a),
+        const SizedBox(width: 8),
+        Expanded(child: b),
+      ],
+    );
     switch (o.status) {
       case 'pending' when !client:
         return two(
@@ -272,48 +308,66 @@ class _OrderPageState extends ConsumerState<OrderPage> {
         );
       case 'pending':
         return NexoButton(
-            label: 'Cancelar solicitud', variant: NexoButtonVariant.ghost, loading: _busy, onPressed: () => _cancel(o));
+          label: 'Cancelar solicitud',
+          variant: NexoButtonVariant.ghost,
+          loading: _busy,
+          onPressed: () => _cancel(o),
+        );
       case 'accepted' when !client:
         return two(
           NexoButton(label: 'Cancelar', variant: NexoButtonVariant.ghost, onPressed: _busy ? null : () => _cancel(o)),
           NexoButton(label: 'Marcar como resuelto', icon: 'check', loading: _busy, onPressed: () => _resolve(o)),
         );
       case 'accepted':
-        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Notice('${o.counterpart.displayName} lo marcará como resuelto al terminar. Después podrás calificarlo.'),
-          const SizedBox(height: 10),
-          NexoButton(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Notice('${o.counterpart.displayName} lo marcará como resuelto al terminar. Después podrás calificarlo.'),
+            const SizedBox(height: 10),
+            NexoButton(
               label: 'Cancelar servicio',
               variant: NexoButtonVariant.ghost,
               loading: _busy,
-              onPressed: () => _cancel(o)),
-        ]);
+              onPressed: () => _cancel(o),
+            ),
+          ],
+        );
       case 'resolved' when client:
         if (o.myReviewStars != null) {
           return NexoCard(
             margin: EdgeInsets.zero,
-            child: Column(children: [
-              Text('Tu calificación', style: NexoText.display(16, weight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              StarsView(o.myReviewStars!, size: 26),
-            ]),
+            child: Column(
+              children: [
+                Text('Tu calificación', style: NexoText.display(16, weight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                StarsView(o.myReviewStars!, size: 26),
+              ],
+            ),
           );
         }
         if (!o.canReview) return const SizedBox.shrink();
         return NexoCard(
           margin: EdgeInsets.zero,
-          child: Column(children: [
-            Text('¿Cómo te fue con ${o.counterpart.displayName}?',
-                textAlign: TextAlign.center, style: NexoText.display(17, weight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text('Toca las estrellas para calificar.', style: NexoText.body(13.5, color: NexoColors.muted)),
-            const SizedBox(height: 8),
-            StarPicker(value: 0, onChanged: (n) => _review(o, n)),
-          ]),
+          child: Column(
+            children: [
+              Text(
+                '¿Cómo te fue con ${o.counterpart.displayName}?',
+                textAlign: TextAlign.center,
+                style: NexoText.display(17, weight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text('Toca las estrellas para calificar.', style: NexoText.body(13.5, color: NexoColors.muted)),
+              const SizedBox(height: 8),
+              StarPicker(value: 0, onChanged: (n) => _review(o, n)),
+            ],
+          ),
         );
       case 'resolved':
-        return Notice('Le pedimos a ${o.counterpart.displayName} que califique el servicio.',
-            icon: 'check', tone: BadgeTone.ok);
+        return Notice(
+          'Le pedimos a ${o.counterpart.displayName} que califique el servicio.',
+          icon: 'check',
+          tone: BadgeTone.ok,
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -347,14 +401,16 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   }
 
   Future<void> _changeAddress(Order o) async {
-    final r = await context.push<LocationPick>(Routes.location,
-        extra: LocationPickerArgs(
-          title: 'Tu domicilio',
-          subtitle: 'Mueve el mapa hasta tu casa.',
-          initial: o.location,
-          showRadius: false,
-          button: 'Usar este punto',
-        ));
+    final r = await context.push<LocationPick>(
+      Routes.location,
+      extra: LocationPickerArgs(
+        title: 'Tu domicilio',
+        subtitle: 'Mueve el mapa hasta tu casa.',
+        initial: o.location,
+        showRadius: false,
+        button: 'Usar este punto',
+      ),
+    );
     if (r == null || !mounted) return;
     final text = await _askText(
       title: 'Calle, número y referencias',
@@ -364,7 +420,9 @@ class _OrderPageState extends ConsumerState<OrderPage> {
     );
     if (text == null || text.trim().length < 5) return;
     await _run(
-        () => ref.read(apiProvider).updateAddress(o, address: text.trim(), location: r.point), 'Dirección actualizada');
+      () => ref.read(apiProvider).updateAddress(o, address: text.trim(), location: r.point),
+      'Dirección actualizada',
+    );
   }
 
   Future<String?> _askText({required String title, required String hint, String initial = '', required String button}) {
@@ -393,7 +451,9 @@ class _OrderPageState extends ConsumerState<OrderPage> {
     final res = await showNexoSheet<(int?, String?)>(context, builder: (_) => const _AcceptSheet());
     if (res == null) return;
     await _run(
-        () => ref.read(apiProvider).acceptOrder(o, amountCents: res.$1, includes: res.$2), 'Aceptaste el pedido');
+      () => ref.read(apiProvider).acceptOrder(o, amountCents: res.$1, includes: res.$2),
+      'Aceptaste el pedido',
+    );
   }
 
   Future<void> _reject(Order o) async {
@@ -422,30 +482,38 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   }
 
   Future<void> _cancel(Order o) async {
-    final ok = await confirmSheet(context,
-        title: o.status == 'pending' ? '¿Cancelar tu solicitud?' : '¿Cancelar el servicio?',
-        subtitle: 'Le avisaremos a ${o.counterpart.displayName}. Esta acción no se puede deshacer.',
-        confirmLabel: 'Sí, cancelar',
-        cancelLabel: 'Volver');
+    final ok = await confirmSheet(
+      context,
+      title: o.status == 'pending' ? '¿Cancelar tu solicitud?' : '¿Cancelar el servicio?',
+      subtitle: 'Le avisaremos a ${o.counterpart.displayName}. Esta acción no se puede deshacer.',
+      confirmLabel: 'Sí, cancelar',
+      cancelLabel: 'Volver',
+    );
     if (ok != true) return;
     await _run(
-        () => ref
-            .read(apiProvider)
-            .cancelOrder(o, reason: o.iAmProvider ? 'No tengo disponibilidad' : 'Ya no lo necesito'),
-        'Pedido cancelado');
+      () =>
+          ref.read(apiProvider).cancelOrder(o, reason: o.iAmProvider ? 'No tengo disponibilidad' : 'Ya no lo necesito'),
+      'Pedido cancelado',
+    );
   }
 
   Future<void> _resolve(Order o) async {
-    final res = await showNexoSheet<(int?, String?)>(context,
-        builder: (_) => _AcceptSheet(resolve: true, initialCents: o.agreedPrice?.amountCents));
+    final res = await showNexoSheet<(int?, String?)>(
+      context,
+      builder: (_) => _AcceptSheet(resolve: true, initialCents: o.agreedPrice?.amountCents),
+    );
     if (res == null) return;
-    await _run(() => ref.read(apiProvider).resolveOrder(o, finalPriceCents: res.$1, note: res.$2),
-        'Servicio marcado como resuelto');
+    await _run(
+      () => ref.read(apiProvider).resolveOrder(o, finalPriceCents: res.$1, note: res.$2),
+      'Servicio marcado como resuelto',
+    );
   }
 
   Future<void> _review(Order o, int stars) async {
-    final res = await showNexoSheet<(int, String, bool)>(context,
-        builder: (_) => _ReviewSheet(stars: stars, name: o.counterpart.displayName));
+    final res = await showNexoSheet<(int, String, bool)>(
+      context,
+      builder: (_) => _ReviewSheet(stars: stars, name: o.counterpart.displayName),
+    );
     if (res == null) return;
     setState(() => _busy = true);
     try {
@@ -475,29 +543,40 @@ class _Steps extends StatelessWidget {
         children: [
           for (var i = 0; i < 3; i++) ...[
             if (i > 0) Expanded(child: Container(height: 2, color: i <= step ? NexoColors.brand : NexoColors.line)),
-            Column(children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i < step ? NexoColors.brand : (i == step ? NexoColors.brandSoft : NexoColors.surface2),
-                  border: Border.all(color: i <= step ? NexoColors.brand : NexoColors.line, width: 1.5),
+            Column(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: i < step ? NexoColors.brand : (i == step ? NexoColors.brandSoft : NexoColors.surface2),
+                    border: Border.all(color: i <= step ? NexoColors.brand : NexoColors.line, width: 1.5),
+                  ),
+                  child: Center(
+                    child: i < step
+                        ? const NexoIcon('check', size: 15, color: Colors.white, strokeWidth: 2.4)
+                        : Text(
+                            '${i + 1}',
+                            style: NexoText.body(
+                              13,
+                              weight: FontWeight.w800,
+                              color: i == step ? NexoColors.brand : NexoColors.muted,
+                            ),
+                          ),
+                  ),
                 ),
-                child: Center(
-                  child: i < step
-                      ? const NexoIcon('check', size: 15, color: Colors.white, strokeWidth: 2.4)
-                      : Text('${i + 1}',
-                          style: NexoText.body(13,
-                              weight: FontWeight.w800, color: i == step ? NexoColors.brand : NexoColors.muted)),
+                const SizedBox(height: 4),
+                Text(
+                  labels[i],
+                  style: NexoText.body(
+                    12,
+                    weight: i == step ? FontWeight.w800 : FontWeight.w600,
+                    color: i <= step ? NexoColors.ink : NexoColors.muted,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(labels[i],
-                  style: NexoText.body(12,
-                      weight: i == step ? FontWeight.w800 : FontWeight.w600,
-                      color: i <= step ? NexoColors.ink : NexoColors.muted)),
-            ]),
+              ],
+            ),
           ],
         ],
       ),
@@ -530,18 +609,20 @@ class _AcceptSheetState extends State<_AcceptSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SheetHeader(widget.resolve ? 'Marcar como resuelto' : 'Aceptar pedido',
-            subtitle: widget.resolve
-                ? 'Confirma el precio final (opcional). Le pediremos al cliente que te califique.'
-                : 'Si ya acordaron el precio, escríbelo. Si no, lo acuerdan en el chat.'),
+        SheetHeader(
+          widget.resolve ? 'Marcar como resuelto' : 'Aceptar pedido',
+          subtitle: widget.resolve
+              ? 'Confirma el precio final (opcional). Le pediremos al cliente que te califique.'
+              : 'Si ya acordaron el precio, escríbelo. Si no, lo acuerdan en el chat.',
+        ),
         TextField(
           controller: _amt,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: NexoText.body(16, weight: FontWeight.w700),
-          decoration:
-              nexoInputDecoration(hint: widget.resolve ? 'Precio final (opcional)' : 'Precio acordado (opcional)')
-                  .copyWith(prefixText: '\$ '),
+          decoration: nexoInputDecoration(
+            hint: widget.resolve ? 'Precio final (opcional)' : 'Precio acordado (opcional)',
+          ).copyWith(prefixText: '\$ '),
         ),
         const SizedBox(height: 10),
         TextField(
@@ -549,7 +630,8 @@ class _AcceptSheetState extends State<_AcceptSheet> {
           maxLength: 100,
           style: NexoText.body(15),
           decoration: nexoInputDecoration(
-              hint: widget.resolve ? 'Nota (opcional)' : '¿Qué incluye? Ej. Material y mano de obra'),
+            hint: widget.resolve ? 'Nota (opcional)' : '¿Qué incluye? Ej. Material y mano de obra',
+          ),
         ),
         const SizedBox(height: 6),
         NexoButton(
@@ -557,8 +639,9 @@ class _AcceptSheetState extends State<_AcceptSheet> {
           icon: 'check',
           onPressed: () {
             final n = int.tryParse(_amt.text);
-            Navigator.of(context)
-                .pop((n == null ? null : n * 100, _note.text.trim().isEmpty ? null : _note.text.trim()));
+            Navigator.of(
+              context,
+            ).pop((n == null ? null : n * 100, _note.text.trim().isEmpty ? null : _note.text.trim()));
           },
         ),
       ],
@@ -597,7 +680,9 @@ class _ReviewSheetState extends State<_ReviewSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SheetHeader('Califica a ${widget.name}', subtitle: 'Tu opinión se publica en su perfil con tu nombre corto.'),
-        Center(child: StarPicker(value: _stars, onChanged: (n) => setState(() => _stars = n))),
+        Center(
+          child: StarPicker(value: _stars, onChanged: (n) => setState(() => _stars = n)),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _text,

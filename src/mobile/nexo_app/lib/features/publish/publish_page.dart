@@ -1,3 +1,6 @@
+import '../common/publication_editor_ui.dart';
+import '../common/publication_text.dart';
+export '../common/publication_text.dart' show autoTitle;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,42 +27,44 @@ import '../location/location_picker_page.dart';
 import '../shell/gate.dart';
 import 'publish_option_row.dart';
 
-/// Título a partir del texto (`autoTitle`): la primera frase, máx. 90.
-String autoTitle(String text) {
-  final t = text.trim().replaceAll(RegExp(r'\s+'), ' ');
-  if (t.isEmpty) return '';
-  final cut = t.split(RegExp(r'[.!?\n]')).first.trim();
-  final s = cut.length < 5 ? t : cut;
-  return s.length <= 90 ? s : '${s.substring(0, 87).trimRight()}…';
-}
-
 Future<bool> _publishedSheet(BuildContext context, {required String title, required String detail}) async =>
-    await showNexoSheet<bool>(context,
-        builder: (sheet) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
-                Center(
-                    child: Container(
-                  width: 66,
-                  height: 66,
-                  decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
-                  child: const Center(child: NexoIcon('check', size: 30, color: NexoColors.brand)),
-                )),
-                const SizedBox(height: 16),
-                Text(title, textAlign: TextAlign.center, style: NexoText.display(23, weight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                Text(detail,
-                    textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
-                const SizedBox(height: 22),
-                NexoButton(label: 'Ver publicación', onPressed: () => Navigator.of(sheet).pop(true)),
-                const SizedBox(height: 8),
-                NexoButton(
-                    label: 'Volver a Inicio',
-                    variant: NexoButtonVariant.ghost,
-                    onPressed: () => Navigator.of(sheet).pop(false)),
-              ],
-            )) ??
+    await showNexoSheet<bool>(
+      context,
+      builder: (sheet) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 8),
+          Center(
+            child: Container(
+              width: 66,
+              height: 66,
+              decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
+              child: const Center(child: NexoIcon('check', size: 30, color: NexoColors.brand)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: NexoText.display(23, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            detail,
+            textAlign: TextAlign.center,
+            style: NexoText.body(14, color: NexoColors.muted, height: 1.45),
+          ),
+          const SizedBox(height: 22),
+          NexoButton(label: 'Ver publicación', onPressed: () => Navigator.of(sheet).pop(true)),
+          const SizedBox(height: 8),
+          NexoButton(
+            label: 'Volver a Inicio',
+            variant: NexoButtonVariant.ghost,
+            onPressed: () => Navigator.of(sheet).pop(false),
+          ),
+        ],
+      ),
+    ) ??
     false;
 
 /// 7.10 Publicar (`V.publish`): "Busco un servicio" y "Mi experiencia" para
@@ -79,14 +84,15 @@ class _PublishPageState extends ConsumerState<PublishPage> {
     final s = ref.watch(sessionProvider);
     if (s.isGuest) {
       return const GateScreen(
-          title: 'Publicar',
-          icon: 'plus',
-          text: 'Necesitas una cuenta para publicar lo que buscas o los trabajos que realizas.');
+        title: 'Publicar',
+        icon: 'plus',
+        text: 'Necesitas una cuenta para publicar lo que buscas o los trabajos que realizas.',
+      );
     }
     if (s.isProviderMode) {
       final mp = ref.watch(myProviderProvider);
       return mp.when(
-        loading: () => const LoadingView(),
+        loading: () => const SingleChildScrollView(child: ContentSkeleton(kind: NexoSkeletonKind.form)),
         error: (e, _) => ErrorView(e, onRetry: () => ref.invalidate(myProviderProvider)),
         data: (me) => me == null ? const NoProviderProfile(title: 'Publicar un trabajo') : _WorkComposer(me: me),
       );
@@ -109,7 +115,12 @@ class _CompTop extends StatelessWidget {
     return ScreenTitleBar(
       'Publicar',
       trailing: NexoButton(
-          label: 'Publicar', small: true, block: false, loading: loading, onPressed: enabled ? onPublish : null),
+        label: 'Publicar',
+        small: true,
+        block: false,
+        loading: loading,
+        onPressed: enabled ? onPublish : null,
+      ),
     );
   }
 }
@@ -121,13 +132,13 @@ class _KindTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        child: SegControl<String>(
-          options: const [('req', 'Busco un servicio'), ('exp', 'Mi experiencia')],
-          value: value,
-          onChanged: onChanged,
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    child: SegControl<String>(
+      options: const [('req', 'Busco un servicio'), ('exp', 'Mi experiencia')],
+      value: value,
+      onChanged: onChanged,
+    ),
+  );
 }
 
 /// Usuario que publica (`compUser`).
@@ -140,51 +151,72 @@ class _CompUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          NexoAvatar(name: name, url: photo),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: NexoText.body(15, weight: FontWeight.w800)),
-                if (pills != null) ...[const SizedBox(height: 6), pills!] else
-                  Text(sub, style: NexoText.body(12.5, color: NexoColors.muted)),
-              ],
-            ),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      NexoAvatar(name: name, url: photo),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(name, style: NexoText.body(15, weight: FontWeight.w800)),
+            if (pills != null) ...[
+              const SizedBox(height: 6),
+              pills!,
+            ] else
+              Text(sub, style: NexoText.body(12.5, color: NexoColors.muted)),
+          ],
+        ),
+      ),
+    ],
+  );
 }
 
-/// Fila de opción del compositor (`optRow` → `.crow`).
-Widget _composeBox({required List<Widget> children}) => Container(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: NexoColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: NexoColors.line),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-    );
+/// Tarjeta única del compositor: el contenido va seguido, sin divisiones.
+Widget _composeBox({required List<Widget> children, List<Widget> rows = const []}) => Container(
+  margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+  clipBehavior: Clip.antiAlias,
+  decoration: BoxDecoration(
+    color: NexoColors.surface,
+    borderRadius: BorderRadius.circular(24),
+    border: Border.all(color: NexoColors.line),
+    boxShadow: const [BoxShadow(color: Color(0x0F1F302B), blurRadius: 20, offset: Offset(0, 7))],
+  ),
+  child: Material(
+    type: MaterialType.transparency,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, rows.isEmpty ? 14 : 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+        ),
+        // Las opciones continúan dentro de la misma tarjeta.
+        ...rows,
+      ],
+    ),
+  ),
+);
 
-TextField _bigText(TextEditingController c, String hint, int max, VoidCallback onChanged) => TextField(
-      controller: c,
-      minLines: 4,
-      maxLines: 8,
-      maxLength: max,
-      onChanged: (_) => onChanged(),
-      textCapitalization: TextCapitalization.sentences,
-      style: NexoText.body(17, height: 1.4),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: NexoText.body(17, color: NexoColors.muted),
-        border: InputBorder.none,
-        counterStyle: NexoText.body(12, color: NexoColors.muted),
-      ),
-    );
+/// Líneas del texto según el alto disponible, para repartir bien el espacio.
+int _textLines(BuildContext context, int reserved) =>
+    ((MediaQuery.sizeOf(context).height - reserved) / 24).floor().clamp(4, 8);
+
+TextField _bigText(TextEditingController c, String hint, int max, VoidCallback onChanged, {int lines = 4}) => TextField(
+  controller: c,
+  minLines: lines,
+  maxLines: lines + 4,
+  maxLength: max,
+  onChanged: (_) => onChanged(),
+  textCapitalization: TextCapitalization.sentences,
+  style: NexoText.body(17, height: 1.4),
+  decoration: InputDecoration(
+    hintText: hint,
+    hintStyle: NexoText.body(17, color: NexoColors.muted),
+    border: InputBorder.none,
+    counterStyle: NexoText.body(12, color: NexoColors.muted),
+  ),
+);
 
 Future<T?> _choose<T>(BuildContext context, String title, List<(T, String, String)> options, T? current) {
   return showNexoSheet<T>(
@@ -276,10 +308,13 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
         idempotencyKey: _idem,
       );
       refreshActivity(ref);
-      final showPost = mounted &&
-          await _publishedSheet(context,
-              title: 'Tu solicitud ya está publicada',
-              detail: 'Los prestadores de tu zona pueden verla e interesarse. Podrás editarla desde Mis solicitudes.');
+      final showPost =
+          mounted &&
+          await _publishedSheet(
+            context,
+            title: 'Tu solicitud ya está publicada',
+            detail: 'Los prestadores de tu zona pueden verla e interesarse. Podrás editarla desde Mis solicitudes.',
+          );
       _reset();
       if (mounted) {
         context.go(Routes.home);
@@ -303,14 +338,14 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
   }
 
   void _reset() => setState(() {
-        _text.clear();
-        _cat = null;
-        _imgs.clear();
-        _uploaded.clear();
-        _guess = null;
-        _idem = const Uuid().v4();
-        _lastPayload = null;
-      });
+    _text.clear();
+    _cat = null;
+    _imgs.clear();
+    _uploaded.clear();
+    _guess = null;
+    _idem = const Uuid().v4();
+    _lastPayload = null;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -323,141 +358,139 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
       children: [
         _CompTop(enabled: _ok, loading: _busy, onPublish: _publish),
         _KindTabs(value: 'req', onChanged: widget.onKind),
-        _composeBox(children: [
-          _CompUser(
+        _composeBox(
+          children: [
+            _CompUser(
               name: s.name ?? 'Tú',
               photo: ref.watch(accountProvider).asData?.value?.photoUrl,
-              sub: 'Visible para prestadores de $zone'),
-          _bigText(_text, '¿Qué necesitas resolver${first.isEmpty ? '' : ', $first'}?', 600, () => setState(() {})),
-          if (_imgs.isNotEmpty)
-            SizedBox(
+              sub: 'Visible para prestadores de $zone',
+            ),
+            _bigText(
+              _text,
+              '¿Qué necesitas resolver${first.isEmpty ? '' : ', $first'}?',
+              600,
+              () => setState(() {}),
+              lines: _textLines(context, 720),
+            ),
+            if (_imgs.isNotEmpty)
+              SizedBox(
                 height: 116,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _imgs.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (_, i) => SizedBox(
-                      width: 116,
-                      child: Stack(children: [
+                    width: 116,
+                    child: Stack(
+                      children: [
                         ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: SizedBox.expand(child: NexoImage('file://${_imgs[i].path}'))),
+                          borderRadius: BorderRadius.circular(14),
+                          child: SizedBox.expand(child: NexoImage('file://${_imgs[i].path}')),
+                        ),
                         Positioned(
-                            right: 2,
-                            top: 2,
-                            child: NexoIconButton(
-                                icon: 'close',
-                                label: 'Quitar foto ${i + 1}',
-                                size: 34,
-                                circle: true,
-                                onTap: () => setState(() => _imgs.removeAt(i)))),
-                      ])),
-                )),
-          if (_imgs.length < 6)
+                          right: 2,
+                          top: 2,
+                          child: NexoIconButton(
+                            icon: 'close',
+                            label: 'Quitar foto ${i + 1}',
+                            size: 34,
+                            circle: true,
+                            onTap: () => setState(() => _imgs.removeAt(i)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 10),
+            AddPhotosBar(
+              count: _imgs.length,
+              onTap: () async {
+                final images = await pickImages(max: 6 - _imgs.length);
+                if (mounted) setState(() => _imgs.addAll(images));
+              },
+            ),
+            if (_guess != null && _cat == null)
+              CategoryGuessNotice(
+                guess: _guess!,
+                name: catInfo(_guess!.category).name,
+                onUse: () => setState(() {
+                  _cat = _guess!.category;
+                  _guess = null;
+                }),
+                onDismiss: () => setState(() => _guess = null),
+              ),
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () async {
-                  final images = await pickImages(max: 6 - _imgs.length);
-                  if (mounted) setState(() => _imgs.addAll(images));
-                },
-                icon: const NexoIcon('camera', size: 18, color: NexoColors.brand),
-                label: Text('Agregar fotos (${_imgs.length}/6)',
-                    style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
-              ),
+              child: AssistButton(enabled: _cat != null && _text.text.trim().length >= 10, onTap: _assist),
             ),
-          if (_guess != null && _cat == null)
-            CategoryGuessNotice(
-              guess: _guess!,
-              name: catInfo(_guess!.category).name,
-              onUse: () => setState(() {
-                _cat = _guess!.category;
-                _guess = null;
-              }),
-              onDismiss: () => setState(() => _guess = null),
+          ],
+          rows: [
+            PublishOptionRow(
+              icon: _cat == null ? 'hammer' : catInfo(_cat!).icon,
+              label: 'Servicio',
+              value: _cat == null ? 'Elegir' : catInfo(_cat!).name,
+              empty: _cat == null,
+              onTap: () async {
+                try {
+                  final cats = await ref.read(catalogProvider.future);
+                  if (!context.mounted) return;
+                  final c = await _choose<String>(context, '¿Qué servicio necesitas?', [
+                    for (final c in cats) (c.id, c.name, c.icon),
+                  ], _cat);
+                  if (c != null && mounted) setState(() => _cat = c);
+                } catch (e) {
+                  ref.invalidate(catalogProvider);
+                  showNexoToast(apiErrorMessage(e));
+                }
+              },
             ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: AssistButton(enabled: _cat != null && _text.text.trim().length >= 10, onTap: _assist),
-          ),
-        ]),
-        Container(
-          margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          decoration: BoxDecoration(
-            color: NexoColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: NexoColors.line),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Material(
-            type: MaterialType.transparency,
-            child: Column(children: [
-              PublishOptionRow(
-                icon: _cat == null ? 'hammer' : catInfo(_cat!).icon,
-                label: 'Servicio',
-                value: _cat == null ? 'Elegir' : catInfo(_cat!).name,
-                empty: _cat == null,
-                onTap: () async {
-                  try {
-                    final cats = await ref.read(catalogProvider.future);
-                    if (!context.mounted) return;
-                    final c = await _choose<String>(
-                        context, '¿Qué servicio necesitas?', [for (final c in cats) (c.id, c.name, c.icon)], _cat);
-                    if (c != null && mounted) setState(() => _cat = c);
-                  } catch (e) {
-                    ref.invalidate(catalogProvider);
-                    showNexoToast(apiErrorMessage(e));
-                  }
-                },
-              ),
-              PublishOptionRow(
-                icon: 'pin',
-                label: 'Ubicación',
-                value: zone,
-                onTap: () async {
-                  final r = await context.push<LocationPick>(Routes.location,
-                      extra: LocationPickerArgs(
-                        title: '¿Dónde es el servicio?',
-                        subtitle: 'Los prestadores ven la zona aproximada; tu punto exacto no se publica.',
-                        initial: _loc ?? loc.point,
-                        showRadius: false,
-                        button: 'Usar esta ubicación',
-                      ));
-                  if (r != null) {
-                    setState(() {
-                      _loc = r.point;
-                      _zone = r.zoneLabel;
-                    });
-                  }
-                },
-              ),
-              PublishOptionRow(
-                icon: 'clock',
-                label: '¿Para cuándo?',
-                value: _urgs.firstWhere((u) => u.$1 == _urg).$2,
-                onTap: () async {
-                  final u = await _choose<String>(context, '¿Para cuándo lo necesitas?', _urgs, _urg);
-                  if (u != null) setState(() => _urg = u);
-                },
-              ),
-              PublishOptionRow(
-                icon: 'chat',
-                label: 'Te contactan por',
-                value: _contact == 'chat' ? 'Solo chat' : 'Chat y llamada',
-                onTap: () async {
-                  final c = await _choose<String>(
-                      context,
-                      '¿Cómo quieres que te contacten?',
-                      const [
-                        ('chat', 'Solo chat (tu número no se muestra)', 'chat'),
-                        ('chatCall', 'Chat y llamada', 'phone')
-                      ],
-                      _contact);
-                  if (c != null) setState(() => _contact = c);
-                },
-              ),
-            ]),
-          ),
+            PublishOptionRow(
+              icon: 'pin',
+              label: 'Ubicación',
+              value: zone,
+              onTap: () async {
+                final r = await context.push<LocationPick>(
+                  Routes.location,
+                  extra: LocationPickerArgs(
+                    title: '¿Dónde es el servicio?',
+                    subtitle: 'Los prestadores ven la zona aproximada; tu punto exacto no se publica.',
+                    initial: _loc ?? loc.point,
+                    showRadius: false,
+                    button: 'Usar esta ubicación',
+                  ),
+                );
+                if (r != null) {
+                  setState(() {
+                    _loc = r.point;
+                    _zone = r.zoneLabel;
+                  });
+                }
+              },
+            ),
+            PublishOptionRow(
+              icon: 'clock',
+              label: '¿Para cuándo?',
+              value: _urgs.firstWhere((u) => u.$1 == _urg).$2,
+              onTap: () async {
+                final u = await _choose<String>(context, '¿Para cuándo lo necesitas?', _urgs, _urg);
+                if (u != null) setState(() => _urg = u);
+              },
+            ),
+            PublishOptionRow(
+              icon: 'chat',
+              label: 'Te contactan por',
+              value: _contact == 'chat' ? 'Solo chat' : 'Chat y llamada',
+              onTap: () async {
+                final c = await _choose<String>(context, '¿Cómo quieres que te contacten?', const [
+                  ('chat', 'Solo chat (tu número no se muestra)', 'chat'),
+                  ('chatCall', 'Chat y llamada', 'phone'),
+                ], _contact);
+                if (c != null) setState(() => _contact = c);
+              },
+            ),
+          ],
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -535,58 +568,50 @@ class _ExperienceComposerState extends ConsumerState<_ExperienceComposer> {
                 'Cuando un prestador marque como resuelto un servicio que le pediste, podrás contar aquí cómo te fue.',
           )
         else ...[
-          _composeBox(children: [
-            _CompUser(name: s.name ?? 'Tú', sub: 'Se publica en el perfil del prestador'),
-            _bigText(
+          _composeBox(
+            children: [
+              _CompUser(name: s.name ?? 'Tú', sub: 'Se publica en el perfil del prestador'),
+              _bigText(
                 _text,
                 _order == null
                     ? '¿Cómo te fue con el servicio?'
                     : '¿Cómo te fue con ${_order!.counterpart.displayName}?',
                 280,
-                () => setState(() {})),
-          ]),
-          Container(
-            margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            decoration: BoxDecoration(
-              color: NexoColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: NexoColors.line),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Material(
-              type: MaterialType.transparency,
-              child: Column(children: [
-                PublishOptionRow(
-                  icon: 'user',
-                  label: 'Prestador',
-                  value: _order == null ? 'Etiquetar' : '@${_order!.counterpart.displayName}',
-                  empty: _order == null,
-                  onTap: () async {
-                    final o = await _choose<Order>(
-                      context,
-                      '¿A quién calificas?',
-                      [
-                        for (final o in pending)
-                          (o, '${o.counterpart.displayName} · ${catInfo(o.category).name}', catInfo(o.category).icon)
-                      ],
-                      _order,
-                    );
-                    if (o != null) setState(() => _order = o);
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(children: [
+                () => setState(() {}),
+                lines: _textLines(context, 680),
+              ),
+            ],
+            rows: [
+              PublishOptionRow(
+                icon: 'user',
+                label: 'Prestador',
+                value: _order == null ? 'Etiquetar' : '@${_order!.counterpart.displayName}',
+                empty: _order == null,
+                onTap: () async {
+                  final o = await _choose<Order>(context, '¿A quién calificas?', [
+                    for (final o in pending)
+                      (o, '${o.counterpart.displayName} · ${catInfo(o.category).name}', catInfo(o.category).icon),
+                  ], _order);
+                  if (o != null) setState(() => _order = o);
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  children: [
                     Text('Calificación', style: NexoText.body(14.5, weight: FontWeight.w600)),
                     const Spacer(),
                     StarPicker(value: _stars, size: 28, onChanged: (n) => setState(() => _stars = n)),
-                  ]),
+                  ],
                 ),
-                const Divider(height: 1, color: NexoColors.line),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(children: [
-                    Expanded(child: Text('¿Lo recomiendas?', style: NexoText.body(14.5, weight: FontWeight.w600))),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text('¿Lo recomiendas?', style: NexoText.body(14.5, weight: FontWeight.w600)),
+                    ),
                     SizedBox(
                       width: 150,
                       child: SegControl<bool?>(
@@ -596,10 +621,11 @@ class _ExperienceComposerState extends ConsumerState<_ExperienceComposer> {
                         onChanged: (v) => setState(() => _rec = v),
                       ),
                     ),
-                  ]),
+                  ],
                 ),
-              ]),
-            ),
+              ),
+              const SizedBox(height: 4),
+            ],
           ),
         ],
       ],
@@ -643,8 +669,8 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
   String _hint(int len) => len >= 20
       ? 'Listo para publicar'
       : len == 0
-          ? 'Cuenta qué hiciste, el problema y cuánto tardaste'
-          : 'Escribe ${20 - len} caracteres más';
+      ? 'Cuenta qué hiciste, el problema y cuánto tardaste'
+      : 'Escribe ${20 - len} caracteres más';
 
   Future<void> _publish() async {
     setState(() => _busy = true);
@@ -672,10 +698,13 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
       ref.invalidate(providerWorksProvider(p.id));
       ref.invalidate(myProviderProvider);
       ref.invalidate(feedProvider);
-      final showPost = mounted &&
-          await _publishedSheet(context,
-              title: 'Tu trabajo ya está publicado',
-              detail: 'Ya forma parte de tu perfil profesional. Puedes revisarlo y editarlo cuando lo necesites.');
+      final showPost =
+          mounted &&
+          await _publishedSheet(
+            context,
+            title: 'Tu trabajo ya está publicado',
+            detail: 'Ya forma parte de tu perfil profesional. Puedes revisarlo y editarlo cuando lo necesites.',
+          );
       setState(() {
         _text.clear();
         _tag.clear();
@@ -689,9 +718,11 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
         if (showPost) context.push(Routes.provider(p.id));
       }
     } catch (e) {
-      showNexoToast(e is ApiException && e.code == 'server.dependency_unavailable'
-          ? 'No se pudo validar o guardar el trabajo. Conservamos tu borrador; inténtalo más tarde.'
-          : apiErrorMessage(e));
+      showNexoToast(
+        e is ApiException && e.code == 'server.dependency_unavailable'
+            ? 'No se pudo validar o guardar el trabajo. Conservamos tu borrador; inténtalo más tarde.'
+            : apiErrorMessage(e),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -706,100 +737,116 @@ class _WorkComposerState extends ConsumerState<_WorkComposer> {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _CompTop(enabled: _ok, loading: _busy, onPublish: _publish),
-        _composeBox(children: [
-          _CompUser(
-            name: p.name,
-            photo: p.photoUrl,
-            sub: p.zoneLabel,
-            pills: Wrap(spacing: 6, runSpacing: 6, children: [
-              for (final c in p.categories)
-                ToggleChip(
-                    label: catInfo(c).name,
-                    icon: catInfo(c).icon,
-                    selected: _cat == c,
-                    onTap: () => setState(() => _cat = c)),
-              NBadge(p.zoneLabel, icon: 'pin', tone: BadgeTone.brand),
-            ]),
-          ),
-          _bigText(_text, '¿Qué trabajo hiciste, $first?', 1000, () => setState(() {})),
-          Align(alignment: Alignment.centerLeft, child: AssistButton(enabled: len >= 10, onTap: _assist)),
-          if (_imgs.isNotEmpty)
-            SizedBox(
-              height: 92,
-              child: ListView(scrollDirection: Axis.horizontal, children: [
-                for (var i = 0; i < _imgs.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Stack(children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: SizedBox(width: 92, height: 92, child: NexoImage('file://${_imgs[i].path}')),
-                      ),
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: NexoIconButton(
-                            icon: 'close',
-                            label: 'Quitar foto ${i + 1}',
-                            size: 28,
-                            circle: true,
-                            onTap: () => setState(() => _imgs.removeAt(i))),
-                      ),
-                    ]),
-                  ),
-              ]),
-            ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _tag,
-            maxLength: 40,
-            style: NexoText.body(14),
-            decoration: InputDecoration(
-              hintText: 'Etiqueta (opcional): Antes y después, Reparación…',
-              hintStyle: NexoText.body(14, color: NexoColors.muted),
-              border: InputBorder.none,
-              prefixIcon: const Padding(
-                  padding: EdgeInsets.only(right: 6), child: NexoIcon('flag', size: 17, color: NexoColors.muted)),
-              prefixIconConstraints: const BoxConstraints(minWidth: 26),
-            ),
-          ),
-          const Divider(height: 1, color: NexoColors.line),
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Row(children: [
-              if (_imgs.length < 6)
-                TextButton.icon(
-                  onPressed: () async {
-                    final images = await pickImages(max: 6 - _imgs.length);
-                    if (mounted) setState(() => _imgs.addAll(images));
-                  },
-                  icon: const NexoIcon('camera', size: 18, color: NexoColors.brand),
-                  label:
-                      Text('Agregar fotos', style: NexoText.body(14, weight: FontWeight.w700, color: NexoColors.brand)),
-                )
-              else
-                const NBadge('6 fotos', icon: 'check', tone: BadgeTone.ok),
-              const Spacer(),
-              Flexible(
-                child: Text(_hint(len),
-                    textAlign: TextAlign.right,
-                    style: NexoText.body(12.5,
-                        weight: FontWeight.w600, color: len >= 20 ? NexoColors.ok : NexoColors.muted)),
+        _composeBox(
+          children: [
+            _CompUser(
+              name: p.name,
+              photo: p.photoUrl,
+              sub: p.zoneLabel,
+              pills: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final c in p.categories)
+                    ToggleChip(
+                      label: catInfo(c).name,
+                      icon: catInfo(c).icon,
+                      selected: _cat == c,
+                      onTap: () => setState(() => _cat = c),
+                    ),
+                  NBadge(p.zoneLabel, icon: 'pin', tone: BadgeTone.brand),
+                ],
               ),
-            ]),
-          ),
-        ]),
+            ),
+            _bigText(
+              _text,
+              '¿Qué trabajo hiciste, $first?',
+              1000,
+              () => setState(() {}),
+              lines: _textLines(context, 660),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: AssistButton(enabled: len >= 10, onTap: _assist),
+            ),
+            if (_imgs.isNotEmpty)
+              SizedBox(
+                height: 92,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (var i = 0; i < _imgs.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: SizedBox(width: 92, height: 92, child: NexoImage('file://${_imgs[i].path}')),
+                            ),
+                            Positioned(
+                              right: 4,
+                              top: 4,
+                              child: NexoIconButton(
+                                icon: 'close',
+                                label: 'Quitar foto ${i + 1}',
+                                size: 28,
+                                circle: true,
+                                onTap: () => setState(() => _imgs.removeAt(i)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _tag,
+              maxLength: 40,
+              style: NexoText.body(14),
+              decoration: InputDecoration(
+                hintText: 'Etiqueta (opcional): Reparación…',
+                counterText: '',
+                hintStyle: NexoText.body(14, color: NexoColors.muted),
+                border: InputBorder.none,
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.only(right: 6),
+                  child: NexoIcon('flag', size: 17, color: NexoColors.muted),
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 26),
+              ),
+            ),
+            AddPhotosBar(
+              count: _imgs.length,
+              onTap: () async {
+                final images = await pickImages(max: 6 - _imgs.length);
+                if (mounted) setState(() => _imgs.addAll(images));
+              },
+            ),
+            const SizedBox(height: 11),
+            Text(
+              _hint(len),
+              style: NexoText.body(12.5, weight: FontWeight.w600, color: len >= 20 ? NexoColors.ok : NexoColors.muted),
+            ),
+          ],
+        ),
         if (_imgs.isEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(children: [
-              const NexoIcon('image', size: 17, color: NexoColors.muted),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('Las fotos del antes y después ayudan a que te elijan.',
-                    style: NexoText.body(13, color: NexoColors.muted)),
-              ),
-            ]),
+            child: Row(
+              children: [
+                const NexoIcon('image', size: 17, color: NexoColors.muted),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Las fotos del antes y después ayudan a que te elijan.',
+                    style: NexoText.body(13, color: NexoColors.muted),
+                  ),
+                ),
+              ],
+            ),
           ),
       ],
     );
