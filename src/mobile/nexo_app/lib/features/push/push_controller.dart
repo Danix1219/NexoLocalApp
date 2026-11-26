@@ -1,3 +1,4 @@
+import 'chat_notifications.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -24,8 +25,10 @@ class PushState {
 final pushGatewayProvider = Provider<PushGateway>((ref) => FirebasePushGateway());
 
 /// Abre la pantalla de un aviso. Se separa para poder probarlo sin router.
-final pushNavigatorProvider =
-    Provider<void Function(String path)>((ref) => (path) => ref.read(routerProvider).push(path));
+final pushNavigatorProvider = Provider<void Function(String path)>(
+  (ref) =>
+      (path) => ref.read(routerProvider).push(path),
+);
 
 /// Notificaciones push de los procesos principales: interés en una
 /// solicitud, pedido aceptado o resuelto y mensajes nuevos (spec 050).
@@ -54,10 +57,11 @@ class PushController extends Notifier<PushState> {
     ref.listen<bool>(sessionProvider.select((s) => s.isSignedIn), (prev, now) {
       if (!now) {
         _registeredToken = null;
+        unawaited(ChatNotifications.clear().catchError((Object _) {}));
         return;
       }
       if (prev == true) return;
-      if (state.enabled) unawaited(_register());
+      unawaited(_resume());
       final p = _pending;
       if (p != null) {
         _pending = null;
@@ -71,7 +75,7 @@ class PushController extends Notifier<PushState> {
 
   Future<void> _init() async {
     if (!await _gw.init()) return;
-    final granted = await _gw.isGranted();
+    final granted = await _gw.isGranted() && !await _storage.readPushOff();
     state = PushState(available: true, enabled: granted);
     _subs
       ..add(_gw.onForeground.listen(_onForeground))
@@ -80,6 +84,19 @@ class PushController extends Notifier<PushState> {
     final first = await _gw.initialMessage();
     if (first != null) open(first.link);
     if (granted && ref.read(sessionProvider).isSignedIn) await _register();
+  }
+
+  /// Al volver a entrar, si el teléfono ya había dado permiso y no se
+  /// apagaron los avisos, se reactivan solos, sin volver a preguntar.
+  Future<void> _resume() async {
+    if (!state.available) return;
+    try {
+      if (await _storage.readPushOff() || !await _gw.isGranted()) return;
+      state = const PushState(available: true, enabled: true);
+      await _register();
+    } catch (_) {
+      // El próximo inicio vuelve a intentarlo.
+    }
   }
 
   /// La app está abierta: se refresca la actividad y se muestra el aviso.
@@ -100,9 +117,15 @@ class PushController extends Notifier<PushState> {
     return true;
   }
 
-  /// ¿Mostrar la pantalla previa al permiso? Una sola vez por sesión.
+  /// ¿Mostrar la pantalla previa al permiso? Una sola vez en este teléfono y
+  /// nunca si el permiso ya está concedido.
   Future<bool> shouldAsk() async =>
-      state.available && !state.enabled && ref.read(sessionProvider).isSignedIn && !await _storage.readPushAsked();
+      state.available &&
+      !state.enabled &&
+      ref.read(sessionProvider).isSignedIn &&
+      !await _storage.readPushAsked() &&
+      !await _storage.readPushOff() &&
+      !await _gw.isGranted();
 
   Future<void> markAsked() => _storage.writePushAsked();
 
@@ -110,13 +133,18 @@ class PushController extends Notifier<PushState> {
     if (!state.available) return false;
     final ok = await _gw.requestPermission();
     state = PushState(available: true, enabled: ok);
-    if (ok) await _register();
+    if (ok) {
+      await _storage.writePushOff(false);
+      await _register();
+    }
     return ok;
   }
 
   /// Desactivar avisos o cerrar sesión: baja en el backend y token borrado.
-  Future<void> disable() async {
+  /// [optOut] solo cuando la persona los apaga: así no se reactivan solos.
+  Future<void> disable({bool optOut = false}) async {
     _registeredToken = null;
+    if (optOut) await _storage.writePushOff(true);
     final id = await _storage.readDeviceId();
     if (id != null && id.isNotEmpty) {
       try {
