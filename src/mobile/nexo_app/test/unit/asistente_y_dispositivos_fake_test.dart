@@ -5,12 +5,8 @@ import 'package:nexo_app/data/fake/fake_nexo_api.dart';
 /// Spec 049/050 en la maqueta: la plantilla de ejemplo solo existe en
 /// depuración o API_MODE=fake; en un release el asistente se informa caído.
 void main() {
-  FakeNexoApi api({required bool demo}) => FakeNexoApi(FakeContext(
-        name: () => 'Ana',
-        mode: () => 'client',
-        notify: (_) {},
-        simulateCounterpart: demo,
-      ));
+  FakeNexoApi api({required bool demo}) =>
+      FakeNexoApi(FakeContext(name: () => 'Ana', mode: () => 'client', notify: (_) {}, simulateCounterpart: demo));
 
   test('release (sin simulación): el asistente no inventa texto', () async {
     await expectLater(
@@ -20,8 +16,9 @@ void main() {
   });
 
   test('modo de prueba: plantilla marcada como demo, sin precios y con el límite', () async {
-    final d = await api(demo: true)
-        .assistDraft(kind: 'request', category: 'plomeria', userText: 'gotea la llave del baño', lengthLimit: 80);
+    final d = await api(
+      demo: true,
+    ).assistDraft(kind: 'request', category: 'plomeria', userText: 'gotea la llave del baño', lengthLimit: 80);
     expect(d.modelVersion, startsWith('demo'));
     expect(d.text.length, lessThanOrEqualTo(80));
     expect(d.text, isNot(contains(r'$')));

@@ -1,3 +1,4 @@
+import 'package:nexo_app/core/network/api_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nexo_app/data/http_nexo_api.dart';
 import 'package:nexo_app/data/models.dart';
@@ -7,32 +8,40 @@ import '../support/mock_adapter.dart';
 
 /// Specs 035/038/036 · grupos `solicitudes`, `interes` y `trabajos`.
 void main() {
+  test('delete own request uses DELETE without closing as resolved', () async {
+    final a = MockAdapter();
+    final api = HttpNexoApi(testDio(a));
+    a.on('DELETE', '/v1/discovery/requests/r', null, status: 204);
+    await api.deleteRequest('r');
+    expect(a.last('DELETE', '/v1/discovery/requests/r').method, 'DELETE');
+  });
   test('mine, oportunidades y trabajos recorren todos los cursores', () async {
     for (final path in [
       '/v1/discovery/requests/mine',
       '/v1/discovery/requests/opportunities',
-      '/v1/discovery/providers/p/works'
+      '/v1/discovery/providers/p/works',
     ]) {
       final adapter = MockAdapter();
       adapter.onRaw(
-          'GET',
-          path,
-          (o) => o.queryParameters['cursor'] == null
-              ? jsonBody({
-                  'items': [path.endsWith('works') ? Fx.work(id: 'one') : Fx.request(id: 'one')],
-                  'hasMore': true,
-                  'nextCursor': 'next'
-                })
-              : jsonBody({
-                  'items': [path.endsWith('works') ? Fx.work(id: 'two') : Fx.request(id: 'two')],
-                  'hasMore': false
-                }));
+        'GET',
+        path,
+        (o) => o.queryParameters['cursor'] == null
+            ? jsonBody({
+                'items': [path.endsWith('works') ? Fx.work(id: 'one') : Fx.request(id: 'one')],
+                'hasMore': true,
+                'nextCursor': 'next',
+              })
+            : jsonBody({
+                'items': [path.endsWith('works') ? Fx.work(id: 'two') : Fx.request(id: 'two')],
+                'hasMore': false,
+              }),
+      );
       final api = HttpNexoApi(testDio(adapter));
       final ids = path.endsWith('works')
           ? (await api.providerWorks('p')).map((w) => w.id)
           : path.endsWith('mine')
-              ? (await api.myRequests()).map((r) => r.id)
-              : (await api.opportunities(const OppFilters())).map((r) => r.id);
+          ? (await api.myRequests()).map((r) => r.id)
+          : (await api.opportunities(const OppFilters())).map((r) => r.id);
       expect(ids, ['one', 'two']);
       expect(adapter.calls.length, 2);
       expect(adapter.calls.last.query['cursor'], 'next');
@@ -46,19 +55,23 @@ void main() {
   });
   test('trabajo conserva clave enviada al reintentar y lee contrato real', () async {
     final adapter = MockAdapter()
-      ..on('POST', '/v1/discovery/works', {'workId': 'real', 'category': 'plomeria', 'title': 'Trabajo real'},
-          status: 201);
+      ..on('POST', '/v1/discovery/works', {
+        'workId': 'real',
+        'category': 'plomeria',
+        'title': 'Trabajo real',
+      }, status: 201);
     final api = HttpNexoApi(testDio(adapter));
     for (var i = 0; i < 2; i++) {
       expect(
-          (await api.createWork(
-                  category: 'plomeria',
-                  title: 'Trabajo real',
-                  text: 'Trabajo terminado en cocina',
-                  location: const GeoPoint(20, -99),
-                  idempotencyKey: 'same-key'))
-              .id,
-          'real');
+        (await api.createWork(
+          category: 'plomeria',
+          title: 'Trabajo real',
+          text: 'Trabajo terminado en cocina',
+          location: const GeoPoint(20, -99),
+          idempotencyKey: 'same-key',
+        )).id,
+        'real',
+      );
     }
     expect(adapter.calls.map((c) => c.header('Idempotency-Key')), ['same-key', 'same-key']);
   });
@@ -66,9 +79,9 @@ void main() {
     final adapter = MockAdapter()
       ..on('GET', '/v1/discovery/requests/opportunities', {
         'items': [
-          {...Fx.request(), 'iAmInterested': null}
+          {...Fx.request(), 'iAmInterested': null},
         ],
-        'interestSummaryAvailable': false
+        'interestSummaryAvailable': false,
       });
     final r = (await HttpNexoApi(testDio(adapter)).opportunities(const OppFilters())).single;
     expect(r.interestKnown, isFalse);
@@ -116,8 +129,10 @@ void main() {
   test('cerrar solicitud con resultado', () async {
     a.on('POST', '/v1/discovery/requests/req_1/close', {'status': 'closed'});
     await api.closeRequest('req_1', outcome: 'solvedHere', pickedProviderId: 'prv_1');
-    expect(a.last('POST', '/v1/discovery/requests/req_1/close').body,
-        {'outcome': 'solvedHere', 'pickedProviderId': 'prv_1'});
+    expect(a.last('POST', '/v1/discovery/requests/req_1/close').body, {
+      'outcome': 'solvedHere',
+      'pickedProviderId': 'prv_1',
+    });
   });
 
   test('interés: POST con nota y DELETE para retirar', () async {
@@ -129,6 +144,30 @@ void main() {
     expect(a.calls.last.method, 'DELETE');
   });
 
+  test('interested list follows every cursor with stable sort', () async {
+    a.onRaw(
+      'GET',
+      '/v1/engagement/requests/req_1/interested',
+      (o) => jsonBody({
+        'items': [
+          {...Fx.provider(), 'providerId': o.queryParameters['cursor'] == null ? 'p1' : 'p2'},
+        ],
+        'requestTitle': 'Fuga',
+        'hasMore': o.queryParameters['cursor'] == null,
+        'nextCursor': o.queryParameters['cursor'] == null ? 'next' : null,
+      }),
+    );
+    final result = await api.interested('req_1', sort: 'recs');
+    expect(result.items.length, 2);
+    expect(a.last('GET', '/v1/engagement/requests/req_1/interested').query['cursor'], 'next');
+    expect(a.last('GET', '/v1/engagement/requests/req_1/interested').query['sort'], 'recs');
+  });
+
+  test('interested list rejects repeated cursor instead of silently truncating', () async {
+    a.on('GET', '/v1/engagement/requests/req_1/interested', {'items': [], 'hasMore': true, 'nextCursor': 'same'});
+    await expectLater(api.interested('req_1'), throwsA(isA<ApiException>()));
+  });
+
   test('interesados ordenados', () async {
     a.on('GET', '/v1/engagement/requests/req_1/interested', {
       ...Fx.page([
@@ -136,7 +175,7 @@ void main() {
           ...Fx.provider(),
           'note': 'Puedo hoy',
           'conversationId': 'cnv_1',
-          'actions': {'canMessage': true, 'canOrder': true}
+          'actions': {'canMessage': true, 'canOrder': true},
         },
       ]),
       'requestTitle': 'Fuga',

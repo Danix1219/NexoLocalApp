@@ -21,23 +21,25 @@ void main() {
   final avisos = <String>[];
 
   OutboxItem item(String idem, {String account = 'acc_1'}) => OutboxItem(
-        account: account,
-        method: 'POST',
-        path: '/v1/discovery/requests',
-        body: '{"category":"plomeria","title":"Fuga"}',
-        idempotencyKey: idem,
-        createdAt: DateTime(2026, 11, 8),
-      );
+    account: account,
+    method: 'POST',
+    path: '/v1/discovery/requests',
+    body: '{"category":"plomeria","title":"Fuga"}',
+    idempotencyKey: idem,
+    createdAt: DateTime(2026, 11, 8),
+  );
 
   Future<void> start({bool signedIn = true}) async {
     final storage = MemoryTokenStorage();
     if (signedIn) await storage.write(fakeTokens(sub: 'acc_1'));
-    c = ProviderContainer(overrides: [
-      tokenStorageProvider.overrideWithValue(storage),
-      localStoreProvider.overrideWithValue(Future.value(store)),
-      connectivityChangesProvider.overrideWithValue(net.stream),
-      dioProvider.overrideWithValue(testDio(a)),
-    ]);
+    c = ProviderContainer(
+      overrides: [
+        tokenStorageProvider.overrideWithValue(storage),
+        localStoreProvider.overrideWithValue(Future.value(store)),
+        connectivityChangesProvider.overrideWithValue(net.stream),
+        dioProvider.overrideWithValue(testDio(a)),
+      ],
+    );
     c.read(sessionProvider);
     await pumpEventQueue();
     c.read(syncProvider.notifier).notify = avisos.add;
@@ -77,8 +79,12 @@ void main() {
 
   test('error de negocio: se descarta y se avisa el motivo', () async {
     await store.enqueue(item('idem-3'));
-    a.on('POST', '/v1/discovery/requests', problem('request.too_many_open', 409, 'Ya tienes 5 solicitudes abiertas.'),
-        status: 409);
+    a.on(
+      'POST',
+      '/v1/discovery/requests',
+      problem('request.too_many_open', 409, 'Ya tienes 5 solicitudes abiertas.'),
+      status: 409,
+    );
     await start();
     final r = await c.read(syncProvider.notifier).flush();
     expect(r.failed, ['Ya tienes 5 solicitudes abiertas.']);

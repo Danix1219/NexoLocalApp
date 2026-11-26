@@ -47,12 +47,17 @@ class MockAdapter implements HttpClientAdapter {
   /// Vuelve la señal.
   void online() => isOffline = false;
 
-  Recorded last(String method, String path) => calls.lastWhere((c) => c.method == method && c.path == path,
-      orElse: () => throw StateError('No hubo $method $path'));
+  Recorded last(String method, String path) => calls.lastWhere(
+    (c) => c.method == method && c.path == path,
+    orElse: () => throw StateError('No hubo $method $path'),
+  );
 
   @override
   Future<ResponseBody> fetch(
-      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
     calls.add(Recorded(options));
     if (isOffline) {
       throw DioException(
@@ -86,5 +91,11 @@ ResponseBody jsonBody(Object? json, {int status = 200, Map<String, List<String>>
 Dio testDio(MockAdapter a) => Dio(BaseOptions(baseUrl: 'https://api.nexo.test'))..httpClientAdapter = a;
 
 /// Problem Details de Nexo.
-Map<String, Object?> problem(String code, int status, [String? detail]) =>
-    {'type': 'about:blank', 'title': code, 'status': status, 'code': code, 'detail': detail, 'traceId': '00-test'};
+Map<String, Object?> problem(String code, int status, [String? detail]) => {
+  'type': 'about:blank',
+  'title': code,
+  'status': status,
+  'code': code,
+  'detail': detail,
+  'traceId': '00-test',
+};

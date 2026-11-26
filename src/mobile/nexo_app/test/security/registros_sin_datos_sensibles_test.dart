@@ -14,7 +14,8 @@ void main() {
     try {
       final o = RequestOptions(path: 'https://storage.test/incoming/u?sig=clave-privada', method: 'PUT');
       ApiException.fromDio(
-          DioException(requestOptions: o, message: 'https://storage.test/incoming/u?sig=clave-privada'));
+        DioException(requestOptions: o, message: 'https://storage.test/incoming/u?sig=clave-privada'),
+      );
       expect(output.join(), isNot(contains('clave-privada')));
     } finally {
       debugPrint = previous;
@@ -27,7 +28,9 @@ void main() {
     debugPrint = (String? message, {int? wrapWidth}) => output.add(message ?? '');
     try {
       final o = RequestOptions(
-          path: '/v1/discovery/search/providers', queryParameters: {'lat': 20.123456, 'q': 'Calle Privada 123'});
+        path: '/v1/discovery/search/providers',
+        queryParameters: {'lat': 20.123456, 'q': 'Calle Privada 123'},
+      );
       ApiException.fromDio(DioException(requestOptions: o, message: 'Calle Privada 123'));
       expect(output.join(), isNot(contains('20.123456')));
       expect(output.join(), isNot(contains('Calle Privada')));
@@ -64,19 +67,27 @@ void main() {
 
   test('direcciones y coordenadas no aparecen en logs de geocodificación', () {
     final options = RequestOptions(
-        path: '/v1/discovery/places/search',
-        queryParameters: {'q': 'Calle Privada 123', 'lat': 20.12345, 'lng': -99.12345});
-    ApiException.fromDio(DioException(
+      path: '/v1/discovery/places/search',
+      queryParameters: {'q': 'Calle Privada 123', 'lat': 20.12345, 'lng': -99.12345},
+    );
+    ApiException.fromDio(
+      DioException(
         requestOptions: options,
-        response: Response(requestOptions: options, statusCode: 503, data: {'detail': 'Calle Privada 123'})));
+        response: Response(requestOptions: options, statusCode: 503, data: {'detail': 'Calle Privada 123'}),
+      ),
+    );
     ApiException.fromDio(DioException(requestOptions: options, message: 'Calle Privada 123'));
     expect(logs.join(' '), isNot(contains('Calle Privada')));
     expect(logs.join(' '), isNot(contains('20.12345')));
     expect(OfflineCacheInterceptor.cacheable(options), isFalse);
-    expect(OfflineCacheInterceptor.cacheable(RequestOptions(path: '/v1/discovery/places/reverse', method: 'GET')),
-        isFalse);
     expect(
-        OfflineCacheInterceptor.cacheable(RequestOptions(path: '/v1/discovery/me/location', method: 'GET')), isFalse);
+      OfflineCacheInterceptor.cacheable(RequestOptions(path: '/v1/discovery/places/reverse', method: 'GET')),
+      isFalse,
+    );
+    expect(
+      OfflineCacheInterceptor.cacheable(RequestOptions(path: '/v1/discovery/me/location', method: 'GET')),
+      isFalse,
+    );
   });
 
   test('error con respuesta', () {

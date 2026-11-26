@@ -57,7 +57,12 @@ void main() {
     expect(o.can('cancel'), isTrue);
     await expectLater(
       s.api.createOrder(
-          providerId: 'p3', category: 'carpinteria', description: 'Otra vez', attention: 'home', idempotencyKey: 'k2'),
+        providerId: 'p3',
+        category: 'carpinteria',
+        description: 'Otra vez',
+        attention: 'home',
+        idempotencyKey: 'k2',
+      ),
       throwsA(isA<ApiException>().having((e) => e.code, 'code', 'order.already_active')),
     );
     final c = await s.api.cancelOrder(o, reason: 'Ya no lo necesito');
@@ -69,11 +74,12 @@ void main() {
     await s.becomeProvider();
     s.mode = 'client';
     final o = await s.api.createOrder(
-        providerId: 'p6',
-        category: 'cerrajeria',
-        description: 'Cambiar chapa de la puerta',
-        attention: 'home',
-        idempotencyKey: 'k3');
+      providerId: 'p6',
+      category: 'cerrajeria',
+      description: 'Cambiar chapa de la puerta',
+      attention: 'home',
+      idempotencyKey: 'k3',
+    );
     await expectLater(
       s.api.review(orderId: o.id, stars: 5, text: '', recommend: true),
       throwsA(isA<ApiException>().having((e) => e.code, 'code', 'review.order_not_resolved')),

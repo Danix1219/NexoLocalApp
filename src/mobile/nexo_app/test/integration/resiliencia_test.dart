@@ -18,13 +18,13 @@ void main() {
   final events = <String>[];
 
   HybridNexoApi build(Map<ApiGroup, GroupMode> modes) => HybridNexoApi(
-        modes: modes,
-        http: HttpNexoApi(testDio(a)),
-        fake: s.api,
-        cooldown: const Duration(seconds: 60),
-        clock: () => now,
-        onDemo: (g, demo) => events.add('${g.name}:$demo'),
-      );
+    modes: modes,
+    http: HttpNexoApi(testDio(a)),
+    fake: s.api,
+    cooldown: const Duration(seconds: 60),
+    clock: () => now,
+    onDemo: (g, demo) => events.add('${g.name}:$demo'),
+  );
 
   Map<ApiGroup, GroupMode> all(GroupMode m) => {for (final g in ApiGroup.values) g: m};
 
@@ -61,7 +61,7 @@ void main() {
     await expectLater(api.feed(at: centro), throwsA(isA<ApiException>()));
     a.on('GET', '/v1/discovery/feed', {
       ...Fx.page([Fx.work(id: 'wrk_real')]),
-      'zoneLabel': 'Centro'
+      'zoneLabel': 'Centro',
     });
     final still = await api.feed(at: centro);
     expect(still.page.items.single.id, 'wrk_real');
@@ -82,11 +82,16 @@ void main() {
 
   test('respuesta 200 que no es JSON (página HTML) → ejemplo', () async {
     a.onRaw(
-        'GET',
-        '/v1/discovery/feed',
-        (_) => ResponseBody.fromString('<html>Hola</html>', 200, headers: {
-              Headers.contentTypeHeader: ['text/html'],
-            }));
+      'GET',
+      '/v1/discovery/feed',
+      (_) => ResponseBody.fromString(
+        '<html>Hola</html>',
+        200,
+        headers: {
+          Headers.contentTypeHeader: ['text/html'],
+        },
+      ),
+    );
     final api = build(all(GroupMode.auto));
     await expectLater(api.feed(at: centro), throwsA(isA<ApiException>()));
   });

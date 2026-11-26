@@ -88,7 +88,7 @@ void main() {
           'key': 'recs',
           'label': 'Recomiendan',
           'values': ['31', '22'],
-          'best': 0
+          'best': 0,
         },
       ],
     });
@@ -98,13 +98,19 @@ void main() {
   });
 
   test('error de negocio del perfil llega como ApiException con código', () async {
-    a.on('PATCH', '/v1/discovery/providers/me/prices', problem('provider.prices_limit', 400, 'Máximo 3 precios'),
-        status: 400);
+    a.on(
+      'PATCH',
+      '/v1/discovery/providers/me/prices',
+      problem('provider.prices_limit', 400, 'Máximo 3 precios'),
+      status: 400,
+    );
     await expectLater(
       api.patchProvider('prices', {'prices': []}),
-      throwsA(isA<ApiException>()
-          .having((e) => e.code, 'code', 'provider.prices_limit')
-          .having((e) => e.detail, 'detail', 'Máximo 3 precios')),
+      throwsA(
+        isA<ApiException>()
+            .having((e) => e.code, 'code', 'provider.prices_limit')
+            .having((e) => e.detail, 'detail', 'Máximo 3 precios'),
+      ),
     );
   });
   test('404 sin código de perfil no se convierte en ausencia', () async {
@@ -155,8 +161,8 @@ void main() {
           'key': 'payment',
           'label': 'Pago',
           'values': ['Efectivo', 'Tarjeta'],
-          'best': null
-        }
+          'best': null,
+        },
       ],
     });
     final result = await api.compare(['prv_1', 'prv_2'], at: const GeoPoint(20, -99));
@@ -166,7 +172,9 @@ void main() {
 
   test('moderación no disponible permanece como fallo real', () async {
     a.on('POST', '/v1/discovery/providers', problem('server.dependency_unavailable', 503), status: 503);
-    await expectLater(api.createProvider(ProviderDraft(), idempotencyKey: testIdempotencyKey),
-        throwsA(isA<ApiException>().having((e) => e.code, 'code', 'server.dependency_unavailable')));
+    await expectLater(
+      api.createProvider(ProviderDraft(), idempotencyKey: testIdempotencyKey),
+      throwsA(isA<ApiException>().having((e) => e.code, 'code', 'server.dependency_unavailable')),
+    );
   });
 }

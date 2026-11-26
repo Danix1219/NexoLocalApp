@@ -17,7 +17,7 @@ void main() {
     a.on('GET', '/v1/engagement/orders/ord_1', Fx.order(status: 'accepted', version: 4));
   });
 
-  test('crear pedido directo sin category en el cuerpo', () async {
+  test('crear pedido directo envía la categoría elegida', () async {
     a.on('POST', '/v1/engagement/orders', Fx.order(role: 'client'), status: 201);
     await api.createOrder(
       providerId: 'prv_1',
@@ -31,19 +31,20 @@ void main() {
     expect(c.header('Idempotency-Key'), 'idem-ord');
     final b = c.body as Map;
     expect(b['origin'], 'direct');
-    expect(b.containsKey('category'), isFalse);
+    expect(b['category'], 'plomeria');
     expect(b.containsKey('requestId'), isFalse);
   });
 
   test('pedido desde solicitud usa origin=post', () async {
     a.on('POST', '/v1/engagement/orders', Fx.order(role: 'client'), status: 201);
     await api.createOrder(
-        providerId: 'prv_1',
-        requestId: 'req_1',
-        category: 'plomeria',
-        description: 'x' * 12,
-        attention: 'shop',
-        idempotencyKey: 'k');
+      providerId: 'prv_1',
+      requestId: 'req_1',
+      category: 'plomeria',
+      description: 'x' * 12,
+      attention: 'shop',
+      idempotencyKey: 'k',
+    );
     expect((a.last('POST', '/v1/engagement/orders').body as Map)['origin'], 'post');
   });
 
@@ -77,9 +78,11 @@ void main() {
     a.on('POST', '/v1/engagement/orders/ord_1/accept', problem('order.version_conflict', 412), status: 412);
     await expectLater(
       api.acceptOrder(pend),
-      throwsA(isA<ApiException>()
-          .having((e) => e.status, 'status', 412)
-          .having((e) => e.code, 'code', 'order.version_conflict')),
+      throwsA(
+        isA<ApiException>()
+            .having((e) => e.status, 'status', 412)
+            .having((e) => e.code, 'code', 'order.version_conflict'),
+      ),
     );
   });
 
@@ -114,7 +117,7 @@ void main() {
           'text': 'Excelente',
           'recommend': true,
           'author': {'displayName': 'Laura G.'},
-          'ago': 'ayer'
+          'ago': 'ayer',
         },
       ]),
       'summary': {'avg': 4.8, 'count': 12, 'recommendCount': 11},

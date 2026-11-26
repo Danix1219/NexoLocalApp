@@ -17,11 +17,11 @@ void main() {
             'icon': 'drop',
             'gradient': {'from': '#123456', 'to': '#654321'},
             'specialties': [
-              {'slug': 'fugas', 'name': 'Fugas'}
-            ]
-          }
+              {'slug': 'fugas', 'name': 'Fugas'},
+            ],
+          },
         ],
-        'version': '2026-11-10'
+        'version': '2026-11-10',
       });
     final c = (await HttpNexoApi(testDio(adapter)).categories()).single;
     expect(c.slug, 'plomeria');
@@ -40,7 +40,7 @@ void main() {
   test('feed paginado por cursor', () async {
     a.on('GET', '/v1/discovery/feed', {
       ...Fx.page([Fx.work()], next: 'c2'),
-      'zoneLabel': 'Centro'
+      'zoneLabel': 'Centro',
     });
     final f = await api.feed(at: at);
     expect(f.zoneLabel, 'Centro');
@@ -56,7 +56,7 @@ void main() {
     a.on('GET', '/v1/discovery/search/providers', {
       ...Fx.page([Fx.provider()]),
       'total': 1,
-      'outOfZone': false
+      'outOfZone': false,
     });
     final r = await api.searchProviders(
       const SearchFilters(q: ' fuga ', cat: 'plomeria', open: true, sort: 'near'),
@@ -96,9 +96,9 @@ void main() {
           'slug': 'plomeria',
           'name': 'Plomería',
           'icon': 'drop',
-          'gradient': {'from': '#46A3F0', 'to': '#2B72D1'}
+          'gradient': {'from': '#46A3F0', 'to': '#2B72D1'},
         },
-      ]
+      ],
     });
     a.on('GET', '/v1/discovery/map/nearby', {
       'summary': {'text': '3 prestadores'},
@@ -107,7 +107,7 @@ void main() {
           'id': 'prv_1',
           'point': {'lat': 20.05, 'lng': -99.34},
           'state': 'open',
-          'title': 'Hernández'
+          'title': 'Hernández',
         },
       ],
     });
@@ -123,11 +123,15 @@ void main() {
     a.on('PUT', '/v1/discovery/me/location', {
       'zoneLabel': 'Jardines',
       'radiusKm': 5,
-      'summary': {'text': '8 prestadores'}
+      'summary': {'text': '8 prestadores'},
     });
     final r = await api.setLocation(at, radiusKm: 5, source: 'gps');
     expect(r.zoneLabel, 'Jardines');
-    expect(
-        a.last('PUT', '/v1/discovery/me/location').body, {'lat': 20.05, 'lng': -99.34, 'radiusKm': 5, 'source': 'gps'});
+    expect(a.last('PUT', '/v1/discovery/me/location').body, {
+      'lat': 20.05,
+      'lng': -99.34,
+      'radiusKm': 5,
+      'source': 'gps',
+    });
   });
 }

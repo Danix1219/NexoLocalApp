@@ -25,13 +25,15 @@ void main() {
   Future<void> start({bool signedIn = true}) async {
     storage = MemoryTokenStorage();
     if (signedIn) await storage.write(fakeTokens(sub: 'acc_1'));
-    c = ProviderContainer(overrides: [
-      tokenStorageProvider.overrideWithValue(storage),
-      localStoreProvider.overrideWithValue(Future.value(MemoryLocalStore())),
-      pushGatewayProvider.overrideWithValue(gw),
-      pushNavigatorProvider.overrideWithValue(nav.add),
-      apiProvider.overrideWithValue(HttpNexoApi(testDio(a))),
-    ]);
+    c = ProviderContainer(
+      overrides: [
+        tokenStorageProvider.overrideWithValue(storage),
+        localStoreProvider.overrideWithValue(Future.value(MemoryLocalStore())),
+        pushGatewayProvider.overrideWithValue(gw),
+        pushNavigatorProvider.overrideWithValue(nav.add),
+        apiProvider.overrideWithValue(HttpNexoApi(testDio(a))),
+      ],
+    );
     c.read(sessionProvider);
     c.read(pushProvider);
     await pumpEventQueue();
@@ -96,6 +98,34 @@ void main() {
     expect(gw.deletes, 1);
     expect(storage.data.containsKey('device'), isFalse);
     expect(c.read(pushProvider).enabled, isFalse);
+  });
+
+  test('tras cerrar sesión y volver a entrar se reactivan solos y no se vuelve a preguntar', () async {
+    await start();
+    final n = c.read(pushProvider.notifier);
+    await n.markAsked();
+    expect(await n.enable(), isTrue);
+    await n.disable();
+    await c.read(sessionProvider.notifier).signOutLocal();
+    await pumpEventQueue();
+    await c.read(sessionProvider.notifier).signIn(fakeTokens(sub: 'acc_1'));
+    await pumpEventQueue();
+    expect(c.read(pushProvider).enabled, isTrue);
+    expect(await n.shouldAsk(), isFalse);
+    expect(a.calls.where((x) => x.method == 'POST' && x.path == '/v1/identity/devices'), hasLength(2));
+  });
+
+  test('si se apagan en Cuenta siguen apagados al volver a entrar', () async {
+    gw.granted = true;
+    await start();
+    final n = c.read(pushProvider.notifier);
+    await n.disable(optOut: true);
+    await c.read(sessionProvider.notifier).signOutLocal();
+    await pumpEventQueue();
+    await c.read(sessionProvider.notifier).signIn(fakeTokens(sub: 'acc_1'));
+    await pumpEventQueue();
+    expect(c.read(pushProvider).enabled, isFalse);
+    expect(await n.shouldAsk(), isFalse);
   });
 
   test('aviso con la app abierta refresca la actividad', () async {
