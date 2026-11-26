@@ -47,6 +47,9 @@ import 'package:nexo_app/features/push/push_controller.dart';
 import 'package:nexo_app/features/provider/edit_sheets.dart';
 import 'package:nexo_app/data/http_nexo_api.dart';
 import '../support/mock_adapter.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
+import 'package:nexo_app/features/intelligence/category_suggester.dart';
+import 'package:nexo_app/features/intelligence/ml_kit_suggester.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1400,6 +1403,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('ML: al agregar una foto sin categoría, Publicar sugiere la categoría (spec 049, FR-001)',
+      (tester) async {
+    ImagePickerPlatform.instance = _OnePhotoPicker();
+    final adapter = MockAdapter()
+      ..on('GET', '/v1/discovery/categories', {
+        'categories': [
+          {'slug': 'plomeria', 'name': 'Plomería', 'icon': 'drop'}
+        ]
+      });
+    await tester.pumpWidget(ProviderScope(overrides: [
+      sessionProvider.overrideWith(VisualSession.new),
+      searchLocationProvider.overrideWith(TestLocation.new),
+      apiProvider.overrideWithValue(HttpNexoApi(testDio(adapter))),
+      categorySuggesterProvider.overrideWithValue(_PlumbingSuggester()),
+    ], child: MaterialApp(scaffoldMessengerKey: rootMessengerKey, home: const Scaffold(body: PublishPage()))));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Por la foto parece'), findsNothing);
+    await tester.ensureVisible(find.textContaining('Agregar fotos'));
+    await tester.tap(find.textContaining('Agregar fotos'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Por la foto parece'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final width in [320.0, 390.0]) {
     testWidgets('Publicar mantiene columnas alineadas y opciones tocables a $width', (tester) async {
       await tester.binding.setSurfaceSize(Size(width, 844));
@@ -2589,4 +2616,21 @@ void main() {
     expect(find.text('Guardar cambios'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+}
+
+class _OnePhotoPicker extends ImagePickerPlatform {
+  @override
+  Future<List<XFile>> getMultiImageWithOptions(
+          {MultiImagePickerOptions options = const MultiImagePickerOptions()}) async =>
+      [
+        XFile.fromData(Uint8List.fromList([0xFF, 0xD8, 0xFF]), path: 'lavabo.jpg', mimeType: 'image/jpeg')
+      ];
+}
+
+class _PlumbingSuggester implements CategorySuggester {
+  @override
+  Future<CategoryGuess?> suggest(String imagePath, {Set<String>? allowed}) async =>
+      const CategoryGuess(category: 'plomeria', confidence: 0.72, labels: ['Sink', 'Tap']);
+  @override
+  Future<void> close() async {}
 }
