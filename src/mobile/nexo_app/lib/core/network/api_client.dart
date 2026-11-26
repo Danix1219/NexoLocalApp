@@ -6,6 +6,7 @@ import '../auth/auth_tokens.dart';
 import '../auth/session_controller.dart';
 import '../auth/token_storage.dart';
 import '../local/offline_interceptor.dart';
+import '../local/snapshot_cipher.dart';
 import '../local/sync_controller.dart';
 
 /// Marca en `Options.extra` para pedir el header Authorization.
@@ -13,12 +14,12 @@ const kAuth = 'nexo.auth';
 const _kRetried = 'nexo.retried';
 
 BaseOptions _baseOptions() => BaseOptions(
-      baseUrl: Env.apiBaseUrl,
-      // Corto: si el backend no contesta, el modo auto pasa a la maqueta (spec 045).
-      connectTimeout: const Duration(seconds: 6),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {'Accept': 'application/json'},
-    );
+  baseUrl: Env.apiBaseUrl,
+  // Corto: si el backend no contesta, el modo auto pasa a la maqueta (spec 045).
+  connectTimeout: const Duration(seconds: 6),
+  receiveTimeout: const Duration(seconds: 15),
+  headers: {'Accept': 'application/json'},
+);
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(_baseOptions());
@@ -26,13 +27,16 @@ final dioProvider = Provider<Dio>((ref) {
     ..add(AuthInterceptor(ref, dio))
     // Caché por cuenta y cola sin señal (spec 051). Va después del de
     // autenticación: un 401 se renueva antes de decidir si hay red.
-    ..add(OfflineCacheInterceptor(
-      store: () => ref.read(localStoreProvider),
-      account: () => accountKey(ref.read(sessionProvider)),
-      onOffline: (t) => ref.read(syncProvider.notifier).markOffline(t),
-      onOnline: () => ref.read(syncProvider.notifier).markOnline(),
-      onQueued: () => ref.read(syncProvider.notifier).queued(),
-    ));
+    ..add(
+      OfflineCacheInterceptor(
+        store: () => ref.read(localStoreProvider),
+        account: () => accountKey(ref.read(sessionProvider)),
+        onOffline: (t) => ref.read(syncProvider.notifier).markOffline(t),
+        onOnline: () => ref.read(syncProvider.notifier).markOnline(),
+        onQueued: () => ref.read(syncProvider.notifier).queued(),
+        vault: DeviceSnapshotCipher(),
+      ),
+    );
   return dio;
 });
 
@@ -110,8 +114,8 @@ class AuthInterceptor extends Interceptor {
   Future<AuthTokens?> _doRefresh() async {
     final current = await _ref.read(tokenStorageProvider).read();
     if (current == null) return null;
-    final t = await refreshTokens(current.refreshToken);
-    if (t != null) await _ref.read(sessionProvider.notifier).updateTokens(t);
+    final t = await _ref.read(tokenStorageProvider).refreshCoordinated(current, refreshTokens);
+    if (t != null) await _ref.read(sessionProvider.notifier).updateTokens(t, persist: false);
     return t;
   }
 }

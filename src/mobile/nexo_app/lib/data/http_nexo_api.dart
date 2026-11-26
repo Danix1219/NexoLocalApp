@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import '../core/chat/encrypted_chat_transport.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/foundation.dart' show kReleaseMode, kDebugMode, debugPrint;
 import 'package:uuid/uuid.dart';
 
 import '../app/env.dart';
@@ -28,21 +31,82 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<LocationResult?> getLocation() => _call(() async {
-        final response = await _dio.get('/v1/discovery/me/location', options: _auth());
-        if (response.data == null || response.data == '') return null;
-        return LocationResult.fromJson(Map<String, dynamic>.from(response.data as Map));
-      });
+    final response = await _dio.get('/v1/discovery/me/location', options: _auth());
+    if (response.data == null || response.data == '') return null;
+    return LocationResult.fromJson(Map<String, dynamic>.from(response.data as Map));
+  });
 
   Future<Json> _publicPlaces(String path, Map<String, dynamic> query) => _call(() async {
-        final response =
-            await _dio.get<dynamic>(path, queryParameters: query, options: Options(extra: const {kAuth: false}));
-        if (response.data is! Map) throw const ApiException(code: 'client.unexpected_response');
-        return Json.from(response.data as Map);
-      });
+    final response = await _dio.get<dynamic>(
+      path,
+      queryParameters: query,
+      options: Options(extra: const {kAuth: false}),
+    );
+    if (response.data is! Map) throw const ApiException(code: 'client.unexpected_response');
+    return Json.from(response.data as Map);
+  });
 
-  HttpNexoApi(this._dio, {Dio? uploadDio, this.refreshToken}) : _uploadDio = uploadDio ?? Dio();
+  HttpNexoApi(this._dio, {Dio? uploadDio, this.refreshToken, this.encryptedChat}) : _uploadDio = uploadDio ?? Dio();
 
   final Dio _dio;
+  final Future<EncryptedChatTransport> Function()? encryptedChat;
+  final Map<String, String> _privatePeers = {};
+  final Set<String> _privateConversations = {};
+  @override
+  Future<void> retryPrivateMessage(String id) async {
+    final peer = _privatePeers[id];
+    if (peer == null || encryptedChat == null) throw StateError('Abre primero el chat privado');
+    await (await encryptedChat!()).retryPending(id, peer);
+  }
+
+  @override
+  Future<void> enablePrivateChat(String conversationId) async {
+    final factory = encryptedChat;
+    if (factory == null) throw StateError('Esta compilaci\u00f3n no tiene chat privado');
+    await (await factory()).enable(conversationId);
+    _privateConversations.add(conversationId);
+  }
+
+  @override
+  Future<Message> sendPrivateAttachment(
+    String conversationId,
+    Uint8List bytes,
+    String type, {
+    String? caption,
+    String? clientMessageId,
+  }) async {
+    if (caption != null && caption.length > 1000) throw StateError('Texto demasiado largo');
+    final peer = _privatePeers[conversationId];
+    if (peer == null || encryptedChat == null) throw StateError('Abre primero la conversacion privada');
+    final transport = await encryptedChat!();
+    final pending = await transport.crypto.vault.transaction((state) async => state['pending:$conversationId']);
+    if (pending != null) {
+      final saved = jsonDecode(pending) as Map<String, dynamic>;
+      final content = jsonDecode(saved['content'] as String) as Map<String, dynamic>;
+      if (clientMessageId == null || content['clientId'] != clientMessageId) {
+        throw StateError('Reintenta primero el mensaje pendiente');
+      }
+      final id = await transport.retryPending(conversationId, peer);
+      return Message(
+        id: id,
+        kind: '${content['kind']}',
+        text: content['text'] as String? ?? '',
+        mine: true,
+        privateAttachment: Map<String, dynamic>.from(content['file'] as Map),
+      );
+    }
+    final file = await transport.uploadAttachment(conversationId, bytes, type);
+    final kind = type.startsWith('image/') ? 'image' : 'audio';
+    if (type == 'audio/wav' && bytes.length >= 44) file['durationMs'] = ((bytes.length - 44) * 1000 / 32000).round();
+    final id = await transport.send(conversationId, peer, {
+      'kind': kind,
+      'file': file,
+      if (clientMessageId != null) 'clientId': clientMessageId,
+      if (caption != null && caption.trim().isNotEmpty) 'text': caption.trim(),
+    });
+    return Message(id: id, kind: kind, text: caption?.trim() ?? '', mine: true, privateAttachment: file);
+  }
+
   final Future<String> Function()? refreshToken;
 
   /// Cliente sin interceptores ni baseUrl para la URL firmada del
@@ -51,12 +115,9 @@ class HttpNexoApi implements NexoApi {
   static const _uuid = Uuid();
 
   Options _auth({String? idem, int? ifMatch}) => Options(
-        extra: const {kAuth: true},
-        headers: {
-          if (idem != null) 'Idempotency-Key': idem,
-          if (ifMatch != null) 'If-Match': '"$ifMatch"',
-        },
-      );
+    extra: const {kAuth: true},
+    headers: {if (idem != null) 'Idempotency-Key': idem, if (ifMatch != null) 'If-Match': '"$ifMatch"'},
+  );
 
   Future<T> _call<T>(Future<T> Function() f) async {
     try {
@@ -73,22 +134,22 @@ class HttpNexoApi implements NexoApi {
   }
 
   Future<Json> _get(String path, [Map<String, dynamic>? q]) => _call(() async {
-        q?.removeWhere((_, v) => v == null || v == '');
-        final r = await _dio.get<dynamic>(path, queryParameters: q, options: _auth());
-        // Una lectura de Nexo siempre es un objeto JSON; HTML o texto significa
-        // que esa ruta todavía no es la del backend (spec 045).
-        if (r.data is! Map) throw const ApiException(code: 'client.unexpected_response');
-        return Json.from(r.data as Map);
-      });
+    q?.removeWhere((_, v) => v == null || v == '');
+    final r = await _dio.get<dynamic>(path, queryParameters: q, options: _auth());
+    // Una lectura de Nexo siempre es un objeto JSON; HTML o texto significa
+    // que esa ruta todavía no es la del backend (spec 045).
+    if (r.data is! Map) throw const ApiException(code: 'client.unexpected_response');
+    return Json.from(r.data as Map);
+  });
 
   Future<Json> _send(String method, String path, {Object? body, String? idem, int? ifMatch}) => _call(() async {
-        final o = _auth(idem: idem, ifMatch: ifMatch)..method = method;
-        final r = await _dio.request<dynamic>(path, data: body, options: o);
-        if (r.data is Map) return Json.from(r.data as Map);
-        // 201/204 sin cuerpo es válido; texto o HTML no lo es.
-        if (r.data == null || (r.data is String && (r.data as String).trim().isEmpty)) return <String, dynamic>{};
-        throw const ApiException(code: 'client.unexpected_response');
-      });
+    final o = _auth(idem: idem, ifMatch: ifMatch)..method = method;
+    final r = await _dio.request<dynamic>(path, data: body, options: o);
+    if (r.data is Map) return Json.from(r.data as Map);
+    // 201/204 sin cuerpo es válido; texto o HTML no lo es.
+    if (r.data == null || (r.data is String && (r.data as String).trim().isEmpty)) return <String, dynamic>{};
+    throw const ApiException(code: 'client.unexpected_response');
+  });
 
   Map<String, dynamic> _at(GeoPoint? p) => p == null ? {} : {'lat': p.lat, 'lng': p.lng};
 
@@ -100,10 +161,24 @@ class HttpNexoApi implements NexoApi {
   Future<AccountScreen> accountScreen() async => AccountScreen.fromJson(await _get('/v1/identity/me'));
 
   @override
-  Future<void> updateMe({String? name, String? photoUploadId}) => _send('PATCH', '/v1/identity/me', body: {
-        if (name != null) 'name': name,
-        if (photoUploadId != null) 'photoUploadId': photoUploadId,
-      });
+  Future<String> shareProfile() async {
+    final result = await _send('POST', '/v1/identity/me/profile-share');
+    final id = result['shareId']?.toString();
+    if (id == null || !RegExp(r'^[a-fA-F0-9-]{36}$').hasMatch(id)) {
+      throw const ApiException(code: 'client.unexpected_response');
+    }
+    return 'nexolocal://profile/$id';
+  }
+
+  @override
+  Future<Json> sharedProfile(String id) => _get('/v1/identity/profiles/$id');
+
+  @override
+  Future<void> updateMe({String? name, String? photoUploadId}) => _send(
+    'PATCH',
+    '/v1/identity/me',
+    body: {if (name != null) 'name': name, if (photoUploadId != null) 'photoUploadId': photoUploadId},
+  );
 
   @override
   Future<AuthTokens?> switchMode(String mode) async => _switchMode(mode);
@@ -153,26 +228,31 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<String> createProvider(ProviderDraft d, {required String idempotencyKey}) async {
-    final j = await _send('POST', '/v1/discovery/providers', idem: idempotencyKey, body: {
-      'kind': d.kind,
-      'name': d.name,
-      if (d.kind == 'business') 'owner': d.owner,
-      if (d.kind == 'business') 'sector': d.sector,
-      if (d.kind == 'business') 'activity': d.activity,
-      if (d.bio.isNotEmpty) 'bio': d.bio,
-      'experience': d.experience ?? 0,
-      'crew': d.crew,
-      if (d.kind == 'business' && d.crew == 'team' && d.teamSize != null) 'teamSize': d.teamSize,
-      if (d.kind == 'trade') 'trades': d.trades,
-      'attention': d.kind == 'trade' ? 'home' : d.attention,
-      'categories': d.categories,
-      'specialties': providerSpecialtySlugs(d.categories, d.specialties),
-      'location': d.location?.toJson(),
-      'radiusKm': d.attention == 'shop' ? 0 : d.radiusKm,
-      'photoUploadId': d.photoUploadId,
-      'coverUploadId': d.coverUploadId,
-      'acceptedRules': d.acceptedRules,
-    });
+    final j = await _send(
+      'POST',
+      '/v1/discovery/providers',
+      idem: idempotencyKey,
+      body: {
+        'kind': d.kind,
+        'name': d.name,
+        if (d.kind == 'business') 'owner': d.owner,
+        if (d.kind == 'business') 'sector': d.sector,
+        if (d.kind == 'business') 'activity': d.activity,
+        if (d.bio.isNotEmpty) 'bio': d.bio,
+        'experience': d.experience ?? 0,
+        'crew': d.crew,
+        if (d.kind == 'business' && d.crew == 'team' && d.teamSize != null) 'teamSize': d.teamSize,
+        if (d.kind == 'trade') 'trades': d.trades,
+        'attention': d.kind == 'trade' ? 'home' : d.attention,
+        'categories': d.categories,
+        'specialties': providerSpecialtySlugs(d.categories, d.specialties),
+        'location': d.location?.toJson(),
+        'radiusKm': d.attention == 'shop' ? 0 : d.radiusKm,
+        'photoUploadId': d.photoUploadId,
+        'coverUploadId': d.coverUploadId,
+        'acceptedRules': d.acceptedRules,
+      },
+    );
     final id = j['providerId'];
     if (id is! String || id.isEmpty) throw const ApiException(code: 'client.unexpected_response');
     return id;
@@ -190,9 +270,9 @@ class HttpNexoApi implements NexoApi {
   // ---------------- descubrimiento ----------------
   @override
   Future<List<ServiceCategory>> categories() async => _call(() async {
-        final j = await _get('/v1/discovery/categories');
-        return (j['categories'] as List).map((v) => ServiceCategory.fromJson(Json.from(v as Map))).toList();
-      });
+    final j = await _get('/v1/discovery/categories');
+    return (j['categories'] as List).map((v) => ServiceCategory.fromJson(Json.from(v as Map))).toList();
+  });
 
   @override
   Future<FeedPage> feed({required GeoPoint at, String? cursor}) async {
@@ -200,8 +280,11 @@ class HttpNexoApi implements NexoApi {
     return FeedPage(
       zoneLabel: '${j['zoneLabel'] ?? ''}',
       guest: j['guest'] == true,
-      page: CursorPage(_items(j, (w) => Work.fromJson(w)),
-          nextCursor: j['nextCursor']?.toString(), hasMore: j['hasMore'] == true),
+      page: CursorPage(
+        _items(j, (w) => Work.fromJson(w)),
+        nextCursor: j['nextCursor']?.toString(),
+        hasMore: j['hasMore'] == true,
+      ),
     );
   }
 
@@ -251,8 +334,11 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<LocationResult> setLocation(GeoPoint p, {required int radiusKm, String source = 'map'}) async {
-    final j = await _send('PUT', '/v1/discovery/me/location',
-        body: {'lat': p.lat, 'lng': p.lng, 'radiusKm': radiusKm, 'source': source});
+    final j = await _send(
+      'PUT',
+      '/v1/discovery/me/location',
+      body: {'lat': p.lat, 'lng': p.lng, 'radiusKm': radiusKm, 'source': source},
+    );
     final s = j['summary'];
     return LocationResult(
       point: p,
@@ -272,27 +358,37 @@ class HttpNexoApi implements NexoApi {
     GeoPoint? location,
     List<String> imageUploadIds = const [],
     String? idempotencyKey,
-  }) async =>
-      Work.fromJson(await _send('POST', '/v1/discovery/works', idem: idempotencyKey ?? _uuid.v4(), body: {
+  }) async => Work.fromJson(
+    await _send(
+      'POST',
+      '/v1/discovery/works',
+      idem: idempotencyKey ?? _uuid.v4(),
+      body: {
         'category': category,
         'title': title,
         'text': text,
         if (tag != null) 'tag': tag,
         if (location != null) 'location': location.toJson(),
         'imageUploadIds': imageUploadIds,
-      }));
+      },
+    ),
+  );
 
   @override
-  Future<Work> editWork(Work original,
-          {required String title, required String text, String? tag, required List<String> imageUploadIds}) async =>
-      Work.fromJson(
-          await _send('PATCH', '/v1/discovery/works/${original.id}', body: {
-            'title': title,
-            'text': text,
-            'tag': tag,
-            'imageUploadIds': imageUploadIds,
-          }),
-          provider: original.provider);
+  Future<Work> editWork(
+    Work original, {
+    required String title,
+    required String text,
+    String? tag,
+    required List<String> imageUploadIds,
+  }) async => Work.fromJson(
+    await _send(
+      'PATCH',
+      '/v1/discovery/works/${original.id}',
+      body: {'title': title, 'text': text, 'tag': tag, 'imageUploadIds': imageUploadIds},
+    ),
+    provider: original.provider,
+  );
   @override
   Future<void> deleteWork(String id) => _send('DELETE', '/v1/discovery/works/$id');
 
@@ -313,8 +409,12 @@ class HttpNexoApi implements NexoApi {
     String? cursor;
     do {
       final page = await _get(path, {...query, if (cursor != null) 'cursor': cursor});
-      items.addAll(_items(page,
-          (j) => parse({...j, if (page['interestSummaryAvailable'] == false) 'interestSummaryAvailable': false})));
+      items.addAll(
+        _items(
+          page,
+          (j) => parse({...j, if (page['interestSummaryAvailable'] == false) 'interestSummaryAvailable': false}),
+        ),
+      );
       cursor = page['nextCursor']?.toString();
       if (page['hasMore'] != true) break;
       if (cursor == null || cursor.isEmpty || !seen.add(cursor)) {
@@ -335,74 +435,97 @@ class HttpNexoApi implements NexoApi {
     required GeoPoint location,
     List<String> imageUploadIds = const [],
     required String idempotencyKey,
-  }) async =>
-      ServiceRequest.fromJson(
-          await _send('POST', '/v1/discovery/requests', idem: idempotencyKey, body: {
-            'category': category,
-            'title': title,
-            'description': description,
-            'urgency': urgency,
-            'contact': contact,
-            'location': location.toJson(),
-            'imageUploadIds': imageUploadIds,
-          }),
-          mine: true);
-
-  @override
-  Future<ServiceRequest> editRequest(String id,
-          {required String title,
-          required String description,
-          required String urgency,
-          required String contact,
-          required List<String> imageUploadIds}) async =>
-      ServiceRequest.fromJson(
-          await _send('PATCH', '/v1/discovery/requests/$id', body: {
-            'title': title,
-            'description': description,
-            'urgency': urgency,
-            'contact': contact,
-            'imageUploadIds': imageUploadIds,
-          }),
-          mine: true);
-  @override
-  Future<List<ServiceRequest>> myRequests() => _allPages(
-      '/v1/discovery/requests/mine', {'status': 'all', 'limit': 50}, (j) => ServiceRequest.fromJson(j, mine: true));
-
-  @override
-  Future<List<ServiceRequest>> opportunities(OppFilters f) => _allPages(
-      '/v1/discovery/requests/opportunities',
-      {
-        'cat': f.cat,
-        'today': f.today,
-        'inRadius': f.inRadius,
-        'myServiceOnly': f.myServiceOnly,
-        'q': f.q.trim(),
-        'limit': 50,
+  }) async => ServiceRequest.fromJson(
+    await _send(
+      'POST',
+      '/v1/discovery/requests',
+      idem: idempotencyKey,
+      body: {
+        'category': category,
+        'title': title,
+        'description': description,
+        'urgency': urgency,
+        'contact': contact,
+        'location': location.toJson(),
+        'imageUploadIds': imageUploadIds,
       },
-      ServiceRequest.fromJson);
+    ),
+    mine: true,
+  );
 
   @override
-  Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId}) =>
-      _send('POST', '/v1/discovery/requests/$id/close',
-          body: {'outcome': outcome, if (pickedProviderId != null) 'pickedProviderId': pickedProviderId});
+  Future<ServiceRequest> editRequest(
+    String id, {
+    required String title,
+    required String description,
+    required String urgency,
+    required String contact,
+    required List<String> imageUploadIds,
+  }) async => ServiceRequest.fromJson(
+    await _send(
+      'PATCH',
+      '/v1/discovery/requests/$id',
+      body: {
+        'title': title,
+        'description': description,
+        'urgency': urgency,
+        'contact': contact,
+        'imageUploadIds': imageUploadIds,
+      },
+    ),
+    mine: true,
+  );
+  @override
+  Future<List<ServiceRequest>> myRequests() => _allPages('/v1/discovery/requests/mine', {
+    'status': 'all',
+    'limit': 50,
+  }, (j) => ServiceRequest.fromJson(j, mine: true));
+
+  @override
+  Future<List<ServiceRequest>> opportunities(OppFilters f) => _allPages('/v1/discovery/requests/opportunities', {
+    'cat': f.cat,
+    'today': f.today,
+    'inRadius': f.inRadius,
+    'myServiceOnly': f.myServiceOnly,
+    'q': f.q.trim(),
+    'limit': 50,
+  }, ServiceRequest.fromJson);
+
+  @override
+  Future<void> deleteRequest(String id) => _send('DELETE', '/v1/discovery/requests/$id');
+  @override
+  Future<void> closeRequest(String id, {required String outcome, String? pickedProviderId}) => _send(
+    'POST',
+    '/v1/discovery/requests/$id/close',
+    body: {'outcome': outcome, if (pickedProviderId != null) 'pickedProviderId': pickedProviderId},
+  );
 
   // ---------------- interés ----------------
   @override
   Future<void> setInterest(String requestId, bool on, {String? note}) => _send(
-        on ? 'POST' : 'DELETE',
-        '/v1/engagement/requests/$requestId/interest',
-        body: on ? {if (note != null && note.isNotEmpty) 'note': note} : null,
-      );
+    on ? 'POST' : 'DELETE',
+    '/v1/engagement/requests/$requestId/interest',
+    body: on ? {if (note != null && note.isNotEmpty) 'note': note} : null,
+  );
 
   @override
   Future<InterestedPage> interested(String requestId, {String sort = 'rate'}) async {
-    final j = await _get('/v1/engagement/requests/$requestId/interested', {'sort': sort, 'limit': 50});
-    return InterestedPage(
-      requestId: requestId,
-      title: '${j['requestTitle'] ?? ''}',
-      status: '${j['requestStatus'] ?? 'open'}',
-      items: _items(j, Interested.fromJson),
-    );
+    final path = '/v1/engagement/requests/$requestId/interested';
+    var page = await _get(path, {'sort': sort, 'limit': 50});
+    final title = '${page['requestTitle'] ?? ''}';
+    final status = '${page['requestStatus'] ?? 'open'}';
+    final items = <Interested>[];
+    final seen = <String>{};
+    while (true) {
+      items.addAll(_items(page, Interested.fromJson));
+      if (page['hasMore'] != true) break;
+      final cursor = page['nextCursor']?.toString();
+      if (cursor == null || cursor.isEmpty || !seen.add(cursor)) {
+        throw const ApiException(code: 'client.unexpected_response');
+      }
+      page = await _get(path, {'sort': sort, 'limit': 50, 'cursor': cursor});
+    }
+    return InterestedPage(requestId: requestId, title: title, status: status, items: items);
   }
 
   // ---------------- pedidos ----------------
@@ -417,25 +540,37 @@ class HttpNexoApi implements NexoApi {
     String? addressNote,
     GeoPoint? location,
     required String idempotencyKey,
-  }) async =>
-      Order.fromJson(await _send('POST', '/v1/engagement/orders', idem: idempotencyKey, body: {
+  }) async => Order.fromJson(
+    await _send(
+      'POST',
+      '/v1/engagement/orders',
+      idem: idempotencyKey,
+      body: {
         'providerId': providerId,
         if (requestId != null) 'requestId': requestId,
         'origin': requestId == null ? 'direct' : 'post',
+        // El servidor solo la conserva si el prestador ofrece esa categoría.
+        'category': category,
         'description': description,
         'attention': attention,
         if (address != null) 'address': address,
         if (addressNote != null) 'addressNote': addressNote,
         if (location != null) 'location': location.toJson(),
-      }));
+      },
+    ),
+  );
 
   @override
   Future<OrdersPage> orders({required String role, String status = 'all'}) async {
     final j = await _get('/v1/engagement/orders', {'role': role, 'status': status, 'limit': 50});
     final c = j['counts'] is Map ? j['counts'] as Map : const {};
     int n(String k) => (c[k] as num?)?.toInt() ?? 0;
-    return OrdersPage(_items(j, Order.fromJson),
-        pending: n('pending'), accepted: n('accepted'), resolved: n('resolved'));
+    return OrdersPage(
+      _items(j, Order.fromJson),
+      pending: n('pending'),
+      accepted: n('accepted'),
+      resolved: n('resolved'),
+    );
   }
 
   @override
@@ -448,9 +583,8 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<Order> acceptOrder(Order o, {int? amountCents, String? includes}) => _action(o, 'accept', {
-        if (amountCents != null)
-          'agreedPrice': {'amountCents': amountCents, if (includes != null) 'includes': includes},
-      });
+    if (amountCents != null) 'agreedPrice': {'amountCents': amountCents, if (includes != null) 'includes': includes},
+  });
 
   @override
   Future<Order> rejectOrder(Order o, {required String reason, String? note}) =>
@@ -461,25 +595,34 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<Order> resolveOrder(Order o, {int? finalPriceCents, String? note}) => _action(o, 'resolve', {
-        if (finalPriceCents != null) 'finalPrice': {'amountCents': finalPriceCents},
-        if (note != null && note.isNotEmpty) 'note': note,
-      });
+    if (finalPriceCents != null) 'finalPrice': {'amountCents': finalPriceCents},
+    if (note != null && note.isNotEmpty) 'note': note,
+  });
 
   @override
   Future<Order> updateAddress(Order o, {required String address, String? addressNote, GeoPoint? location}) async {
-    await _send('PUT', '/v1/engagement/orders/${o.id}/address', ifMatch: o.version, body: {
-      'address': address,
-      if (addressNote != null) 'addressNote': addressNote,
-      if (location != null) 'location': location.toJson(),
-    });
+    await _send(
+      'PUT',
+      '/v1/engagement/orders/${o.id}/address',
+      ifMatch: o.version,
+      body: {
+        'address': address,
+        if (addressNote != null) 'addressNote': addressNote,
+        if (location != null) 'location': location.toJson(),
+      },
+    );
     return order(o.id);
   }
 
   // ---------------- opiniones ----------------
   @override
   Future<void> review({required String orderId, required int stars, required String text, required bool recommend}) =>
-      _send('POST', '/v1/engagement/reviews',
-          idem: _uuid.v4(), body: {'orderId': orderId, 'stars': stars, 'text': text, 'recommend': recommend});
+      _send(
+        'POST',
+        '/v1/engagement/reviews',
+        idem: _uuid.v4(),
+        body: {'orderId': orderId, 'stars': stars, 'text': text, 'recommend': recommend},
+      );
 
   @override
   Future<ReviewsPage> reviews(String providerId) async =>
@@ -494,10 +637,12 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<String> openConversation({String? providerId, String? requestId}) async {
-    final j = await _send('POST', '/v1/engagement/conversations', idem: _uuid.v4(), body: {
-      if (providerId != null) 'providerId': providerId,
-      if (requestId != null) 'requestId': requestId,
-    });
+    final j = await _send(
+      'POST',
+      '/v1/engagement/conversations',
+      idem: _uuid.v4(),
+      body: {if (providerId != null) 'providerId': providerId, if (requestId != null) 'requestId': requestId},
+    );
     return '${j['conversationId']}';
   }
 
@@ -505,11 +650,106 @@ class HttpNexoApi implements NexoApi {
   Future<ChatThread> messages(String conversationId, {String? before}) async {
     final j = await _get('/v1/engagement/conversations/$conversationId/messages', {'before': before, 'limit': 30});
     final cp = j['counterpart'] is Map ? Json.from(j['counterpart'] as Map) : null;
+    final encrypted = j['encrypted'] == true;
+    if (encrypted) _privateConversations.add(conversationId);
+    if (!encrypted && _privateConversations.contains(conversationId)) {
+      throw StateError('Se rechazo un cambio a chat sin cifrar');
+    }
+    var messages = _items(j, Message.fromJson).reversed.toList();
+    if (encrypted) {
+      final peer = j['peerAccountId'] as String?;
+      final factory = encryptedChat;
+      if (peer == null || factory == null) {
+        throw StateError('Actualiza la aplicaci\u00f3n para abrir este chat privado');
+      }
+      final transport = await factory();
+      _privatePeers[conversationId] = peer;
+      final decoded = <Message>[];
+      for (final message in messages) {
+        if (message.kind != 'encrypted') {
+          decoded.add(message);
+          continue;
+        }
+        try {
+          Map<String, dynamic> content;
+          final envelopes = message.encryptedPayload?['envelopes'] as List? ?? [];
+          final selected = envelopes
+              .whereType<Map>()
+              .where(
+                (e) => e['recipient'] == transport.crypto.account && e['recipientDevice'] == transport.crypto.deviceId,
+              )
+              .firstOrNull;
+          Map<String, dynamic>? ownContent;
+          if (message.mine) {
+            try {
+              ownContent = await transport.readOwn(
+                message.id,
+                conversationId,
+                operationId: envelopes.whereType<Map>().firstOrNull?['messageId'] as String?,
+              );
+            } on StateError {
+              // A different originating device may instead have an envelope for this one.
+            }
+          }
+          if (ownContent != null) {
+            content = ownContent;
+          } else {
+            if (selected == null || message.senderId == null) {
+              throw StateError('El mensaje no est\u00e1 disponible para este dispositivo');
+            }
+            content = await transport.crypto.decrypt(
+              conversation: conversationId,
+              sender: message.senderId!,
+              envelope: Map<String, dynamic>.from(selected),
+            );
+          }
+          if (message.editedAt != null && content['editOf'] != message.id) {
+            throw StateError('La edicion no corresponde a este mensaje');
+          }
+          decoded.add(
+            Message(
+              editedAt: message.editedAt,
+              id: message.id,
+              kind: '${content['kind']}',
+              text: content['text'] as String? ?? '',
+              privateAttachment: content['file'] is Map ? Json.from(content['file'] as Map) : null,
+              mine: message.mine,
+              createdAt: message.createdAt,
+              encryptedPayload: message.encryptedPayload,
+              senderId: message.senderId,
+              readAt: message.readAt,
+              deliveredAt: message.deliveredAt,
+            ),
+          );
+        } catch (error) {
+          if (kDebugMode) {
+            final reason = error is StateError ? error.message : error.runtimeType.toString();
+            debugPrint('[CHAT] private message unavailable: $reason');
+          }
+          // Keep unavailable ciphertext intact; never reset sessions or invent plaintext.
+          decoded.add(
+            Message(
+              id: message.id,
+              kind: 'unavailable',
+              text:
+                  'Este mensaje privado no est\u00e1 disponible en este dispositivo. Pide que te lo env\u00eden de nuevo.',
+              mine: message.mine,
+              createdAt: message.createdAt,
+              encryptedPayload: message.encryptedPayload,
+              senderId: message.senderId,
+            ),
+          );
+        }
+      }
+      messages = decoded;
+    }
     return ChatThread(
+      encrypted: encrypted,
+      peerAccountId: j['peerAccountId'] as String?,
       id: conversationId,
       counterpart: Counterpart.fromJson(cp),
       // El API devuelve del más nuevo al más viejo.
-      messages: _items(j, Message.fromJson).reversed.toList(),
+      messages: messages,
       activeOrder: ActiveOrder.fromJson(j['activeOrder'] is Map ? Json.from(j['activeOrder'] as Map) : null),
       blocked: j['blocked'] == true,
       canSend: j['canSend'] != false,
@@ -520,12 +760,56 @@ class HttpNexoApi implements NexoApi {
   }
 
   @override
-  Future<Message> sendMessage(String conversationId, {String? text, String? imageUploadId}) async =>
-      Message.fromJson(await _send('POST', '/v1/engagement/conversations/$conversationId/messages',
-          idem: _uuid.v4(),
-          body: imageUploadId != null
-              ? {'kind': 'image', 'imageUploadId': imageUploadId}
-              : {'kind': 'text', 'text': text}));
+  Future<void> editMessage(String conversationId, String messageId, String text) async {
+    final value = text.trim();
+    if (value.isEmpty || value.length > 1000) throw StateError('Escribe entre 1 y 1000 caracteres.');
+    final peer = _privatePeers[conversationId];
+    if (peer == null || encryptedChat == null) throw StateError('Abre el chat privado antes de editar.');
+    await (await encryptedChat!()).send(conversationId, peer, {
+      'kind': 'text',
+      'text': value,
+      'editOf': messageId,
+    }, editTarget: messageId);
+  }
+
+  @override
+  Future<void> deleteMessage(String conversationId, String messageId) async {
+    if (!_privateConversations.contains(conversationId)) throw StateError('Abre el chat privado antes de eliminar.');
+    await _send(
+      'DELETE',
+      '/v1/engagement/chat-keys/conversations/$conversationId/messages/$messageId',
+      idem: _uuid.v4(),
+    );
+    if (encryptedChat != null) await (await encryptedChat!()).discardDeletedEdit(conversationId, messageId);
+  }
+
+  @override
+  Future<Message> sendMessage(String conversationId, {String? text, String? imageUploadId}) async {
+    if (_privateConversations.contains(conversationId) &&
+        (_privatePeers[conversationId] == null || encryptedChat == null)) {
+      throw StateError('El chat requiere cifrado; no se enviara texto sin proteccion');
+    }
+    if (_privatePeers[conversationId] case final String peer) {
+      if (imageUploadId != null) throw StateError('Las fotos privadas requieren el transporte de adjuntos cifrados');
+      final transport = await encryptedChat!();
+      final id = await transport.send(conversationId, peer, {'kind': 'text', 'text': text});
+      return Message(id: id, kind: 'text', text: text ?? '', mine: true);
+    }
+    return Message.fromJson(
+      await _send(
+        'POST',
+        '/v1/engagement/conversations/$conversationId/messages',
+        idem: _uuid.v4(),
+        body: imageUploadId != null
+            ? {'kind': 'image', 'imageUploadId': imageUploadId}
+            : {'kind': 'text', 'text': text},
+      ),
+    );
+  }
+
+  @override
+  Future<void> markDelivered(String conversationId, String upToMessageId) =>
+      _send('POST', '/v1/engagement/conversations/$conversationId/delivered', body: {'upToMessageId': upToMessageId});
 
   @override
   Future<void> markRead(String conversationId, String upToMessageId) =>
@@ -533,8 +817,11 @@ class HttpNexoApi implements NexoApi {
 
   @override
   Future<bool> block(String conversationId, bool blocked, {bool alsoReport = false}) async {
-    final j = await _send('POST', '/v1/engagement/conversations/$conversationId/block',
-        body: {'blocked': blocked, 'alsoReport': alsoReport});
+    final j = await _send(
+      'POST',
+      '/v1/engagement/conversations/$conversationId/block',
+      body: {'blocked': blocked, 'alsoReport': alsoReport},
+    );
     return j['blocked'] == true;
   }
 
@@ -542,15 +829,26 @@ class HttpNexoApi implements NexoApi {
   @override
   Future<(List<SavedItem>, SavedCounts)> saved({String? kind}) async {
     final j = await _get('/v1/discovery/saved', {'kind': kind, 'limit': 50});
-    final items = _items(j, (s) {
+    final rows = <dynamic>[...?j['items'] as List?];
+    var page = j;
+    final seen = <String>{};
+    while (page['hasMore'] == true) {
+      final cursor = page['nextCursor']?.toString();
+      if (cursor == null || cursor.isEmpty || !seen.add(cursor)) {
+        throw const ApiException(code: 'client.unexpected_response');
+      }
+      page = await _get('/v1/discovery/saved', {'kind': kind, 'limit': 50, 'cursor': cursor});
+      rows.addAll(page['items'] as List? ?? const []);
+    }
+    final items = _items({...j, 'items': rows}, (s) {
       final p = s['provider'], w = s['work'], r = s['request'];
       return SavedItem(
         kind: '${s['kind']}',
         targetId: '${s['targetId']}',
         available: s['available'] != false,
         provider: p is Map ? ProviderProfile.fromJson(Json.from(p)) : null,
-        work: w is Map ? Work.fromJson(Json.from(w)) : null,
-        request: r is Map ? ServiceRequest.fromJson(Json.from(r)) : null,
+        work: w is Map ? Work.fromJson({...Json.from(w), 'saved': true}) : null,
+        request: r is Map ? ServiceRequest.fromJson({...Json.from(r), 'saved': true}) : null,
       );
     });
     return (items, SavedCounts.fromJson(j['counts'] is Map ? Json.from(j['counts'] as Map) : null));
@@ -564,19 +862,32 @@ class HttpNexoApi implements NexoApi {
 
   // ---------------- contacto y reportes ----------------
   @override
-  Future<PhoneReveal> revealPhone(
-      {required String targetId, required String targetType, required String context}) async {
-    final j = await _send('POST', '/v1/engagement/contacts/phone',
-        body: {'targetId': targetId, 'targetType': targetType, 'context': context});
+  Future<PhoneReveal> revealPhone({
+    required String targetId,
+    required String targetType,
+    required String context,
+  }) async {
+    final j = await _send(
+      'POST',
+      '/v1/engagement/contacts/phone',
+      body: {'targetId': targetId, 'targetType': targetType, 'context': context},
+    );
     return PhoneReveal('${j['displayPhone'] ?? j['phone'] ?? ''}', '${j['targetName'] ?? ''}');
   }
 
   @override
-  Future<String> report(
-      {required String targetType, required String targetId, required String category, required String reason}) async {
-    final j = await _send('POST', '/v1/engagement/reports',
-        idem: _uuid.v4(),
-        body: {'targetType': targetType, 'targetId': targetId, 'category': category, 'reason': reason});
+  Future<String> report({
+    required String targetType,
+    required String targetId,
+    required String category,
+    required String reason,
+  }) async {
+    final j = await _send(
+      'POST',
+      '/v1/engagement/reports',
+      idem: _uuid.v4(),
+      body: {'targetType': targetType, 'targetId': targetId, 'category': category, 'reason': reason},
+    );
     return '${j['message'] ?? 'Recibimos tu reporte.'}';
   }
 
@@ -600,51 +911,56 @@ class HttpNexoApi implements NexoApi {
   // ---------------- imágenes ----------------
   @override
   Future<String> upload(PickedImage img, {required String purpose}) => _call(() async {
-        if (img.bytes.isEmpty || img.bytes.length > 5242880) throw const ApiException(code: 'upload.too_large');
-        if (!{'image/jpeg', 'image/png', 'image/webp'}.contains(img.contentType)) {
-          throw const ApiException(code: 'upload.content_type_invalid');
-        }
-        final t = await _send('POST', '/v1/discovery/uploads', body: {
-          'purpose': purpose,
-          'contentType': img.contentType,
-          'size': img.bytes.length,
-          if (img.width != null) 'width': img.width,
-          if (img.height != null) 'height': img.height,
-        });
-        final id = t['uploadId'];
-        final uri = Uri.tryParse('${t['uploadUrl']}');
-        if (id is! String ||
-            id.isEmpty ||
-            uri == null ||
-            !Env.isSecureBaseUrl(uri.toString(), release: kReleaseMode) ||
-            uri.userInfo.isNotEmpty ||
-            t['method'] != null && t['method'] != 'PUT') {
-          throw const ApiException(code: 'client.unexpected_response');
-        }
-        final headers = <String, dynamic>{};
-        if (t['headers'] is Map) {
-          (t['headers'] as Map).forEach((k, v) => headers['$k'] = '$v');
-        }
-        // La URL firmada va directo al almacenamiento: sin Bearer ni baseUrl.
-        await _uploadDio.put<dynamic>(
-          '${t['uploadUrl']}',
-          data: Stream.fromIterable([img.bytes]),
-          options: Options(headers: {...headers, Headers.contentLengthHeader: img.bytes.length}),
-        );
-        var state = await _send('POST', '/v1/discovery/uploads/$id/complete');
-        for (var n = 0; n < 40; n++) {
-          if (state['status'] == 'approved') return id;
-          if (state['status'] == 'rejected') throw const ApiException(code: 'upload.rejected_by_moderation');
-          if (state['status'] != 'processing' && state['status'] != 'uploaded' && state['status'] != 'pending') {
-            throw const ApiException(code: 'client.unexpected_response');
-          }
-          if (n > 0) await Future<void>.delayed(const Duration(seconds: 2));
-          state = await _get('/v1/discovery/uploads/$id');
-        }
-        throw const ApiException(
-            code: 'upload.processing_timeout',
-            detail: 'La foto sigue en revisión. Espera un momento y vuelve a intentarlo.');
-      });
+    if (img.bytes.isEmpty || img.bytes.length > 5242880) throw const ApiException(code: 'upload.too_large');
+    if (!{'image/jpeg', 'image/png', 'image/webp'}.contains(img.contentType)) {
+      throw const ApiException(code: 'upload.content_type_invalid');
+    }
+    final t = await _send(
+      'POST',
+      '/v1/discovery/uploads',
+      body: {
+        'purpose': purpose,
+        'contentType': img.contentType,
+        'size': img.bytes.length,
+        if (img.width != null) 'width': img.width,
+        if (img.height != null) 'height': img.height,
+      },
+    );
+    final id = t['uploadId'];
+    final uri = Uri.tryParse('${t['uploadUrl']}');
+    if (id is! String ||
+        id.isEmpty ||
+        uri == null ||
+        !Env.isSecureBaseUrl(uri.toString(), release: kReleaseMode) ||
+        uri.userInfo.isNotEmpty ||
+        t['method'] != null && t['method'] != 'PUT') {
+      throw const ApiException(code: 'client.unexpected_response');
+    }
+    final headers = <String, dynamic>{};
+    if (t['headers'] is Map) {
+      (t['headers'] as Map).forEach((k, v) => headers['$k'] = '$v');
+    }
+    // La URL firmada va directo al almacenamiento: sin Bearer ni baseUrl.
+    await _uploadDio.put<dynamic>(
+      '${t['uploadUrl']}',
+      data: Stream.fromIterable([img.bytes]),
+      options: Options(headers: {...headers, Headers.contentLengthHeader: img.bytes.length}),
+    );
+    var state = await _send('POST', '/v1/discovery/uploads/$id/complete');
+    for (var n = 0; n < 40; n++) {
+      if (state['status'] == 'approved') return id;
+      if (state['status'] == 'rejected') throw const ApiException(code: 'upload.rejected_by_moderation');
+      if (state['status'] != 'processing' && state['status'] != 'uploaded' && state['status'] != 'pending') {
+        throw const ApiException(code: 'client.unexpected_response');
+      }
+      if (n > 0) await Future<void>.delayed(const Duration(seconds: 2));
+      state = await _get('/v1/discovery/uploads/$id');
+    }
+    throw const ApiException(
+      code: 'upload.processing_timeout',
+      detail: 'La foto sigue en revisión. Espera un momento y vuelve a intentarlo.',
+    );
+  });
 
   // ---------------- asistente (IA generativa, EP-082) ----------------
   @override
@@ -654,12 +970,11 @@ class HttpNexoApi implements NexoApi {
     required String userText,
     int lengthLimit = 600,
   }) async {
-    final j = await _send('POST', '/v1/assist/draft', body: {
-      'kind': kind,
-      'categoryId': category,
-      'userText': userText,
-      'lengthLimit': lengthLimit,
-    });
+    final j = await _send(
+      'POST',
+      '/v1/assist/draft',
+      body: {'kind': kind, 'categoryId': category, 'userText': userText, 'lengthLimit': lengthLimit},
+    );
     final d = j['draft'];
     final text = d is Map ? '${d['text'] ?? d['description'] ?? ''}' : '${d ?? ''}';
     if (text.trim().isEmpty) throw const ApiException(code: 'client.unexpected_response');
@@ -673,8 +988,11 @@ class HttpNexoApi implements NexoApi {
   // ---------------- dispositivos (push) ----------------
   @override
   Future<String> registerDevice({required String fcmToken, required String appVersion}) async {
-    final j = await _send('POST', '/v1/identity/devices',
-        body: {'fcmToken': fcmToken, 'platform': 'android', 'appVersion': appVersion});
+    final j = await _send(
+      'POST',
+      '/v1/identity/devices',
+      body: {'fcmToken': fcmToken, 'platform': 'android', 'appVersion': appVersion},
+    );
     return '${j['deviceId'] ?? ''}';
   }
 

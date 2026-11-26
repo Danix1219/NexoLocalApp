@@ -1,11 +1,7 @@
 import 'dart:convert';
 
 class AuthTokens {
-  const AuthTokens({
-    required this.accessToken,
-    required this.refreshToken,
-    required this.expiresAt,
-  });
+  const AuthTokens({required this.accessToken, required this.refreshToken, required this.expiresAt});
 
   final String accessToken;
   final String refreshToken;

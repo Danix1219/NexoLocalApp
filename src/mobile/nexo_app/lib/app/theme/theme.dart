@@ -16,14 +16,16 @@ ThemeData buildNexoTheme() {
     scaffoldBackgroundColor: NexoColors.surface,
   );
   return base.copyWith(
-    pageTransitionsTheme: const PageTransitionsTheme(builders: {
-      TargetPlatform.android: NexoPageTransitions(),
-      TargetPlatform.iOS: NexoPageTransitions(),
-      TargetPlatform.windows: NexoPageTransitions(),
-      TargetPlatform.macOS: NexoPageTransitions(),
-      TargetPlatform.linux: NexoPageTransitions(),
-      TargetPlatform.fuchsia: NexoPageTransitions(),
-    }),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: NexoPageTransitions(),
+        TargetPlatform.iOS: NexoPageTransitions(),
+        TargetPlatform.windows: NexoPageTransitions(),
+        TargetPlatform.macOS: NexoPageTransitions(),
+        TargetPlatform.linux: NexoPageTransitions(),
+        TargetPlatform.fuchsia: NexoPageTransitions(),
+      },
+    ),
     textTheme: base.textTheme.apply(bodyColor: NexoColors.ink, displayColor: NexoColors.ink),
     textSelectionTheme: const TextSelectionThemeData(
       cursorColor: NexoColors.brand,

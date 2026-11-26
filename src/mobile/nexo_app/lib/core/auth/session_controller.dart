@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../local/file_cache.dart';
 import '../local/sync_controller.dart';
 import 'auth_tokens.dart';
 import 'token_storage.dart';
@@ -50,13 +53,13 @@ class SessionState {
   bool get isProviderMode => isSignedIn && mode == 'provider';
 
   SessionState copyWith({String? mode, bool? hasProvider, String? name}) => SessionState(
-        status: status,
-        recoveryOnly: recoveryOnly,
-        accountId: accountId,
-        mode: mode ?? this.mode,
-        hasProvider: hasProvider ?? this.hasProvider,
-        name: name ?? this.name,
-      );
+    status: status,
+    recoveryOnly: recoveryOnly,
+    accountId: accountId,
+    mode: mode ?? this.mode,
+    hasProvider: hasProvider ?? this.hasProvider,
+    name: name ?? this.name,
+  );
 }
 
 /// Sesión siempre viva: se restaura del almacenamiento seguro al abrir la app
@@ -92,8 +95,8 @@ class SessionController extends Notifier<SessionState> {
 
   /// Tras una renovación: mode/has_provider se releen del token nuevo, salvo
   /// que el modo se haya elegido en la app (backend de cuenta aún de prueba).
-  Future<void> updateTokens(AuthTokens tokens) async {
-    await _storage.write(tokens);
+  Future<void> updateTokens(AuthTokens tokens, {bool persist = true}) async {
+    if (persist) await _storage.write(tokens);
     if (state.isSignedIn) {
       state = SessionState.fromTokens(tokens, name: state.name, modeOverride: await _storage.readMode());
     }
@@ -136,6 +139,8 @@ class SessionController extends Notifier<SessionState> {
     }
     await _storage.clear();
     state = const SessionState.signedOut();
+    // Fotos y adjuntos cifrados guardados en archivos.
+    unawaited(FileCache.clearAll());
   }
 }
 

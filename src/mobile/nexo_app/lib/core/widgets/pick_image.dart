@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../data/nexo_api.dart';
 import 'nexo_sheet.dart';
+import 'toast.dart';
 
 final _picker = ImagePicker();
 
@@ -16,7 +17,17 @@ String _type(String path) {
 
 Future<PickedImage?> _toPicked(XFile? f) async {
   if (f == null) return null;
-  return PickedImage(path: f.path, bytes: await f.readAsBytes(), contentType: _type(f.path));
+  final bytes = await f.readAsBytes();
+  if (bytes.isEmpty || bytes.length > 5242880) throw StateError('Elige una foto de hasta 5 MB.');
+  final type = bytes.length >= 3 && bytes[0] == 255 && bytes[1] == 216
+      ? 'image/jpeg'
+      : bytes.length >= 4 && bytes[0] == 137 && bytes[1] == 80
+      ? 'image/png'
+      : bytes.length >= 12 && bytes[0] == 82 && bytes[1] == 73 && bytes[8] == 87 && bytes[9] == 69
+      ? 'image/webp'
+      : _type(f.path);
+  if (type == 'image/heic') throw StateError('Elige una imagen JPG, PNG o WebP.');
+  return PickedImage(path: f.path, bytes: bytes, contentType: type);
 }
 
 /// Pregunta cámara o galería y devuelve la foto reducida (máx. 1600 px).
@@ -35,8 +46,9 @@ Future<PickedImage?> pickOneImage(BuildContext context) async {
   );
   if (src == null) return null;
   try {
-    return _toPicked(await _picker.pickImage(source: src, maxWidth: 1600, maxHeight: 1600, imageQuality: 85));
-  } catch (_) {
+    return await _toPicked(await _picker.pickImage(source: src, maxWidth: 1600, maxHeight: 1600, imageQuality: 85));
+  } catch (e) {
+    showNexoToast(e is StateError ? e.message.toString() : 'No pudimos abrir la foto. Int?ntalo de nuevo.');
     return null;
   }
 }
@@ -44,8 +56,12 @@ Future<PickedImage?> pickOneImage(BuildContext context) async {
 /// Varias fotos de la galería (publicar un trabajo, hasta [max]).
 Future<List<PickedImage>> pickImages({int max = 4}) async {
   try {
-    final files =
-        await _picker.pickMultiImage(maxWidth: 1600, maxHeight: 1600, imageQuality: 85, limit: max >= 2 ? max : null);
+    final files = await _picker.pickMultiImage(
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 85,
+      limit: max >= 2 ? max : null,
+    );
     final out = <PickedImage>[];
     for (final f in files.take(max)) {
       final p = await _toPicked(f);

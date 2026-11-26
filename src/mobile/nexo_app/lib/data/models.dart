@@ -102,22 +102,22 @@ class ServiceCategory {
 
 /// Resumen de prestador (feed, chat, guardados, interesados).
 class ProviderMini {
-  const ProviderMini(
-      {required this.id,
-      required this.name,
-      this.photoUrl,
-      this.kind = 'trade',
-      this.emailVerified = false,
-      this.phoneVerified = false});
+  const ProviderMini({
+    required this.id,
+    required this.name,
+    this.photoUrl,
+    this.kind = 'trade',
+    this.emailVerified = false,
+    this.phoneVerified = false,
+  });
   factory ProviderMini.fromJson(Json j) => ProviderMini(
-        id: _sd(j['providerId'] ?? j['id']),
-        name: _sd(j['name'] ?? j['displayName']),
-        photoUrl: _s(j['photoUrl']),
-        kind: _sd(j['kind'], 'trade'),
-        emailVerified:
-            _b(j['emailVerified']) || j['emailVerifiedAt'] != null || _ls(j['badges']).contains('emailVerified'),
-        phoneVerified: _ls(j['badges']).contains('phoneVerified'),
-      );
+    id: _sd(j['providerId'] ?? j['id']),
+    name: _sd(j['name'] ?? j['displayName']),
+    photoUrl: _s(j['photoUrl']),
+    kind: _sd(j['kind'], 'trade'),
+    emailVerified: _b(j['emailVerified']) || j['emailVerifiedAt'] != null || _ls(j['badges']).contains('emailVerified'),
+    phoneVerified: _ls(j['badges']).contains('phoneVerified'),
+  );
   final String id;
   final String name;
   final String? photoUrl;
@@ -129,11 +129,11 @@ class ProviderMini {
 class PriceItem {
   const PriceItem({required this.service, this.fromCents, this.unit = 'from', this.suffix = ''});
   factory PriceItem.fromJson(Json j) => PriceItem(
-        service: _sd(j['service']),
-        fromCents: j['fromCents'] == null ? null : _i(j['fromCents']),
-        unit: _sd(j['unit'], 'from'),
-        suffix: _sd(j['suffix']),
-      );
+    service: _sd(j['service']),
+    fromCents: j['fromCents'] == null ? null : _i(j['fromCents']),
+    unit: _sd(j['unit'], 'from'),
+    suffix: _sd(j['suffix']),
+  );
   final String service;
   final int? fromCents;
   final String unit;
@@ -210,10 +210,12 @@ class ProviderProfile {
     final badgesRaw = j['badges'];
     final badges = badgesRaw is List
         ? badgesRaw
-            .map((b) => b is Map
-                ? ProviderBadge(_sd(b['key']), _sd(b['label']), level: _sd(b['level'], 'declared'))
-                : ProviderBadge('$b', '$b' == 'phoneVerified' ? 'Teléfono confirmado' : '$b'))
-            .toList()
+              .map(
+                (b) => b is Map
+                    ? ProviderBadge(_sd(b['key']), _sd(b['label']), level: _sd(b['level'], 'declared'))
+                    : ProviderBadge('$b', '$b' == 'phoneVerified' ? 'Teléfono confirmado' : '$b'),
+              )
+              .toList()
         : <ProviderBadge>[];
     final sched = _m(j['schedule']);
     final days = sched?['days'] is List
@@ -242,18 +244,20 @@ class ProviderProfile {
       distanceText: _sd(j['distanceText']),
       radiusKm: _i(j['radiusKm']),
       shopLocation: _m(j['shopLocation']) == null ? null : GeoPoint.fromJson(_m(j['shopLocation'])!),
-      zonePoint:
-          _m(_m(j['publicZone'])?['point']) == null ? null : GeoPoint.fromJson(_m(_m(j['publicZone'])!['point'])!),
+      zonePoint: _m(_m(j['publicZone'])?['point']) == null
+          ? null
+          : GeoPoint.fromJson(_m(_m(j['publicZone'])!['point'])!),
       status: OpenStatus.fromJson(_m(j['status'])),
       days: days,
       urgent: _b(sched?['urgent'] ?? j['urgent']),
       visitMode: _sd(visit?['mode'], 'hidden'),
-      visitText: _s(visit?['text']) ??
+      visitText:
+          _s(visit?['text']) ??
           (visit?['mode'] == 'free'
               ? 'Sin costo'
               : visit?['mode'] == 'paid' && visit?['amountCents'] is num
-                  ? formatMoney(_i(visit!['amountCents']))
-                  : null),
+              ? formatMoney(_i(visit!['amountCents']))
+              : null),
       visitAmountCents: visit?['amountCents'] is num ? _i(visit!['amountCents']) : null,
       minPriceText:
           _s(minP?['text']) ?? (minP?['fromCents'] is num ? 'Desde ${formatMoney(_i(minP!['fromCents']))}' : null),
@@ -328,19 +332,26 @@ class ProviderProfile {
   bool get isBusiness => kind == 'business';
   bool get hasShop => attention == 'shop' || attention == 'both';
   ProviderMini get mini => ProviderMini(
-      id: id, name: name, photoUrl: photoUrl, kind: kind, emailVerified: emailVerified, phoneVerified: phoneVerified);
+    id: id,
+    name: name,
+    photoUrl: photoUrl,
+    kind: kind,
+    emailVerified: emailVerified,
+    phoneVerified: phoneVerified,
+  );
 }
 
 /// `GET /providers/me`: el perfil propio con lo que falta por completar.
 class MyProvider {
-  const MyProvider(
-      {required this.profile,
-      this.completeness = 0,
-      this.todo = const [],
-      this.views = 0,
-      this.contactClicks,
-      this.policyVersion,
-      this.location});
+  const MyProvider({
+    required this.profile,
+    this.completeness = 0,
+    this.todo = const [],
+    this.views = 0,
+    this.contactClicks,
+    this.policyVersion,
+    this.location,
+  });
   factory MyProvider.fromJson(Json j) {
     final st = _m(j['stats']);
     return MyProvider(
@@ -391,21 +402,21 @@ class Work {
   });
 
   factory Work.fromJson(Json j, {ProviderMini? provider}) => Work(
-        id: _sd(j['workId']),
-        provider: provider ?? ProviderMini.fromJson(_m(j['provider']) ?? const {}),
-        category: _sd(j['category'], 'otros'),
-        title: _sd(j['title']),
-        text: _sd(j['text'] ?? j['textExcerpt']),
-        images: _lo(j['images'], Img.fromJson),
-        zoneLabel: _sd(j['zoneLabel']),
-        distanceText: _sd(j['distanceText']),
-        recs: _i(j['recs']),
-        tag: _s(j['tag']),
-        ago: _sd(j['ago']),
-        saved: _b(j['saved']),
-        recommended: _b(j['recommended']),
-        canContact: j['canContact'] == null ? true : _b(j['canContact']),
-      );
+    id: _sd(j['workId']),
+    provider: provider ?? ProviderMini.fromJson(_m(j['provider']) ?? const {}),
+    category: _sd(j['category'], 'otros'),
+    title: _sd(j['title']),
+    text: _sd(j['text'] ?? j['textExcerpt']),
+    images: _lo(j['images'], Img.fromJson),
+    zoneLabel: _sd(j['zoneLabel']),
+    distanceText: _sd(j['distanceText']),
+    recs: _i(j['recs']),
+    tag: _s(j['tag']),
+    ago: _sd(j['ago']),
+    saved: _b(j['saved']),
+    recommended: _b(j['recommended']),
+    canContact: j['canContact'] == null ? true : _b(j['canContact']),
+  );
 
   final String id;
   final ProviderMini provider;
@@ -423,21 +434,21 @@ class Work {
   final bool canContact;
 
   Work copyWith({ProviderMini? provider, bool? saved, bool? recommended, int? recs}) => Work(
-        id: id,
-        provider: provider ?? this.provider,
-        category: category,
-        title: title,
-        text: text,
-        images: images,
-        zoneLabel: zoneLabel,
-        distanceText: distanceText,
-        recs: recs ?? this.recs,
-        tag: tag,
-        ago: ago,
-        saved: saved ?? this.saved,
-        recommended: recommended ?? this.recommended,
-        canContact: canContact,
-      );
+    id: id,
+    provider: provider ?? this.provider,
+    category: category,
+    title: title,
+    text: text,
+    images: images,
+    zoneLabel: zoneLabel,
+    distanceText: distanceText,
+    recs: recs ?? this.recs,
+    tag: tag,
+    ago: ago,
+    saved: saved ?? this.saved,
+    recommended: recommended ?? this.recommended,
+    canContact: canContact,
+  );
 }
 
 class FeedPage {
@@ -529,8 +540,8 @@ class ServiceRequest {
   List<String> get photos => imageUrls.isNotEmpty
       ? imageUrls
       : imageUrl == null
-          ? const []
-          : [imageUrl!];
+      ? const []
+      : [imageUrl!];
   final String status;
   final int interestCount;
   final List<ProviderMini> interestedPreview;
@@ -552,13 +563,14 @@ class ServiceRequest {
 }
 
 class Interested {
-  const Interested(
-      {required this.provider,
-      this.note,
-      this.conversationId,
-      this.orderStatus,
-      this.canOrder = true,
-      this.canMessage = true});
+  const Interested({
+    required this.provider,
+    this.note,
+    this.conversationId,
+    this.orderStatus,
+    this.canOrder = true,
+    this.canMessage = true,
+  });
   factory Interested.fromJson(Json j) {
     final a = _m(j['actions']);
     return Interested(
@@ -589,21 +601,22 @@ class InterestedPage {
 // ---------- pedidos ----------
 
 class Counterpart {
-  const Counterpart(
-      {required this.id,
-      required this.displayName,
-      this.photoUrl,
-      this.kind = 'client',
-      this.canCopyPhone = false,
-      this.providerId});
+  const Counterpart({
+    required this.id,
+    required this.displayName,
+    this.photoUrl,
+    this.kind = 'client',
+    this.canCopyPhone = false,
+    this.providerId,
+  });
   factory Counterpart.fromJson(Json? j) => Counterpart(
-        id: _sd(j?['accountId'] ?? j?['id']),
-        providerId: _s(j?['providerId'] ?? (_sd(j?['kind']) == 'provider' ? (j?['id'] ?? j?['accountId']) : null)),
-        displayName: _sd(j?['displayName'] ?? j?['name']),
-        photoUrl: _s(j?['photoUrl']),
-        kind: _sd(j?['kind'], 'client'),
-        canCopyPhone: _b(j?['canCopyPhone']),
-      );
+    id: _sd(j?['accountId'] ?? j?['id']),
+    providerId: _s(j?['providerId'] ?? (_sd(j?['kind']) == 'provider' ? (j?['id'] ?? j?['accountId']) : null)),
+    displayName: _sd(j?['displayName'] ?? j?['name']),
+    photoUrl: _s(j?['photoUrl']),
+    kind: _sd(j?['kind'], 'client'),
+    canCopyPhone: _b(j?['canCopyPhone']),
+  );
   final String id;
   final String displayName;
   final String? photoUrl;
@@ -683,8 +696,9 @@ class Order {
       placeZone: _sd(j['placeZone']),
       address: _s(j['address']),
       addressNote: _s(j['addressNote']),
-      location:
-          _m(j['location'] ?? map?['point']) == null ? null : GeoPoint.fromJson(_m(j['location'] ?? map?['point'])!),
+      location: _m(j['location'] ?? map?['point']) == null
+          ? null
+          : GeoPoint.fromJson(_m(j['location'] ?? map?['point'])!),
       agreedPrice: price == null ? null : Money.fromJson(price),
       requestId: _s(j['requestId'] ?? req?['requestId']),
       requestTitle: _s(req?['title']),
@@ -742,14 +756,15 @@ class OrdersPage {
 // ---------- opiniones ----------
 
 class Review {
-  const Review(
-      {required this.id,
-      required this.stars,
-      required this.text,
-      required this.recommend,
-      required this.author,
-      this.authorPhoto,
-      this.ago = ''});
+  const Review({
+    required this.id,
+    required this.stars,
+    required this.text,
+    required this.recommend,
+    required this.author,
+    this.authorPhoto,
+    this.ago = '',
+  });
   factory Review.fromJson(Json j) {
     final a = _m(j['author']);
     return Review(
@@ -812,16 +827,16 @@ class Conversation {
     this.blockedByMe = false,
   });
   factory Conversation.fromJson(Json j) => Conversation(
-        id: _sd(j['conversationId']),
-        counterpart: Counterpart.fromJson(_m(j['counterpart'])),
-        lastPreview: _sd(j['lastPreview']),
-        ago: _sd(j['ago']),
-        unread: _i(j['unread']),
-        requestId: _s(j['requestId']),
-        activeOrder: ActiveOrder.fromJson(_m(j['activeOrder'])),
-        blocked: _b(j['blocked']),
-        blockedByMe: _b(j['blockedByMe']),
-      );
+    id: _sd(j['conversationId']),
+    counterpart: Counterpart.fromJson(_m(j['counterpart'])),
+    lastPreview: _sd(j['lastPreview']),
+    ago: _sd(j['ago']),
+    unread: _i(j['unread']),
+    requestId: _s(j['requestId']),
+    activeOrder: ActiveOrder.fromJson(_m(j['activeOrder'])),
+    blocked: _b(j['blocked']),
+    blockedByMe: _b(j['blockedByMe']),
+  );
   final String id;
   final Counterpart counterpart;
   final String lastPreview;
@@ -834,16 +849,22 @@ class Conversation {
 }
 
 class Message {
-  const Message(
-      {required this.id,
-      required this.kind,
-      this.text = '',
-      this.imageUrl,
-      required this.mine,
-      this.createdAt,
-      this.readAt,
-      this.systemType,
-      this.orderId});
+  const Message({
+    required this.id,
+    required this.kind,
+    this.text = '',
+    this.imageUrl,
+    required this.mine,
+    this.createdAt,
+    this.readAt,
+    this.deliveredAt,
+    this.systemType,
+    this.editedAt,
+    this.senderId,
+    this.encryptedPayload,
+    this.privateAttachment,
+    this.orderId,
+  });
   factory Message.fromJson(Json j) {
     final sys = _m(j['system']);
     return Message(
@@ -854,7 +875,11 @@ class Message {
       mine: _b(j['mine']),
       createdAt: DateTime.tryParse(_sd(j['createdAt']))?.toLocal(),
       readAt: DateTime.tryParse(_sd(j['readAt']))?.toLocal(),
+      deliveredAt: DateTime.tryParse(_sd(j['deliveredAt']))?.toLocal(),
+      editedAt: DateTime.tryParse(_sd(j['editedAt']))?.toLocal(),
       systemType: _s(sys?['type']),
+      senderId: _s(j['senderId']),
+      encryptedPayload: j['encrypted'] is Map ? Json.from(j['encrypted'] as Map) : null,
       orderId: _s(sys?['orderId']),
     );
   }
@@ -865,21 +890,31 @@ class Message {
   final bool mine;
   final DateTime? createdAt;
   final DateTime? readAt;
+  final DateTime? deliveredAt;
+  final DateTime? editedAt;
   final String? systemType;
+  final String? senderId;
+  final Json? encryptedPayload;
+  final Json? privateAttachment;
   final String? orderId;
 }
 
 class ChatThread {
-  const ChatThread(
-      {required this.id,
-      required this.counterpart,
-      required this.messages,
-      this.activeOrder,
-      this.blocked = false,
-      this.canSend = true,
-      this.quickReplies = const [],
-      this.hasMore = false,
-      this.nextCursor});
+  const ChatThread({
+    required this.id,
+    required this.counterpart,
+    required this.messages,
+    this.activeOrder,
+    this.blocked = false,
+    this.canSend = true,
+    this.quickReplies = const [],
+    this.hasMore = false,
+    this.encrypted = false,
+    this.peerAccountId,
+    this.nextCursor,
+  });
+  final bool encrypted;
+  final String? peerAccountId;
   final String id;
   final Counterpart counterpart;
   final List<Message> messages; // del más viejo al más nuevo
@@ -894,8 +929,14 @@ class ChatThread {
 // ---------- guardados, notificaciones, cuenta ----------
 
 class SavedItem {
-  const SavedItem(
-      {required this.kind, required this.targetId, this.available = true, this.provider, this.work, this.request});
+  const SavedItem({
+    required this.kind,
+    required this.targetId,
+    this.available = true,
+    this.provider,
+    this.work,
+    this.request,
+  });
   final String kind;
   final String targetId;
   final bool available;
@@ -915,25 +956,26 @@ class SavedCounts {
 }
 
 class NotificationItem {
-  const NotificationItem(
-      {required this.id,
-      required this.title,
-      this.body = '',
-      this.deepLink,
-      this.actionLabel,
-      this.icon = 'bell',
-      this.read = false,
-      this.ago = ''});
+  const NotificationItem({
+    required this.id,
+    required this.title,
+    this.body = '',
+    this.deepLink,
+    this.actionLabel,
+    this.icon = 'bell',
+    this.read = false,
+    this.ago = '',
+  });
   factory NotificationItem.fromJson(Json j) => NotificationItem(
-        id: _sd(j['notificationId']),
-        title: _sd(j['title']),
-        body: _sd(j['body']),
-        deepLink: _s(j['deepLink']),
-        actionLabel: _s(j['actionLabel']),
-        icon: _sd(j['icon'], 'bell'),
-        read: j['readAt'] != null,
-        ago: _sd(j['ago']),
-      );
+    id: _sd(j['notificationId']),
+    title: _sd(j['title']),
+    body: _sd(j['body']),
+    deepLink: _s(j['deepLink']),
+    actionLabel: _s(j['actionLabel']),
+    icon: _sd(j['icon'], 'bell'),
+    read: j['readAt'] != null,
+    ago: _sd(j['ago']),
+  );
   final String id;
   final String title;
   final String body;
@@ -1046,12 +1088,12 @@ class AccountScreen {
 class MapPoint {
   const MapPoint({required this.id, required this.point, required this.state, required this.title, this.subtitle = ''});
   factory MapPoint.fromJson(Json j) => MapPoint(
-        id: _sd(j['id']),
-        point: GeoPoint.fromJson(_m(j['point']) ?? const {}),
-        state: _sd(j['state']),
-        title: _sd(j['title']),
-        subtitle: _sd(j['subtitle']),
-      );
+    id: _sd(j['id']),
+    point: GeoPoint.fromJson(_m(j['point']) ?? const {}),
+    state: _sd(j['state']),
+    title: _sd(j['title']),
+    subtitle: _sd(j['subtitle']),
+  );
   final String id;
   final GeoPoint point;
   final String state; // open | closed | today | week…
@@ -1069,9 +1111,10 @@ class LocationResult {
   factory LocationResult.fromJson(Map<String, dynamic> j) {
     final point = Map<String, dynamic>.from(j['searchLocation'] as Map);
     return LocationResult(
-        point: GeoPoint((point['lat'] as num).toDouble(), (point['lng'] as num).toDouble()),
-        zoneLabel: j['zoneLabel'] as String,
-        radiusKm: (j['radiusKm'] as num).toInt());
+      point: GeoPoint((point['lat'] as num).toDouble(), (point['lng'] as num).toDouble()),
+      zoneLabel: j['zoneLabel'] as String,
+      radiusKm: (j['radiusKm'] as num).toInt(),
+    );
   }
   const LocationResult({required this.point, required this.zoneLabel, required this.radiusKm, this.summary = ''});
   final GeoPoint point;
@@ -1093,12 +1136,12 @@ class CompareResult {
   final List<ProviderMini> providers;
   final List<CompareRow> rows;
   static CompareResult fromJson(Json j) => CompareResult(
-        _lo(j['providers'], ProviderMini.fromJson),
-        _lo(
-            j['rows'],
-            (r) =>
-                CompareRow(_sd(r['key']), _sd(r['label']), _ls(r['values']), r['best'] == null ? null : _i(r['best']))),
-      );
+    _lo(j['providers'], ProviderMini.fromJson),
+    _lo(
+      j['rows'],
+      (r) => CompareRow(_sd(r['key']), _sd(r['label']), _ls(r['values']), r['best'] == null ? null : _i(r['best'])),
+    ),
+  );
 }
 
 class Suggestion {
@@ -1123,16 +1166,17 @@ class UploadTicket {
 
 /// Filtros de búsqueda de prestadores (`GET /search/providers`).
 class SearchFilters {
-  const SearchFilters(
-      {this.q = '',
-      this.cat,
-      this.open = false,
-      this.free = false,
-      this.prices = false,
-      this.urgent = false,
-      this.attention,
-      this.sort = 'relevance',
-      this.expanded = false});
+  const SearchFilters({
+    this.q = '',
+    this.cat,
+    this.open = false,
+    this.free = false,
+    this.prices = false,
+    this.urgent = false,
+    this.attention,
+    this.sort = 'relevance',
+    this.expanded = false,
+  });
   final String q;
   final String? cat;
   final bool open;
@@ -1152,27 +1196,27 @@ class SearchFilters {
       (attention != null ? 1 : 0) +
       (sort != 'relevance' ? 1 : 0);
 
-  SearchFilters copyWith(
-          {String? q,
-          Object? cat = _keep,
-          bool? open,
-          bool? free,
-          bool? prices,
-          bool? urgent,
-          Object? attention = _keep,
-          String? sort,
-          bool? expanded}) =>
-      SearchFilters(
-        q: q ?? this.q,
-        cat: identical(cat, _keep) ? this.cat : cat as String?,
-        open: open ?? this.open,
-        free: free ?? this.free,
-        prices: prices ?? this.prices,
-        urgent: urgent ?? this.urgent,
-        attention: identical(attention, _keep) ? this.attention : attention as String?,
-        sort: sort ?? this.sort,
-        expanded: expanded ?? this.expanded,
-      );
+  SearchFilters copyWith({
+    String? q,
+    Object? cat = _keep,
+    bool? open,
+    bool? free,
+    bool? prices,
+    bool? urgent,
+    Object? attention = _keep,
+    String? sort,
+    bool? expanded,
+  }) => SearchFilters(
+    q: q ?? this.q,
+    cat: identical(cat, _keep) ? this.cat : cat as String?,
+    open: open ?? this.open,
+    free: free ?? this.free,
+    prices: prices ?? this.prices,
+    urgent: urgent ?? this.urgent,
+    attention: identical(attention, _keep) ? this.attention : attention as String?,
+    sort: sort ?? this.sort,
+    expanded: expanded ?? this.expanded,
+  );
 }
 
 /// Filtros del prestador sobre solicitudes (`GET /requests/opportunities`).
@@ -1185,12 +1229,12 @@ class OppFilters {
   final bool myServiceOnly;
   int get count => (cat != null ? 1 : 0) + (today ? 1 : 0) + (inRadius ? 0 : 1) + (myServiceOnly ? 0 : 1);
   OppFilters copyWith({String? q, Object? cat = _keep, bool? today, bool? inRadius, bool? myServiceOnly}) => OppFilters(
-        q: q ?? this.q,
-        cat: identical(cat, _keep) ? this.cat : cat as String?,
-        today: today ?? this.today,
-        inRadius: inRadius ?? this.inRadius,
-        myServiceOnly: myServiceOnly ?? this.myServiceOnly,
-      );
+    q: q ?? this.q,
+    cat: identical(cat, _keep) ? this.cat : cat as String?,
+    today: today ?? this.today,
+    inRadius: inRadius ?? this.inRadius,
+    myServiceOnly: myServiceOnly ?? this.myServiceOnly,
+  );
 }
 
 const Object _keep = Object();
@@ -1207,10 +1251,10 @@ class SearchResult {
 class GeoPlace {
   const GeoPlace({required this.point, required this.label, required this.zoneLabel});
   factory GeoPlace.fromJson(Map<String, dynamic> j) => GeoPlace(
-        point: GeoPoint((j['lat'] as num).toDouble(), (j['lng'] as num).toDouble()),
-        label: j['label'] as String,
-        zoneLabel: j['zoneLabel'] as String,
-      );
+    point: GeoPoint((j['lat'] as num).toDouble(), (j['lng'] as num).toDouble()),
+    label: j['label'] as String,
+    zoneLabel: j['zoneLabel'] as String,
+  );
   final GeoPoint point;
   final String label;
   final String zoneLabel;

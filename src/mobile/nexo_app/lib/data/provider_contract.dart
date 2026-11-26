@@ -12,17 +12,17 @@ const _specialtySlugs = <String, List<String>>{
 };
 
 List<String> providerSpecialtySlugs(List<String> categories, List<String> values) => [
-      for (final value in values)
-        (() {
-          for (final cat in fakeCats.where((cat) => categories.contains(cat.id))) {
-            final slugs = _specialtySlugs[cat.id] ?? const <String>[];
-            if (slugs.contains(value)) return value;
-            final index = cat.specs.indexOf(value);
-            if (index >= 0 && index < slugs.length) return slugs[index];
-          }
-          throw const FormatException('La especialidad no pertenece a las categorías seleccionadas.');
-        })(),
-    ];
+  for (final value in values)
+    (() {
+      for (final cat in fakeCats.where((cat) => categories.contains(cat.id))) {
+        final slugs = _specialtySlugs[cat.id] ?? const <String>[];
+        if (slugs.contains(value)) return value;
+        final index = cat.specs.indexOf(value);
+        if (index >= 0 && index < slugs.length) return slugs[index];
+      }
+      throw const FormatException('La especialidad no pertenece a las categorías seleccionadas.');
+    })(),
+];
 
 String providerSpecialtyLabel(List<String> categories, String value) {
   for (final cat in fakeCats.where((cat) => categories.contains(cat.id))) {
@@ -33,20 +33,20 @@ String providerSpecialtyLabel(List<String> categories, String value) {
 }
 
 String? responseTimeLabel(String? value) => switch (value) {
-      'sameDay' => 'El mismo día',
-      'h24' => 'En 24 h',
-      'h48' => 'En 48 h',
-      'week' => 'En la semana',
-      _ => value,
-    };
+  'sameDay' => 'El mismo día',
+  'h24' => 'En 24 h',
+  'h48' => 'En 48 h',
+  'week' => 'En la semana',
+  _ => value,
+};
 String paymentLabel(String value) => switch (value) {
-      'cash' => 'Efectivo',
-      'transfer' => 'Transferencia',
-      'card' => 'Tarjeta',
-      'deposit' => 'Depósito',
-      'other' => 'Otro',
-      _ => value,
-    };
+  'cash' => 'Efectivo',
+  'transfer' => 'Transferencia',
+  'card' => 'Tarjeta',
+  'deposit' => 'Depósito',
+  'other' => 'Otro',
+  _ => value,
+};
 String centsInput(int cents) =>
     cents % 100 == 0 ? '${cents ~/ 100}' : '${cents ~/ 100}.${(cents % 100).toString().padLeft(2, '0')}';
 int? parseProviderMoney(String text) {

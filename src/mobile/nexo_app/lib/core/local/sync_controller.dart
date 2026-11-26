@@ -25,7 +25,8 @@ final localStoreProvider = Provider<Future<LocalStore>>((ref) async {
 
 /// `true` cuando el teléfono vuelve a tener red. Se sobreescribe en pruebas.
 final connectivityChangesProvider = Provider<Stream<bool>>(
-    (ref) => Connectivity().onConnectivityChanged.map((r) => r.any((c) => c != ConnectivityResult.none)));
+  (ref) => Connectivity().onConnectivityChanged.map((r) => r.any((c) => c != ConnectivityResult.none)),
+);
 
 String accountKey(SessionState s) => s.isSignedIn && s.accountId != null ? s.accountId! : 'guest';
 
@@ -139,8 +140,9 @@ class SyncController extends Notifier<SyncState> {
     } finally {
       _flushing = false;
     }
-    if (sent > 0)
+    if (sent > 0) {
       notify?.call(sent == 1 ? 'Se publicó tu solicitud guardada.' : 'Se publicaron $sent solicitudes guardadas.');
+    }
     for (final f in failed) {
       notify?.call(f);
     }

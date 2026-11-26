@@ -7,9 +7,9 @@ import '../validation.dart';
 import 'nexo_icon.dart';
 
 OutlineInputBorder _border(Color c) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: c, width: 1.5),
-    );
+  borderRadius: BorderRadius.circular(16),
+  borderSide: BorderSide(color: c, width: 1.5),
+);
 
 /// Campo de la maqueta (`.fb input`): relleno #F6F5F0 sin borde; al enfocar,
 /// fondo blanco y borde verde.
@@ -19,7 +19,8 @@ InputDecoration nexoInputDecoration({String? hint, Widget? suffix}) {
     hintStyle: NexoText.body(15, color: NexoColors.muted.withValues(alpha: .8)),
     filled: true,
     fillColor: WidgetStateColor.resolveWith(
-        (states) => states.contains(WidgetState.focused) ? NexoColors.surface : NexoColors.field),
+      (states) => states.contains(WidgetState.focused) ? NexoColors.surface : NexoColors.field,
+    ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
     border: _border(Colors.transparent),
     enabledBorder: _border(Colors.transparent),
@@ -87,10 +88,7 @@ class NexoField extends StatelessWidget {
           autofillHints: autofillHints,
           textInputAction: textInputAction,
           onSubmitted: onSubmitted,
-          inputFormatters: [
-            if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
-            ...?inputFormatters,
-          ],
+          inputFormatters: [if (maxLength != null) LengthLimitingTextInputFormatter(maxLength), ...?inputFormatters],
           style: style ?? NexoText.body(16),
           textAlign: textAlign,
           autofocus: autofocus,
@@ -98,10 +96,7 @@ class NexoField extends StatelessWidget {
           textCapitalization: capitalization,
           decoration: nexoInputDecoration(hint: hint, suffix: suffix),
         ),
-        if (helper != null) ...[
-          const SizedBox(height: 7),
-          NexoHint(helper!),
-        ],
+        if (helper != null) ...[const SizedBox(height: 7), NexoHint(helper!)],
       ],
     );
   }
@@ -151,9 +146,7 @@ class _NexoPasswordFieldState extends State<NexoPasswordField> {
           child: SizedBox(
             width: 44,
             height: 44,
-            child: Center(
-              child: NexoIcon(_hidden ? 'eye' : 'eyeOff', color: NexoColors.muted),
-            ),
+            child: Center(child: NexoIcon(_hidden ? 'eye' : 'eyeOff', color: NexoColors.muted)),
           ),
         ),
       ),
@@ -171,25 +164,28 @@ class PasswordRequirements extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget item(bool ok, String text) => Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Semantics(
-            label: '$text: ${ok ? 'cumple' : 'pendiente'}',
-            excludeSemantics: true,
-            child: Row(
-              children: [
-                NexoIcon(ok ? 'check' : 'dots', size: 16, color: ok ? NexoColors.ok : NexoColors.muted),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: NexoText.body(13,
-                        weight: ok ? FontWeight.w600 : FontWeight.w400, color: ok ? NexoColors.ok : NexoColors.muted),
-                  ),
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Semantics(
+        label: '$text: ${ok ? 'cumple' : 'pendiente'}',
+        excludeSemantics: true,
+        child: Row(
+          children: [
+            NexoIcon(ok ? 'check' : 'dots', size: 16, color: ok ? NexoColors.ok : NexoColors.muted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                text,
+                style: NexoText.body(
+                  13,
+                  weight: ok ? FontWeight.w600 : FontWeight.w400,
+                  color: ok ? NexoColors.ok : NexoColors.muted,
                 ),
-              ],
+              ),
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -209,10 +205,10 @@ class NexoHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        textAlign: center ? TextAlign.center : TextAlign.start,
-        style: NexoText.body(12.5, color: NexoColors.muted, height: 1.45),
-      );
+    text,
+    textAlign: center ? TextAlign.center : TextAlign.start,
+    style: NexoText.body(12.5, color: NexoColors.muted, height: 1.45),
+  );
 }
 
 /// Error en línea (`.err`), anunciado a lectores de pantalla.

@@ -13,15 +13,14 @@ class NexoText {
     Color color = NexoColors.ink,
     double? height,
     double? letterSpacing,
-  }) =>
-      TextStyle(
-        fontFamily: 'PlusJakartaSans',
-        fontSize: size,
-        fontWeight: weight,
-        color: color,
-        height: height,
-        letterSpacing: letterSpacing ?? -0.02 * size,
-      );
+  }) => TextStyle(
+    fontFamily: 'PlusJakartaSans',
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    height: height,
+    letterSpacing: letterSpacing ?? -0.02 * size,
+  );
 
   static TextStyle body(
     double size, {
@@ -29,13 +28,12 @@ class NexoText {
     Color color = NexoColors.ink,
     double? height,
     double? letterSpacing,
-  }) =>
-      TextStyle(
-        fontFamily: 'NunitoSans',
-        fontSize: size,
-        fontWeight: weight,
-        color: color,
-        height: height,
-        letterSpacing: letterSpacing,
-      );
+  }) => TextStyle(
+    fontFamily: 'NunitoSans',
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    height: height,
+    letterSpacing: letterSpacing,
+  );
 }
