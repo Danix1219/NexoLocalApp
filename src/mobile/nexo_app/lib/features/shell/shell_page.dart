@@ -9,6 +9,7 @@ import '../../app/theme/tokens.dart';
 import '../../app/theme/typography.dart';
 import '../../core/auth/session_controller.dart';
 import '../../core/local/sync_controller.dart';
+import '../../core/widgets/cached_photo.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_icon.dart';
 import '../../core/widgets/nexo_motion.dart';
@@ -18,6 +19,7 @@ import '../../core/widgets/toast.dart';
 import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../push/push_controller.dart';
+import 'guest_tour.dart';
 
 /// Barra inferior de la maqueta (`.navbar`): Inicio · Buscar · Publicar ·
 /// Mensajes · Cuenta. Igual para cliente y prestador.
@@ -63,15 +65,20 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       builder: (ctx) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SheetHeader('¿Te avisamos?',
-              subtitle:
-                  'Te mandamos un aviso cuando alguien se interese en lo que publicaste, acepten tu pedido o te escriban. '
-                  'Los avisos no muestran tu dirección ni tu número.'),
+          const SheetHeader(
+            '¿Te avisamos?',
+            subtitle:
+                'Te mandamos un aviso cuando alguien se interese en lo que publicaste, acepten tu pedido o te escriban. '
+                'Los avisos no muestran tu dirección ni tu número.',
+          ),
           const SizedBox(height: 16),
           NexoButton(label: 'Activar avisos', icon: 'bell', onPressed: () => Navigator.of(ctx).pop(true)),
           const SizedBox(height: 8),
           NexoButton(
-              label: 'Ahora no', variant: NexoButtonVariant.ghost, onPressed: () => Navigator.of(ctx).pop(false)),
+            label: 'Ahora no',
+            variant: NexoButtonVariant.ghost,
+            onPressed: () => Navigator.of(ctx).pop(false),
+          ),
         ],
       ),
     );
@@ -103,36 +110,75 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     // El nombre no viene en el token: se toma de Cuenta.
     ref.listen<AsyncValue<AccountScreen?>>(accountProvider, (_, next) {
       final a = next.asData?.value;
+      if (a != null) {
+        unawaited(precacheNexoPhoto(context, a.photoUrl));
+        unawaited(precacheNexoPhoto(context, a.photoUrl, thumb: true));
+      }
       if (session.isSignedIn && a != null && a.name.isNotEmpty) {
         ref.read(sessionProvider.notifier).setName(a.name);
       }
     });
 
+    // Portada y foto propias listas antes de abrir el perfil.
+    if (session.isSignedIn && !session.recoveryOnly) {
+      ref.listen<AsyncValue<String?>>(myCoverProvider, (_, next) {
+        unawaited(precacheNexoPhoto(context, next.value));
+      });
+    }
+    ref.listen<AsyncValue<MyProvider?>>(myProviderProvider, (_, next) {
+      final me = next.value?.profile;
+      if (me == null) return;
+      unawaited(precacheNexoPhoto(context, me.coverUrl));
+      unawaited(precacheNexoPhoto(context, me.photoUrl));
+      unawaited(precacheNexoPhoto(context, me.photoUrl, thumb: true));
+    });
+    // Al volver la conexión se actualiza lo que se veía guardado.
+    ref.listen<bool>(syncProvider.select((s) => s.offline), (before, offline) {
+      if (before != true || offline) return;
+      refreshActivity(ref);
+      ref.invalidate(accountProvider);
+      ref.invalidate(myProviderProvider);
+      ref.invalidate(myCoverProvider);
+    });
+
     final current = widget.shell.currentIndex;
+    // La guía solo acompaña a quien explora sin cuenta, y en Inicio.
+    final tourStep = session.isGuest && current == 0 ? ref.watch(guestTourProvider) : null;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
       child: PopScope(
-          canPop: current == 0,
-          onPopInvokedWithResult: (didPop, _) {
-            if (!didPop && current != 0) widget.shell.goBranch(0);
-          },
-          child: Scaffold(
-            backgroundColor: NexoColors.bg,
-            body: SafeArea(
-              bottom: false,
-              child: Column(children: [
-                if (sync.offline || sync.pending > 0)
-                  _OfflineBanner(sync: sync)
-                else if (demo.isNotEmpty && !_hideDemo)
-                  _DemoBanner(onClose: () => setState(() => _hideDemo = true)),
-                Expanded(child: NexoEnter(trigger: current, child: widget.shell)),
-              ]),
-            ),
-            bottomNavigationBar: NexoNavigation(
+        canPop: current == 0,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && current != 0) widget.shell.goBranch(0);
+        },
+        child: Stack(
+          children: [
+            Scaffold(
+              backgroundColor: NexoColors.bg,
+              body: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    if (sync.offline || sync.pending > 0)
+                      _OfflineBanner(sync: sync)
+                    else if (demo.isNotEmpty && !_hideDemo)
+                      _DemoBanner(onClose: () => setState(() => _hideDemo = true)),
+                    Expanded(
+                      child: NexoEnter(trigger: current, child: widget.shell),
+                    ),
+                  ],
+                ),
+              ),
+              bottomNavigationBar: NexoNavigation(
                 current: current,
                 unread: unread,
-                onSelected: (i) => widget.shell.goBranch(i, initialLocation: i == current)),
-          )),
+                onSelected: (i) => widget.shell.goBranch(i, initialLocation: i == current),
+              ),
+            ),
+            if (tourStep != null) Positioned.fill(child: GuestTourOverlay(step: tourStep)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -147,20 +193,24 @@ class _DemoBanner extends StatelessWidget {
       color: NexoColors.accentSoft,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 6, 4, 6),
-        child: Row(children: [
-          const NexoIcon('info', size: 16, color: NexoColors.accentInk),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text('Algunas secciones muestran datos de ejemplo mientras se conectan.',
-                style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.accentInk)),
-          ),
-          IconButton(
-            tooltip: 'Ocultar aviso',
-            visualDensity: VisualDensity.compact,
-            onPressed: onClose,
-            icon: const NexoIcon('close', size: 16, color: NexoColors.accentInk),
-          ),
-        ]),
+        child: Row(
+          children: [
+            const NexoIcon('info', size: 16, color: NexoColors.accentInk),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Algunas secciones muestran datos de ejemplo mientras se conectan.',
+                style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.accentInk),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Ocultar aviso',
+              visualDensity: VisualDensity.compact,
+              onPressed: onClose,
+              icon: const NexoIcon('close', size: 16, color: NexoColors.accentInk),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -186,13 +236,18 @@ class _OfflineBanner extends StatelessWidget {
         color: NexoColors.surface2,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
-          child: Row(children: [
-            const NexoIcon('info', size: 16, color: NexoColors.ink),
-            const SizedBox(width: 8),
-            Expanded(
-                child:
-                    Text(parts.join(' '), style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.ink))),
-          ]),
+          child: Row(
+            children: [
+              const NexoIcon('info', size: 16, color: NexoColors.ink),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  parts.join(' '),
+                  style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.ink),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

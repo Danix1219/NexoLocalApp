@@ -13,6 +13,7 @@ import '../../data/api_provider.dart';
 import '../../data/models.dart';
 import '../common/cards.dart';
 import '../search/filters.dart';
+import '../shell/guest_tour.dart';
 import '../shell/top_bar.dart';
 
 /// 7.4 Inicio — solicitante y 7.5 Inicio — prestador (`V.home`).
@@ -48,16 +49,17 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _withHeader(List<Widget> header, {EdgeInsetsGeometry? padding, required List<Widget> children}) => Column(
-        children: [
-          header.first,
-          Expanded(
-              child: ListView(
-            padding: padding,
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [...header.skip(1), ...children],
-          )),
-        ],
-      );
+    children: [
+      header.first,
+      Expanded(
+        child: ListView(
+          padding: padding,
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [...header.skip(1), ...children],
+        ),
+      ),
+    ],
+  );
 
   // ------------------------------------------------------------- cliente
   Widget _client(SessionState s) {
@@ -68,16 +70,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     final pendingDot = mine.asData?.value.any((r) => !r.closed) ?? false;
 
     final header = <Widget>[
-      HomeTopBar(dot: pendingDot && s.isSignedIn),
-      _SearchRow(
-        hint: 'Buscar servicio en ${loc.zoneLabel}',
-        onTap: () => context.go(Routes.search),
-        filters: ref.watch(searchFiltersProvider).count,
-        onFilters: () async {
-          await showSearchFiltersSheet(context, ref);
-          if (!mounted) return;
-          context.go(Routes.search);
-        },
+      HomeTopBar(dot: pendingDot && s.isSignedIn, locationKey: s.isGuest ? TourAnchors.location : null),
+      KeyedSubtree(
+        key: s.isGuest ? TourAnchors.search : null,
+        child: _SearchRow(
+          hint: 'Buscar servicio en ${loc.zoneLabel}',
+          onTap: () => context.go(Routes.search),
+          filters: ref.watch(searchFiltersProvider).count,
+          onFilters: () async {
+            await showSearchFiltersSheet(context, ref);
+            if (!mounted) return;
+            context.go(Routes.search);
+          },
+        ),
       ),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -91,33 +96,33 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (_clientTab == 'mine') {
       if (s.isGuest) {
-        return _withHeader(header, children: [
-          EmptyState(
-            icon: 'search',
-            title: 'Publica lo que necesitas',
-            text: 'Con una cuenta puedes publicar lo que buscas y dejar que los prestadores de tu zona te contacten.',
-            action: 'Crear cuenta gratis',
-            onAction: () {
-              ref.read(sessionProvider.notifier).leaveGuest();
-              context.go(Routes.registerEmail);
-            },
-          ),
-        ]);
+        return _withHeader(
+          header,
+          children: [
+            EmptyState(
+              icon: 'search',
+              title: 'Publica lo que necesitas',
+              text: 'Con una cuenta puedes publicar lo que buscas y dejar que los prestadores de tu zona te contacten.',
+              action: 'Crear cuenta gratis',
+              onAction: () {
+                ref.read(sessionProvider.notifier).leaveGuest();
+                context.go(Routes.registerEmail);
+              },
+            ),
+          ],
+        );
       }
       final orders = ref.watch(ordersProvider('client'));
       final active =
           orders.asData?.value.items.where((o) => o.status != 'cancelled' && o.status != 'rejected').toList() ??
-              const <Order>[];
+          const <Order>[];
       return _withHeader(
         header,
         padding: const EdgeInsets.only(bottom: 90),
         children: [
-          if (active.isNotEmpty) ...[
-            const Sect('Mis servicios'),
-            for (final o in active) OrderMiniCard(o: o),
-          ],
+          if (active.isNotEmpty) ...[const Sect('Mis servicios'), for (final o in active) OrderMiniCard(o: o)],
           const Sect('Mis solicitudes'),
-          asyncView(mine, (list) {
+          skeletonView(NexoSkeletonKind.requests, mine, (list) {
             if (list.isEmpty) {
               return EmptyState(
                 icon: 'search',
@@ -137,7 +142,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       header,
       padding: const EdgeInsets.only(bottom: 90),
       children: [
-        asyncView(feed, (f) {
+        skeletonView(NexoSkeletonKind.feed, feed, (f) {
           final interests = {
             ...ref.watch(interestsProvider),
             ...(mine.asData?.value ?? const <ServiceRequest>[]).where((r) => !r.closed).map((r) => r.category),
@@ -150,14 +155,21 @@ class _HomePageState extends ConsumerState<HomePage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Sect('Trabajos en ${f.zoneLabel.isEmpty ? loc.zoneLabel : f.zoneLabel}'),
+              KeyedSubtree(
+                key: s.isGuest ? TourAnchors.works : null,
+                child: Sect('Trabajos en ${f.zoneLabel.isEmpty ? loc.zoneLabel : f.zoneLabel}'),
+              ),
               if (items.isEmpty)
                 const EmptyState(
                   icon: 'info',
                   title: 'Aún no hay trabajos aquí',
                   text: 'Prueba con otra zona o busca un servicio directamente.',
                 ),
-              for (final w in shown) WorkCard(work: w),
+              for (final (i, w) in shown.indexed)
+                if (s.isGuest && i == 0)
+                  KeyedSubtree(key: TourAnchors.firstWork, child: _tourWork(w))
+                else
+                  WorkCard(work: w),
               if (s.isGuest) const _GuestMore(),
             ],
           );
@@ -166,25 +178,36 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Widget _tourWork(Work work) {
+    TourAnchors.firstProviderId = work.provider.id;
+    return WorkCard(work: work);
+  }
+
   // ----------------------------------------------------------- prestador
   Widget _provider() {
     final mp = ref.watch(myProviderProvider);
     return mp.when(
-      loading: () => ListView(children: const [HomeTopBar(), LoadingView()]),
-      error: (e, _) =>
-          ListView(children: [const HomeTopBar(), ErrorView(e, onRetry: () => ref.invalidate(myProviderProvider))]),
+      loading: () => ListView(children: const [HomeTopBar(), ContentSkeleton()]),
+      error: (e, _) => ListView(
+        children: [
+          const HomeTopBar(),
+          ErrorView(e, onRetry: () => ref.invalidate(myProviderProvider)),
+        ],
+      ),
       data: (me) {
         if (me == null) {
-          return ListView(children: [
-            const HomeTopBar(),
-            EmptyState(
-              icon: 'hammer',
-              title: 'Crea tu perfil para ver oportunidades',
-              text: 'Con tu perfil verás las solicitudes de personas que buscan justo lo que ofreces en tus zonas.',
-              action: 'Crear mi perfil',
-              onAction: () => context.push(Routes.proOnboarding),
-            ),
-          ]);
+          return ListView(
+            children: [
+              const HomeTopBar(),
+              EmptyState(
+                icon: 'hammer',
+                title: 'Crea tu perfil para ver oportunidades',
+                text: 'Con tu perfil verás las solicitudes de personas que buscan justo lo que ofreces en tus zonas.',
+                action: 'Crear mi perfil',
+                onAction: () => context.push(Routes.proOnboarding),
+              ),
+            ],
+          );
         }
         return _providerHome(me);
       },
@@ -221,10 +244,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           const Sect('Trabajos de tu rubro'),
-          asyncView(feed, (fp) {
+          skeletonView(NexoSkeletonKind.feed, feed, (fp) {
             final mine = me.profile.categories.toSet();
-            final list =
-                fp.page.items.where((w) => mine.contains(w.category) && w.provider.id != me.profile.id).toList();
+            final list = fp.page.items
+                .where((w) => mine.contains(w.category) && w.provider.id != me.profile.id)
+                .toList();
             if (list.isEmpty) {
               return const EmptyState(
                 icon: 'info',
@@ -245,16 +269,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       header,
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        if (pend.isNotEmpty) ...[
-          const Sect('Pedidos por responder'),
-          for (final o in pend) PendingOrderCard(o: o),
-        ],
-        if (ok.isNotEmpty) ...[
-          const Sect('Pedidos aceptados'),
-          for (final o in ok) OrderMiniCard(o: o),
-        ],
+        if (pend.isNotEmpty) ...[const Sect('Pedidos por responder'), for (final o in pend) PendingOrderCard(o: o)],
+        if (ok.isNotEmpty) ...[const Sect('Pedidos aceptados'), for (final o in ok) OrderMiniCard(o: o)],
         Sect('Solicitudes para ti · $count', trailing: f.cat == null ? null : catInfo(f.cat!).name),
-        asyncView(opps, (list) {
+        skeletonView(NexoSkeletonKind.requests, opps, (list) {
           if (list.isEmpty) {
             return EmptyState(
               icon: 'search',
@@ -283,12 +301,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tu perfil está al ${me.completeness}%',
-                          style: NexoText.body(14.5, weight: FontWeight.w800)),
+                      Text(
+                        'Tu perfil está al ${me.completeness}%',
+                        style: NexoText.body(14.5, weight: FontWeight.w800),
+                      ),
                       const SizedBox(height: 2),
                       Text(
-                          'Los perfiles completos aparecen primero. Siguiente: ${me.todo.where((t) => !t.done).map((t) => t.label).firstOrNull ?? 'listo'}.',
-                          style: NexoText.body(13, color: NexoColors.muted, height: 1.4)),
+                        'Los perfiles completos aparecen primero. Siguiente: ${me.todo.where((t) => !t.done).map((t) => t.label).firstOrNull ?? 'listo'}.',
+                        style: NexoText.body(13, color: NexoColors.muted, height: 1.4),
+                      ),
                       const SizedBox(height: 8),
                       NexoButton(
                         label: 'Completar mi perfil',
@@ -336,14 +357,19 @@ class _SearchRow extends StatelessWidget {
                 onTap: onTap,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                  child: Row(children: [
-                    const NexoIcon('search', size: 20, color: NexoColors.muted),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(hint,
-                          overflow: TextOverflow.ellipsis, style: NexoText.body(14.5, color: NexoColors.muted)),
-                    ),
-                  ]),
+                  child: Row(
+                    children: [
+                      const NexoIcon('search', size: 20, color: NexoColors.muted),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          hint,
+                          overflow: TextOverflow.ellipsis,
+                          style: NexoText.body(14.5, color: NexoColors.muted),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -370,8 +396,11 @@ class _GuestMore extends ConsumerWidget {
           const SizedBox(height: 8),
           Text('Esto es solo una probadita', style: NexoText.display(18, weight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text('Crea tu cuenta gratis para contactar, comparar, guardar y publicar lo que necesitas.',
-              textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
+          Text(
+            'Crea tu cuenta gratis para contactar, comparar, guardar y publicar lo que necesitas.',
+            textAlign: TextAlign.center,
+            style: NexoText.body(14, color: NexoColors.muted, height: 1.45),
+          ),
           const SizedBox(height: 14),
           NexoButton(
             label: 'Crear cuenta gratis',

@@ -11,8 +11,9 @@ String redactForAssist(String input) {
   });
   s = s.replaceAll(
     RegExp(
-        r'\b(calle|c\.|avenida|av\.?|privada|priv\.|callej[oó]n|andador|boulevard|blvd\.?)\s+[^,.;\n]{1,40}?\s*(#|n[uú]m\.?|no\.)?\s*\d+[a-z]?\b',
-        caseSensitive: false),
+      r'\b(calle|c\.|avenida|av\.?|privada|priv\.|callej[oó]n|andador|boulevard|blvd\.?)\s+[^,.;\n]{1,40}?\s*(#|n[uú]m\.?|no\.)?\s*\d+[a-z]?\b',
+      caseSensitive: false,
+    ),
     '[domicilio]',
   );
   return s.replaceAll(RegExp(r'[ \t]+'), ' ').trim();

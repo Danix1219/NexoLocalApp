@@ -47,8 +47,10 @@ class FilterButton extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 decoration: BoxDecoration(color: NexoColors.brand, borderRadius: BorderRadius.circular(99)),
                 child: Center(
-                  child:
-                      Text('$count', style: NexoText.body(11, weight: FontWeight.w800, color: Colors.white, height: 1)),
+                  child: Text(
+                    '$count',
+                    style: NexoText.body(11, weight: FontWeight.w800, color: Colors.white, height: 1),
+                  ),
                 ),
               ),
             ),
@@ -59,9 +61,9 @@ class FilterButton extends StatelessWidget {
 }
 
 Widget _label(String t) => Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 8),
-      child: Text(t, style: NexoText.body(14, weight: FontWeight.w800)),
-    );
+  padding: const EdgeInsets.only(top: 14, bottom: 8),
+  child: Text(t, style: NexoText.body(14, weight: FontWeight.w800)),
+);
 
 /// `filterSheet` del solicitante.
 Future<void> showSearchFiltersSheet(BuildContext context, WidgetRef ref) {
@@ -84,44 +86,66 @@ class _SearchFiltersState extends ConsumerState<_SearchFilters> {
       children: [
         const SheetHeader('Filtros', subtitle: 'Ajusta qué prestadores ver en tu zona.'),
         _label('Servicio'),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          const CatalogStatus(),
-          for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
-            ToggleChip(
-              label: c.name,
-              icon: c.icon,
-              selected: f.cat == c.id,
-              onTap: () => setState(() => f = f.copyWith(cat: f.cat == c.id ? null : c.id)),
-            ),
-        ]),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            const CatalogStatus(),
+            for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
+              ToggleChip(
+                label: c.name,
+                icon: c.icon,
+                selected: f.cat == c.id,
+                onTap: () => setState(() => f = f.copyWith(cat: f.cat == c.id ? null : c.id)),
+              ),
+          ],
+        ),
         _label('Disponibilidad y precio'),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          ToggleChip(
-              label: 'Abierto ahora', selected: f.open, onTap: () => setState(() => f = f.copyWith(open: !f.open))),
-          ToggleChip(
-              label: 'Visita sin costo', selected: f.free, onTap: () => setState(() => f = f.copyWith(free: !f.free))),
-          ToggleChip(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ToggleChip(
+              label: 'Abierto ahora',
+              selected: f.open,
+              onTap: () => setState(() => f = f.copyWith(open: !f.open)),
+            ),
+            ToggleChip(
+              label: 'Visita sin costo',
+              selected: f.free,
+              onTap: () => setState(() => f = f.copyWith(free: !f.free)),
+            ),
+            ToggleChip(
               label: 'Con precios publicados',
               selected: f.prices,
-              onTap: () => setState(() => f = f.copyWith(prices: !f.prices))),
-          ToggleChip(
+              onTap: () => setState(() => f = f.copyWith(prices: !f.prices)),
+            ),
+            ToggleChip(
               label: 'Atiende urgencias',
               selected: f.urgent,
-              onTap: () => setState(() => f = f.copyWith(urgent: !f.urgent))),
-        ]),
+              onTap: () => setState(() => f = f.copyWith(urgent: !f.urgent)),
+            ),
+          ],
+        ),
         _label('¿Dónde te atienden?'),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          ToggleChip(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ToggleChip(
               label: 'A domicilio',
               icon: 'home',
               selected: f.attention == 'home',
-              onTap: () => setState(() => f = f.copyWith(attention: f.attention == 'home' ? null : 'home'))),
-          ToggleChip(
+              onTap: () => setState(() => f = f.copyWith(attention: f.attention == 'home' ? null : 'home')),
+            ),
+            ToggleChip(
               label: 'En su local',
               icon: 'pin',
               selected: f.attention == 'shop',
-              onTap: () => setState(() => f = f.copyWith(attention: f.attention == 'shop' ? null : 'shop'))),
-        ]),
+              onTap: () => setState(() => f = f.copyWith(attention: f.attention == 'shop' ? null : 'shop')),
+            ),
+          ],
+        ),
         _label('Ordenar por'),
         SegControl<String>(
           small: true,
@@ -130,25 +154,27 @@ class _SearchFiltersState extends ConsumerState<_SearchFilters> {
           onChanged: (v) => setState(() => f = f.copyWith(sort: v)),
         ),
         const SizedBox(height: 18),
-        Row(children: [
-          Expanded(
-            child: NexoButton(
-              label: 'Quitar filtros',
-              variant: NexoButtonVariant.ghost,
-              onPressed: () => setState(() => f = SearchFilters(q: f.q)),
+        Row(
+          children: [
+            Expanded(
+              child: NexoButton(
+                label: 'Quitar filtros',
+                variant: NexoButtonVariant.ghost,
+                onPressed: () => setState(() => f = SearchFilters(q: f.q)),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: NexoButton(
-              label: 'Ver resultados',
-              onPressed: () {
-                ref.read(searchFiltersProvider.notifier).set(f);
-                Navigator.of(context).pop();
-              },
+            const SizedBox(width: 8),
+            Expanded(
+              child: NexoButton(
+                label: 'Ver resultados',
+                onPressed: () {
+                  ref.read(searchFiltersProvider.notifier).set(f);
+                  Navigator.of(context).pop();
+                },
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ],
     );
   }
@@ -175,54 +201,66 @@ class _OppFiltersState extends ConsumerState<_OppFilters> {
       children: [
         const SheetHeader('Filtrar solicitudes'),
         OptRow(
-            icon: f.inRadius ? 'check' : 'pin',
-            label: 'Dentro de mi radio',
-            selected: f.inRadius,
-            onTap: () => setState(() => f = f.copyWith(inRadius: !f.inRadius))),
+          icon: f.inRadius ? 'check' : 'pin',
+          label: 'Dentro de mi radio',
+          selected: f.inRadius,
+          onTap: () => setState(() => f = f.copyWith(inRadius: !f.inRadius)),
+        ),
         const SizedBox(height: 8),
         OptRow(
-            icon: f.myServiceOnly ? 'check' : 'hammer',
-            label: 'Coincide con mi servicio',
-            selected: f.myServiceOnly,
-            onTap: () => setState(() => f = f.copyWith(myServiceOnly: !f.myServiceOnly))),
+          icon: f.myServiceOnly ? 'check' : 'hammer',
+          label: 'Coincide con mi servicio',
+          selected: f.myServiceOnly,
+          onTap: () => setState(() => f = f.copyWith(myServiceOnly: !f.myServiceOnly)),
+        ),
         const SizedBox(height: 8),
         OptRow(
-            icon: f.today ? 'check' : 'bolt',
-            label: 'Urgentes (hoy)',
-            selected: f.today,
-            onTap: () => setState(() => f = f.copyWith(today: !f.today))),
+          icon: f.today ? 'check' : 'bolt',
+          label: 'Urgentes (hoy)',
+          selected: f.today,
+          onTap: () => setState(() => f = f.copyWith(today: !f.today)),
+        ),
         _label('Categoría'),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          const CatalogStatus(),
-          for (final c in (ref.watch(catalogProvider).asData?.value ?? []).where((c) =>
-              !f.myServiceOnly ||
-              (ref.watch(myProviderProvider).asData?.value?.profile.categories.contains(c.id) ?? false)))
-            ToggleChip(
-              label: c.name,
-              icon: c.icon,
-              selected: f.cat == c.id,
-              onTap: () => setState(() => f = f.copyWith(cat: f.cat == c.id ? null : c.id)),
-            ),
-        ]),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            const CatalogStatus(),
+            for (final c in (ref.watch(catalogProvider).asData?.value ?? []).where(
+              (c) =>
+                  !f.myServiceOnly ||
+                  (ref.watch(myProviderProvider).asData?.value?.profile.categories.contains(c.id) ?? false),
+            ))
+              ToggleChip(
+                label: c.name,
+                icon: c.icon,
+                selected: f.cat == c.id,
+                onTap: () => setState(() => f = f.copyWith(cat: f.cat == c.id ? null : c.id)),
+              ),
+          ],
+        ),
         const SizedBox(height: 18),
-        Row(children: [
-          Expanded(
-            child: NexoButton(
+        Row(
+          children: [
+            Expanded(
+              child: NexoButton(
                 label: 'Quitar filtros',
                 variant: NexoButtonVariant.ghost,
-                onPressed: () => setState(() => f = OppFilters(q: f.q))),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: NexoButton(
-              label: 'Aplicar',
-              onPressed: () {
-                ref.read(oppFiltersProvider.notifier).set(f);
-                Navigator.of(context).pop();
-              },
+                onPressed: () => setState(() => f = OppFilters(q: f.q)),
+              ),
             ),
-          ),
-        ]),
+            const SizedBox(width: 8),
+            Expanded(
+              child: NexoButton(
+                label: 'Aplicar',
+                onPressed: () {
+                  ref.read(oppFiltersProvider.notifier).set(f);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

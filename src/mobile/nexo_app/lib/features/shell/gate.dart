@@ -19,9 +19,10 @@ bool requireAccount(BuildContext context, WidgetRef ref, {String? why}) {
     builder: (ctx) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SheetHeader('Crea tu cuenta para continuar',
-            subtitle:
-                why ?? 'Es gratis. Con una cuenta puedes contactar, comparar, guardar y publicar lo que necesitas.'),
+        SheetHeader(
+          'Crea tu cuenta para continuar',
+          subtitle: why ?? 'Es gratis. Con una cuenta puedes contactar, comparar, guardar y publicar lo que necesitas.',
+        ),
         const OneNote(icon: 'shield', text: 'Tu número no se comparte. Acuerdas todo por chat dentro de Nexo.'),
         const SizedBox(height: 14),
         NexoButton(

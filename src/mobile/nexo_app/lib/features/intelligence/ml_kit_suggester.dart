@@ -17,11 +17,15 @@ class MlKitCategorySuggester implements CategorySuggester {
     try {
       final labels = await _labeler.processImage(InputImage.fromFilePath(imagePath));
       sw.stop();
-      final g = guessFromLabels([for (final l in labels) (l.label, l.confidence)],
-          allowed: allowed, latencyMs: sw.elapsedMilliseconds);
+      final g = guessFromLabels(
+        [for (final l in labels) (l.label, l.confidence)],
+        allowed: allowed,
+        latencyMs: sw.elapsedMilliseconds,
+      );
       if (kDebugMode) {
         debugPrint(
-            '[ML] ${labels.length} etiquetas en ${sw.elapsedMilliseconds} ms -> ${g?.category ?? 'se abstiene'}');
+          '[ML] ${labels.length} etiquetas en ${sw.elapsedMilliseconds} ms -> ${g?.category ?? 'se abstiene'}',
+        );
       }
       return g;
     } catch (_) {

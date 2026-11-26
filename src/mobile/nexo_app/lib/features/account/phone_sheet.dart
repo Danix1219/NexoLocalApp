@@ -70,18 +70,11 @@ class _PhoneSheetState extends ConsumerState<_PhoneSheet> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 15,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
                 color: NexoColors.surface2,
                 child: Text(
                   '+52',
-                  style: NexoText.body(
-                    16,
-                    weight: FontWeight.w800,
-                    color: NexoColors.muted,
-                  ),
+                  style: NexoText.body(16, weight: FontWeight.w800, color: NexoColors.muted),
                 ),
               ),
               Expanded(
@@ -90,10 +83,7 @@ class _PhoneSheetState extends ConsumerState<_PhoneSheet> {
                   autofocus: true,
                   keyboardType: TextInputType.phone,
                   autofillHints: const [AutofillHints.telephoneNumberNational],
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
                   onChanged: (_) => setState(() {}),
                   style: NexoText.body(17, letterSpacing: .5),
                   decoration: const InputDecoration(
@@ -113,11 +103,7 @@ class _PhoneSheetState extends ConsumerState<_PhoneSheet> {
         ),
         if (_error != null) ...[const SizedBox(height: 8), NexoError(_error!)],
         const SizedBox(height: 14),
-        NexoButton(
-          label: 'Guardar celular',
-          loading: _busy,
-          onPressed: _digits.length == 10 ? _send : null,
-        ),
+        NexoButton(label: 'Guardar celular', loading: _busy, onPressed: _digits.length == 10 ? _send : null),
       ],
     );
   }
