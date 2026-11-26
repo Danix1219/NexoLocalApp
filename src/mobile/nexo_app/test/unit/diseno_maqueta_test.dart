@@ -100,6 +100,21 @@ class FakeVoiceCapture implements VoiceCapture {
   Future<void> dispose() async {}
 }
 
+class DeniedVoiceCapture extends FakeVoiceCapture {
+  int starts = 0;
+  bool released = false;
+  @override
+  Future<bool> hasPermission() async => false;
+  @override
+  Future<Stream<Uint8List>> start() {
+    starts++;
+    return super.start();
+  }
+
+  @override
+  Future<void> dispose() async => released = true;
+}
+
 class TestLocation extends SearchLocationController {
   @override
   SearchLocation build() => const SearchLocation(GeoPoint(20.05, -99.34), 'Zona elegida', 5);
@@ -948,6 +963,41 @@ void main() {
     expect(find.byTooltip('Reproducir nota de voz'), findsOneWidget);
     expect(find.textContaining('0:01'), findsOneWidget);
     expect(find.text('Escuchar nota de voz'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('nota de voz: sin permiso de micrófono no se graba ni se envía', (tester) async {
+    final capture = DeniedVoiceCapture();
+    var sent = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [voiceCaptureProvider.overrideWithValue(() => capture)],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: VoiceComposer(
+                accent: Colors.teal,
+                showMic: true,
+                trailing: const SizedBox(),
+                onSend: (_) => sent++,
+                child: const SizedBox(height: 48),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final gesture = await tester.startGesture(tester.getCenter(find.byKey(const ValueKey('voice-mic'))));
+    await tester.pump();
+    await tester.pump();
+    await gesture.up();
+    await tester.pump(const Duration(seconds: 4));
+    expect(capture.starts, 0);
+    expect(capture.released, isTrue);
+    expect(sent, 0);
+    expect(find.text('Desliza para cancelar'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
