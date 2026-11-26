@@ -43,10 +43,7 @@ class WelcomePage extends StatelessWidget {
                     gradient: RadialGradient(
                       center: const Alignment(.7, -1),
                       radius: 1.1,
-                      colors: [
-                        NexoColors.welcomeGlow,
-                        NexoColors.welcomeGlow.withValues(alpha: 0),
-                      ],
+                      colors: [NexoColors.welcomeGlow, NexoColors.welcomeGlow.withValues(alpha: 0)],
                       stops: const [0, .6],
                     ),
                   ),
@@ -106,8 +103,14 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final w = widget.compact ? 136.0 : 168.0;
     // Aros: 0.1–0.8 s; nombre: 0.35–0.95 s (como las animaciones CSS).
-    final rings = CurvedAnimation(parent: _c, curve: const Interval(.1, .8, curve: Cubic(.2, .8, .2, 1)));
-    final brand = CurvedAnimation(parent: _c, curve: const Interval(.35, .95, curve: Curves.easeOut));
+    final rings = CurvedAnimation(
+      parent: _c,
+      curve: const Interval(.1, .8, curve: Cubic(.2, .8, .2, 1)),
+    );
+    final brand = CurvedAnimation(
+      parent: _c,
+      curve: const Interval(.35, .95, curve: Curves.easeOut),
+    );
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -118,10 +121,7 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
-              colors: [
-                NexoColors.logoAmber.withValues(alpha: .22),
-                NexoColors.logoAmber.withValues(alpha: 0),
-              ],
+              colors: [NexoColors.logoAmber.withValues(alpha: .22), NexoColors.logoAmber.withValues(alpha: 0)],
               stops: const [0, .65],
             ),
           ),
@@ -167,9 +167,7 @@ class _Sheet extends StatelessWidget {
       decoration: const BoxDecoration(
         color: NexoColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(color: Color(0x2E031E1B), blurRadius: 30, offset: Offset(0, -10)),
-        ],
+        boxShadow: [BoxShadow(color: Color(0x2E031E1B), blurRadius: 30, offset: Offset(0, -10))],
       ),
       child: SafeArea(
         top: false,
@@ -187,10 +185,7 @@ class _Sheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
-              NexoButton(
-                label: 'Crear cuenta',
-                onPressed: () => showSignupSheet(context),
-              ),
+              NexoButton(label: 'Crear cuenta', onPressed: () => showSignupSheet(context)),
               const SizedBox(height: 12),
               NexoButton(
                 label: 'Iniciar sesión',
@@ -212,8 +207,10 @@ class _Sheet extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Explorar sin cuenta',
-                            style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brandDeep)),
+                        Text(
+                          'Explorar sin cuenta',
+                          style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brandDeep),
+                        ),
                         const SizedBox(width: 5),
                         const NexoIcon('chevron', size: 17, color: NexoColors.brandDeep),
                       ],

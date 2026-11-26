@@ -50,11 +50,7 @@ class _NewPasswordPageState extends ConsumerState<NewPasswordPage> {
     FocusScope.of(context).unfocus();
     setState(() => _loading = true);
     try {
-      await ref.read(authRepositoryProvider).resetPassword(
-            ticket: flow.ticket!,
-            password: _p1.text,
-            confirm: _p2.text,
-          );
+      await ref.read(authRepositoryProvider).resetPassword(ticket: flow.ticket!, password: _p1.text, confirm: _p2.text);
       ref.read(resetFlowProvider.notifier).reset();
       if (mounted) context.go(Routes.forgotDone, extra: flow.email);
     } on ApiException catch (e) {
@@ -73,6 +69,9 @@ class _NewPasswordPageState extends ConsumerState<NewPasswordPage> {
     final email = ref.read(resetFlowProvider).email;
     return ObScaffold(
       icon: 'shield',
+      progress: 1,
+      steps: 3,
+      stepLabel: 'Recuperar acceso · paso 3 de 3',
       title: 'Crea una contraseña nueva',
       subtitle: 'Elige una contraseña distinta a la anterior.',
       content: [
@@ -104,11 +103,7 @@ class _NewPasswordPageState extends ConsumerState<NewPasswordPage> {
           ),
       ],
       footer: [
-        NexoButton(
-          label: 'Guardar contraseña',
-          loading: _loading,
-          onPressed: _valid ? _submit : null,
-        ),
+        NexoButton(label: 'Guardar contraseña', tall: true, loading: _loading, onPressed: _valid ? _submit : null),
       ],
     );
   }

@@ -6,7 +6,9 @@ import '../../../data/api_provider.dart';
 import '../../../core/widgets/toast.dart';
 import '../../location/location_picker_page.dart';
 import '../../../app/router.dart';
+import '../../../app/theme/tokens.dart';
 import '../../../app/theme/typography.dart';
+import '../../../core/widgets/nexo_icon.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/validation.dart';
@@ -43,9 +45,9 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
   void initState() {
     super.initState();
     void changed() => setState(() {
-          _error = null;
-          _errorCode = null;
-        });
+      _error = null;
+      _errorCode = null;
+    });
     _name.addListener(changed);
     _p1.addListener(changed);
     _p2.addListener(changed);
@@ -72,7 +74,9 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
     final router = GoRouter.of(context);
     setState(() => _loading = true);
     try {
-      final a = await ref.read(authRepositoryProvider).createAccount(
+      final a = await ref
+          .read(authRepositoryProvider)
+          .createAccount(
             location: _location!.point,
             radiusKm: _location!.radiusKm,
             ticket: flow.ticket!,
@@ -93,13 +97,18 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
       await selectedLocation.remember(_location!.point, _location!.radiusKm, zoneLabel: _location!.zoneLabel);
       // Account creation succeeded. A later location error must never repeat it.
       try {
-        await selectedLocation.set(_location!.point, _location!.radiusKm,
-            source: _location!.source, zoneLabel: _location!.zoneLabel);
+        await selectedLocation.set(
+          _location!.point,
+          _location!.radiusKm,
+          source: _location!.source,
+          zoneLabel: _location!.zoneLabel,
+        );
         signup.locationStored();
       } catch (_) {
         await selectedLocation.remember(_location!.point, _location!.radiusKm, zoneLabel: _location!.zoneLabel);
         showNexoToast(
-            'Tu cuenta está creada. Puedes volver a guardar la ubicación desde la confirmación o desde Cuenta.');
+          'Tu cuenta está creada. Puedes volver a guardar la ubicación desde la confirmación o desde Cuenta.',
+        );
       }
       router.go(Routes.registerDone);
     } on ApiException catch (e) {
@@ -113,6 +122,14 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
     }
   }
 
+  Future<void> _pickLocation() async {
+    final selected = await context.push<LocationPick>(
+      Routes.location,
+      extra: LocationPickerArgs(initial: _location?.point, radiusKm: _location?.radiusKm ?? 10),
+    );
+    if (selected != null && mounted) setState(() => _location = selected);
+  }
+
   @override
   Widget build(BuildContext context) {
     final flow = ref.watch(signupFlowProvider);
@@ -121,52 +138,44 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
       title: 'Completa tu cuenta',
       subtitle: 'Tu nombre, tu zona y una contraseña para entrar.',
       progress: 1,
+      steps: 3,
       stepLabel: 'Tu cuenta · paso 3 de 3',
       onClose: () => confirmExitSignup(context, ref),
       content: [
-        NexoField(
-          label: 'Tu nombre',
-          controller: _name,
-          hint: 'Ej. María González',
-          autofillHints: const [AutofillHints.name],
-          textInputAction: TextInputAction.next,
-          capitalization: TextCapitalization.words,
-          maxLength: 80,
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        ObSection(
+          title: 'Sobre ti',
+          icon: 'user',
           children: [
-            Text('¿Dónde buscas servicios?', style: NexoText.body(14, weight: FontWeight.w700)),
-            const SizedBox(height: 7),
-            NexoButton(
-              label: _location == null ? 'Elegir mi ubicacion' : 'Cambiar ubicacion seleccionada',
-              icon: 'pin',
-              variant: NexoButtonVariant.line,
-              onPressed: () async {
-                final selected = await context.push<LocationPick>(Routes.location,
-                    extra: LocationPickerArgs(initial: _location?.point, radiusKm: _location?.radiusKm ?? 10));
-                if (selected != null && mounted) setState(() => _location = selected);
-              },
+            NexoField(
+              label: 'Tu nombre',
+              controller: _name,
+              hint: 'Ej. María González',
+              autofillHints: const [AutofillHints.name],
+              textInputAction: TextInputAction.next,
+              capitalization: TextCapitalization.words,
+              maxLength: 80,
             ),
-            if (_location != null)
-              Text(
-                  '${_location!.label ?? _location!.zoneLabel ?? '${_location!.point.lat.toStringAsFixed(3)}, ${_location!.point.lng.toStringAsFixed(3)}'} · ${_location!.radiusKm} km'),
           ],
         ),
-        Text('Crea tu contraseña', style: NexoText.body(14, weight: FontWeight.w700)),
-        NexoPasswordField(
-          label: 'Contraseña',
-          controller: _p1,
-          isNew: true,
-          textInputAction: TextInputAction.next,
+        ObSection(
+          title: flow.intent == 'provider' ? '¿Dónde te encuentras?' : '¿Dónde buscas servicios?',
+          icon: 'pin',
+          children: [_LocationTile(location: _location, onTap: _pickLocation)],
         ),
-        NexoPasswordField(
-          label: 'Confirma tu contraseña',
-          controller: _p2,
-          isNew: true,
-          textInputAction: TextInputAction.done,
+        ObSection(
+          title: 'Crea tu contraseña',
+          icon: 'shield',
+          children: [
+            NexoPasswordField(label: 'Contraseña', controller: _p1, isNew: true, textInputAction: TextInputAction.next),
+            NexoPasswordField(
+              label: 'Confirma tu contraseña',
+              controller: _p2,
+              isNew: true,
+              textInputAction: TextInputAction.done,
+            ),
+            PasswordRequirements(password: _p1.text, confirm: _p2.text),
+          ],
         ),
-        PasswordRequirements(password: _p1.text, confirm: _p2.text),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -179,6 +188,7 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
             const SizedBox(height: 4),
             Wrap(
               spacing: 16,
+              alignment: WrapAlignment.center,
               children: [
                 NexoLink('Leer Términos', onTap: () => showTermsSheet(context)),
                 NexoLink('Leer Aviso de privacidad', onTap: () => showPrivacySheet(context)),
@@ -211,15 +221,59 @@ class _RegisterAccountPageState extends ConsumerState<RegisterAccountPage> {
           ),
       ],
       footer: [
-        NexoButton(
-          label: 'Finalizar',
-          loading: _loading,
-          onPressed: _valid && flow.ticket != null ? _submit : null,
-        ),
+        NexoButton(label: 'Finalizar', loading: _loading, onPressed: _valid && flow.ticket != null ? _submit : null),
       ],
     );
   }
 }
 
-/// Ubicación por defecto (la maqueta la toma de `S.loc`, zona Centro). El
-/// selector de mapa con radio es de otra spec; aquí solo se muestra.
+/// Zona elegida: tarjeta que muestra lo seleccionado y permite cambiarlo.
+class _LocationTile extends StatelessWidget {
+  const _LocationTile({required this.location, required this.onTap});
+  final LocationPick? location;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = location;
+    final name = l == null
+        ? 'Elegir mi ubicación'
+        : l.label ?? l.zoneLabel ?? '${l.point.lat.toStringAsFixed(3)}, ${l.point.lng.toStringAsFixed(3)}';
+    return Semantics(
+      button: true,
+      child: Material(
+        color: l == null ? NexoColors.field : NexoColors.brandSoft,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: l == null ? NexoColors.line : NexoColors.brand, width: 1.3),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
+              children: [
+                NexoIcon(l == null ? 'pin' : 'check', size: 21, color: NexoColors.brand),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: NexoText.body(14.5, weight: FontWeight.w800)),
+                      Text(
+                        l == null ? 'Elige en el mapa tu zona y el radio' : 'Radio de ${l.radiusKm} km · Cambiar',
+                        style: NexoText.body(12.5, color: NexoColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                const NexoIcon('chevron', size: 16, color: NexoColors.muted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

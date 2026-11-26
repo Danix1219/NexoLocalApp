@@ -78,6 +78,7 @@ class _RegisterEmailPageState extends ConsumerState<RegisterEmailPage> {
       title: provider ? 'Confirma tu correo' : '¿Cuál es tu correo?',
       subtitle: 'Te enviaremos un código para confirmar que eres tú.',
       progress: 1 / 3,
+      steps: 3,
       stepLabel: 'Tu cuenta · paso 1 de 3',
       onClose: () => confirmExitSignup(context, ref),
       content: [
@@ -92,18 +93,14 @@ class _RegisterEmailPageState extends ConsumerState<RegisterEmailPage> {
           maxLength: 254,
           autofocus: true,
         ),
-        NexoHint(provider
-            ? 'Tu correo no se publica. Los clientes te escriben por chat dentro de la app.'
-            : 'Tu correo no aparece en tu perfil. Lo usarás para iniciar sesión.'),
+        NexoHint(
+          provider
+              ? 'Tu correo no se publica. Los clientes te escriben por chat dentro de la app.'
+              : 'Tu correo no aparece en tu perfil. Lo usarás para iniciar sesión.',
+        ),
         if (_error != null) NexoError(_error!),
       ],
-      footer: [
-        NexoButton(
-          label: 'Continuar',
-          loading: _loading,
-          onPressed: emailOk(_email.text) ? _submit : null,
-        ),
-      ],
+      footer: [NexoButton(label: 'Continuar', loading: _loading, onPressed: emailOk(_email.text) ? _submit : null)],
     );
   }
 }

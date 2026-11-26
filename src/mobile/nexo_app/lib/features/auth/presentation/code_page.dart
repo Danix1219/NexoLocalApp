@@ -1,16 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../app/theme/typography.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/validation.dart';
 import '../../../core/widgets/nexo_button.dart';
 import '../../../core/widgets/nexo_field.dart';
+import '../../../core/widgets/code_boxes.dart';
 import '../../../core/widgets/nexo_sheet.dart';
 import '../../../core/widgets/ob_scaffold.dart';
 import '../../../core/widgets/toast.dart';
@@ -151,23 +150,13 @@ class _CodePageState extends ConsumerState<CodePage> {
       icon: _signup ? 'chat' : 'mail',
       title: 'Escribe el código',
       subtitle: 'Lo enviamos a $email.',
-      progress: _signup ? 2 / 3 : null,
-      stepLabel: _signup ? 'Tu cuenta · paso 2 de 3' : null,
+      progress: 2 / 3,
+      steps: 3,
+      stepLabel: _signup ? 'Tu cuenta · paso 2 de 3' : 'Recuperar acceso · paso 2 de 3',
       onClose: _signup ? () => confirmExitSignup(context, ref) : null,
       content: [
-        NexoField(
-          label: 'Código de 6 dígitos',
-          controller: _code,
-          hint: '······',
-          keyboardType: TextInputType.number,
-          autofillHints: const [AutofillHints.oneTimeCode],
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          maxLength: 6,
-          textAlign: TextAlign.center,
-          autofocus: true,
-          style: NexoText.display(28, weight: FontWeight.w700, letterSpacing: 12),
-          helper: 'Revisa también tu carpeta de spam. El código vence en 15 minutos.',
-        ),
+        CodeBoxes(controller: _code, invalid: _error != null),
+        const NexoHint('Revisa también tu carpeta de spam. El código vence en 15 minutos.'),
         if (_error != null) NexoError(_error!),
         Wrap(
           spacing: 8,
@@ -193,11 +182,7 @@ class _CodePageState extends ConsumerState<CodePage> {
         ),
       ],
       footer: [
-        NexoButton(
-          label: 'Continuar',
-          loading: _loading,
-          onPressed: codeOk(_code.text) ? _submit : null,
-        ),
+        NexoButton(label: 'Continuar', tall: true, loading: _loading, onPressed: codeOk(_code.text) ? _submit : null),
       ],
     );
   }

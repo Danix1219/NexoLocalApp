@@ -34,28 +34,31 @@ class RegisterDonePage extends ConsumerWidget {
         if (signedIn && !flow.locationSaved) ...[
           const Notice('Tu cuenta ya está creada. Falta guardar tu ubicación.', icon: 'pin'),
           NexoButton(
-              label: 'Guardar ubicación',
-              variant: NexoButtonVariant.line,
-              onPressed: () async {
-                try {
-                  await ref
-                      .read(searchLocationProvider.notifier)
-                      .set(selected.point, selected.radiusKm, zoneLabel: selected.zoneLabel);
-                  ref.read(signupFlowProvider.notifier).locationStored();
-                  showNexoToast('Ubicación guardada');
-                } catch (_) {
-                  showNexoToast('No pudimos guardar la ubicación. Puedes intentarlo desde Cuenta.');
-                }
-              }),
+            label: 'Guardar ubicación',
+            variant: NexoButtonVariant.line,
+            onPressed: () async {
+              try {
+                await ref
+                    .read(searchLocationProvider.notifier)
+                    .set(selected.point, selected.radiusKm, zoneLabel: selected.zoneLabel);
+                ref.read(signupFlowProvider.notifier).locationStored();
+                showNexoToast('Ubicación guardada');
+              } catch (_) {
+                showNexoToast('No pudimos guardar la ubicación. Puedes intentarlo desde Cuenta.');
+              }
+            },
+          ),
         ],
-        CheckList(items: [
-          (true, 'Correo confirmado'),
-          (flow.locationSaved, 'Zona: $zone'),
-          if (provider)
-            (false, 'Perfil profesional: servicios, zona y horario')
-          else
-            (false, 'Intereses: elígelos en Cuenta para ver primero lo que te importa'),
-        ]),
+        CheckList(
+          items: [
+            (true, 'Correo confirmado'),
+            (flow.locationSaved, 'Zona: $zone'),
+            if (provider)
+              (false, 'Perfil profesional: servicios, zona y horario')
+            else
+              (false, 'Intereses: elígelos en Cuenta para ver primero lo que te importa'),
+          ],
+        ),
         OneNote(
           icon: provider ? 'search' : 'hammer',
           text: provider
@@ -68,8 +71,8 @@ class RegisterDonePage extends ConsumerWidget {
           label: !signedIn
               ? 'Iniciar sesión'
               : provider
-                  ? 'Armar mi perfil profesional'
-                  : 'Empezar a explorar',
+              ? 'Armar mi perfil profesional'
+              : 'Empezar a explorar',
           onPressed: () {
             if (!signedIn) {
               final email = flow.email;

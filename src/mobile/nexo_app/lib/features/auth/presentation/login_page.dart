@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
-import '../../../app/theme/tokens.dart';
-import '../../../app/theme/typography.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/validation.dart';
@@ -89,35 +87,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             textInputAction: TextInputAction.next,
             maxLength: 254,
           ),
-          NexoPasswordField(
-            label: 'Contraseña',
-            controller: _pass,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-          ),
-          if (_error != null) NexoError(_error!),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: NexoLink(
-              '¿Olvidaste tu contraseña?',
-              onTap: () => context.push(Routes.forgot, extra: _email.text.trim()),
-            ),
-          ),
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('¿Aún no tienes cuenta?', style: NexoText.body(12.5, color: NexoColors.muted)),
-              NexoLink('Crear cuenta', onTap: () => showSignupSheet(context)),
+              NexoPasswordField(
+                label: 'Contraseña',
+                controller: _pass,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: NexoLink(
+                  '¿Olvidaste tu contraseña?',
+                  onTap: () => context.push(Routes.forgot, extra: _email.text.trim()),
+                ),
+              ),
             ],
           ),
+          if (_error != null) NexoError(_error!),
         ],
         footer: [
-          NexoButton(
-            label: 'Entrar',
-            loading: _loading,
-            onPressed: _valid ? _submit : null,
-          ),
+          NexoButton(label: 'Entrar', tall: true, loading: _loading, onPressed: _valid ? _submit : null),
+          ObSwitch(question: '¿Aún no tienes cuenta?', action: 'Crear cuenta', onTap: () => showSignupSheet(context)),
         ],
       ),
     );
