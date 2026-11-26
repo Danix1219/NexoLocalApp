@@ -320,3 +320,7 @@ Evidencia: análisis sin observaciones, 355 pruebas en verde y capturas generada
 Estado: «Seguridad · AndroidManifest y build» fallaba porque buscaba el permiso del micrófono en un archivo desde el que se había movido la grabación (`voice_composer.dart`). Ahora revisa todo archivo que use el grabador y exige pedir el permiso antes de grabar.
 Evidencia local: check en verde y en rojo al quitar la petición o el grabador; 356 pruebas, cobertura sobre el mínimo y APK debug compilado. Resultado en GitHub pendiente.
 A evitar: subir sin ejecutar `tools/ci/revisar_android.py`.
+
+## 2026-11-26 · APK en CI y límite de descargas
+Estado: «Construir · APK de prueba» falló porque Maven Central respondió HTTP 429 al runner. En CI, Gradle descarga ahora desde el espejo de Google, usa caché y la compilación se reintenta solo ante fallos de red (`tools/ci/`).
+Evidencia local: `assembleDebug` con caché de Gradle vacía y el espejo terminó en BUILD SUCCESSFUL (438 tareas), sin peticiones a Maven Central ni respuestas 429; reintento probado en cuatro casos. Resultado en GitHub pendiente.
