@@ -23,7 +23,7 @@ evaluación v2* (18/nov/2026). Revisado el 2026-11-27 sobre `develop` + rama `fi
 | 6 | DevSecOps en CD | AAB **firmado** con llave fuera del repo (secretos), `--obfuscate --split-debug-info`, R8/ProGuard, publicación a Play Console (pruebas internas → producción) con aprobación |
 | 7 | Endpoints consumidos | **≈ 70 rutas** de la API (identidad, perfil, descubrimiento, trabajos, solicitudes, interés, pedidos, opiniones, mensajes y chat cifrado, guardados, contacto/reportes, notificaciones, imágenes, asistente) + hub SignalR `/hubs/chat` (`lib/data/http_nexo_api.dart`) |
 | 8 | Agentes de IA | **2**: Codex y Claude Code (`AGENTS.md`, `CLAUDE.md`) |
-| 9 | Skills | **0 en el repositorio** (regla del equipo: no versionar configuraciones de agentes sin uso real) |
+| 9 | Skills | **Sí, en el entorno de Claude Code** (instaladas a nivel de usuario, no versionadas en el repo por regla del equipo): `code-review` y `security-review` (integradas), `ui-ux-pro-max` (diseño de pantallas), `playwright-cli` (pruebas de navegador) y `graphify` (mapa del código) |
 | 10 | Memoria.md | **Sí**, `Memoria.md` en la raíz del repo |
 | 11 | Pruebas unitarias | **Sí.** Suite completa con Flutter 3.38.10: **359 pruebas aprobadas** en total (`test/unit` 174 declaraciones, varias parametrizadas) |
 | 12 | Pruebas de seguridad | **Sí**, `test/security`: 9 archivos, 61 casos (secretos, transporte, push, enlaces profundos, caché, cabeceras/subidas, privacidad, IA sin datos personales, logs) |
