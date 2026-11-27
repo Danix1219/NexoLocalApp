@@ -320,6 +320,7 @@ class HttpNexoApi implements NexoApi {
       total: (j['total'] as num?)?.toInt() ?? 0,
       outOfZone: j['outOfZone'] == true,
       notice: j['notice'] is Map ? '${(j['notice'] as Map)['text'] ?? ''}' : j['notice']?.toString(),
+      interpretedLabel: j['interpreted'] is Map ? (j['interpreted'] as Map)['label']?.toString() : null,
     );
   }
 
