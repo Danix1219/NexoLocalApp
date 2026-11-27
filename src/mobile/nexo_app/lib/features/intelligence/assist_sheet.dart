@@ -17,8 +17,9 @@ import 'redact.dart';
 /// escribiendo a mano (spec 049, AC-003).
 String assistErrorMessage(Object e) {
   if (e is ApiException) {
-    if (e.code == 'content.inappropriate')
+    if (e.code == 'content.inappropriate') {
       return 'El texto no cumple las reglas de la comunidad. Cámbialo e inténtalo de nuevo.';
+    }
     if (e.status == 429) return 'Usaste el asistente muchas veces. Espera un momento o escribe tú el texto.';
     if (e.code == 'assist.unavailable' || e.isNetwork || isUnavailable(e)) {
       return 'El asistente no está disponible ahora. Puedes escribir tu texto normalmente.';
@@ -39,8 +40,10 @@ class AssistButton extends StatelessWidget {
     return TextButton.icon(
       onPressed: enabled ? onTap : null,
       icon: NexoIcon('star', size: 18, color: enabled ? NexoColors.brand : NexoColors.muted),
-      label: Text('Ayúdame a redactar',
-          style: NexoText.body(14, weight: FontWeight.w700, color: enabled ? NexoColors.brand : NexoColors.muted)),
+      label: Text(
+        'Ayúdame a redactar',
+        style: NexoText.body(14, weight: FontWeight.w700, color: enabled ? NexoColors.brand : NexoColors.muted),
+      ),
     );
   }
 }
@@ -51,11 +54,10 @@ Future<String?> showAssistSheet(
   required String kind,
   required String category,
   required String userText,
-}) =>
-    showNexoSheet<String>(
-      context,
-      builder: (_) => _AssistSheet(kind: kind, category: category, userText: userText),
-    );
+}) => showNexoSheet<String>(
+  context,
+  builder: (_) => _AssistSheet(kind: kind, category: category, userText: userText),
+);
 
 class _AssistSheet extends ConsumerStatefulWidget {
   const _AssistSheet({required this.kind, required this.category, required this.userText});
@@ -92,7 +94,9 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
     });
     try {
       final clean = redactForAssist(widget.userText);
-      final d = await ref.read(apiProvider).assistDraft(
+      final d = await ref
+          .read(apiProvider)
+          .assistDraft(
             kind: widget.kind,
             category: widget.category,
             userText: clean.length > kAssistMaxInput ? clean.substring(0, kAssistMaxInput) : clean,
@@ -119,9 +123,11 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SheetHeader('Borrador sugerido',
-            subtitle:
-                'Revísalo y cámbialo a tu gusto. No incluye precios ni datos de contacto, y no se publica hasta que tú lo hagas.'),
+        const SheetHeader(
+          'Borrador sugerido',
+          subtitle:
+              'Revísalo y cámbialo a tu gusto. No incluye precios ni datos de contacto, y no se publica hasta que tú lo hagas.',
+        ),
         const SizedBox(height: 12),
         if (_busy)
           const Padding(
@@ -165,9 +171,10 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
         ],
         const SizedBox(height: 8),
         NexoButton(
-            label: 'Seguir escribiendo yo',
-            variant: NexoButtonVariant.ghost,
-            onPressed: () => Navigator.of(context).pop()),
+          label: 'Seguir escribiendo yo',
+          variant: NexoButtonVariant.ghost,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ],
     );
   }
@@ -176,8 +183,13 @@ class _AssistSheetState extends ConsumerState<_AssistSheet> {
 /// Aviso con la sugerencia del modelo de visión: muestra la confianza y deja
 /// usarla o ignorarla (spec 049, AC-002).
 class CategoryGuessNotice extends StatelessWidget {
-  const CategoryGuessNotice(
-      {super.key, required this.guess, required this.name, required this.onUse, required this.onDismiss});
+  const CategoryGuessNotice({
+    super.key,
+    required this.guess,
+    required this.name,
+    required this.onUse,
+    required this.onDismiss,
+  });
   final CategoryGuess guess;
   final String name;
   final VoidCallback onUse;
@@ -190,26 +202,34 @@ class CategoryGuessNotice extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
       decoration: BoxDecoration(color: NexoColors.brandSoft, borderRadius: BorderRadius.circular(14)),
-      child: Row(children: [
-        const NexoIcon('star', size: 18, color: NexoColors.brandDeep),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Semantics(
-            liveRegion: true,
-            child: Text('Por la foto parece $name ($pct % de confianza).',
-                style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.brandDeep)),
+      child: Row(
+        children: [
+          const NexoIcon('star', size: 18, color: NexoColors.brandDeep),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                'Por la foto parece $name ($pct % de confianza).',
+                style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.brandDeep),
+              ),
+            ),
           ),
-        ),
-        TextButton(
+          TextButton(
             onPressed: onUse,
-            child: Text('Usar', style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brand))),
-        IconButton(
-          tooltip: 'Ignorar sugerencia',
-          visualDensity: VisualDensity.compact,
-          onPressed: onDismiss,
-          icon: const NexoIcon('close', size: 16, color: NexoColors.brandDeep),
-        ),
-      ]),
+            child: Text(
+              'Usar',
+              style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brand),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Ignorar sugerencia',
+            visualDensity: VisualDensity.compact,
+            onPressed: onDismiss,
+            icon: const NexoIcon('close', size: 16, color: NexoColors.brandDeep),
+          ),
+        ],
+      ),
     );
   }
 }

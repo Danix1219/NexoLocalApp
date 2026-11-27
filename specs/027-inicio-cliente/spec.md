@@ -101,3 +101,10 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## 2026-11-26 · feed
+- FR-FEED-001: Acceso «¿Necesitas ayuda con algo?» arriba del feed del solicitante con cuenta.
+- FR-FEED-002: Tarjetas de trabajo con mayor separación y barra de contacto en tono suave con botón «Contactar»; la imagen sigue a todo el ancho y cuadrada.
+
+## 2026-11-26 · se retira el cambio de feed
+FR-FEED-001 y FR-FEED-002 quedan **sin efecto** a petición del usuario: se restaura el feed anterior (sin el acceso «¿Necesitas ayuda con algo?» y con las tarjetas previas). Publicar se hace desde el menú inferior.

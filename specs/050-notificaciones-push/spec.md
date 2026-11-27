@@ -59,6 +59,11 @@ Fuera de alcance:
 | NFR-002 | T-003 | AC-902 | `test/integration/resiliencia_test.dart` |
 | NFR-003 | T-005 | AC-903 | Revisión en dispositivo (T-005) |
 | NFR-004 | T-002 | AC-904 | Pipeline `app-ci.yml` |
+| FR-007 | T-030 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-008 | T-031 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-009 | T-033 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-010 | T-016 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-011 | T-016 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
 
 ## 5. Contratos (rutas, config, env)
 
@@ -84,6 +89,8 @@ Configuración: `API_BASE_URL` (HTTPS en release), `API_MODE` (`auto` por omisi�
 - [ ] AC-902 → NFR-002: Con el backend apagado la pantalla carga en modo auto sin mensaje de error y con el aviso de datos de ejemplo; un error con código de Nexo se muestra.
 - [ ] AC-903 → NFR-003: Revisión en Android: cada estado tiene mensaje y acción; TalkBack lee los botones de ícono.
 - [ ] AC-904 → NFR-004: Los jobs listados en el plan aparecen y pasan en el PR; la evidencia queda en el checklist.
+- [ ] AC-007: verificar ambos telefonos en primer/segundo plano, toque, aislamiento de cuenta y fallback sin red. Pendiente de recorrido real; pruebas con dobles no acreditan FCM productivo.
+- [ ] AC-009: comportamiento descrito en el incremento correspondiente; aceptación pendiente.
 
 ## 7. Riesgos y deudas documentadas
 
@@ -101,3 +108,18 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.6.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+### Incremento local 2026-11-17: vista previa privada
+
+- FR-007: push de chat solo transporta referencias y destinatario; el dispositivo autenticado consulta y descifra el mensaje para componer nombre, foto y texto con Android MessagingStyle. Foto/voz muestran su tipo; no se descargan adjuntos privados para notificar.
+- FR-008: tocar abre el chat validado; bloqueo de pantalla conserva visibilidad privada, sin marcar lectura. Sin sesion o destinatario distinto se omite; sin red/claves se muestra aviso discreto.
+(AC-007 se registra en la sección 6.)
+
+
+### Ajuste 2026-11-17: QR y avisos leidos
+- FR-009: suprimir avisos de la conversacion visible en primer plano; retirar el aviso al abrirla y no recrearlo para el ultimo mensaje confirmado como leido. Otro chat o app en segundo plano conserva sus avisos. AC-009: pruebas de carreras y aislamiento por cuenta, mas recorrido real pendiente.
+
+## 2026-11-26 · la decisión sobre avisos es del teléfono
+- FR-001 (precisa): «¿Te avisamos?» se muestra una sola vez en este teléfono, aunque se cierre sesión, y nunca si el permiso ya está concedido.
+- FR-010: Al volver a iniciar sesión, con permiso concedido, el teléfono se registra solo.
+- FR-011: Si la persona apaga los avisos en Cuenta, siguen apagados al volver a entrar hasta que los active.

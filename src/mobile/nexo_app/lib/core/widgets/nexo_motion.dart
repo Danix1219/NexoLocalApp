@@ -10,13 +10,14 @@ abstract final class NexoMotion {
 
 /// Preserves the subtree (including drafts and scroll positions) when tabs change.
 class NexoEnter extends StatefulWidget {
-  const NexoEnter(
-      {super.key,
-      required this.child,
-      this.trigger,
-      this.duration = NexoMotion.enter,
-      this.beginOpacity = .4,
-      this.distance = 8});
+  const NexoEnter({
+    super.key,
+    required this.child,
+    this.trigger,
+    this.duration = NexoMotion.enter,
+    this.beginOpacity = .4,
+    this.distance = 8,
+  });
   final Widget child;
   final Object? trigger;
   final Duration duration;
@@ -58,15 +59,16 @@ class _NexoEnterState extends State<NexoEnter> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _controller,
-        child: widget.child,
-        builder: (_, child) {
-          final t = Curves.easeOut.transform(_controller.value);
-          return Opacity(
-              opacity: widget.beginOpacity + (1 - widget.beginOpacity) * t,
-              child: Transform.translate(offset: Offset(0, widget.distance * (1 - t)), child: child));
-        },
+    animation: _controller,
+    child: widget.child,
+    builder: (_, child) {
+      final t = Curves.easeOut.transform(_controller.value);
+      return Opacity(
+        opacity: widget.beginOpacity + (1 - widget.beginOpacity) * t,
+        child: Transform.translate(offset: Offset(0, widget.distance * (1 - t)), child: child),
       );
+    },
+  );
 }
 
 /// Pointer feedback is visual only: InkWell retains keyboard, focus and semantics.
@@ -86,16 +88,16 @@ class _NexoPressFeedbackState extends State<NexoPressFeedback> {
 
   @override
   Widget build(BuildContext context) => Listener(
-        onPointerDown: widget.enabled ? (_) => _set(true) : null,
-        onPointerUp: (_) => _set(false),
-        onPointerCancel: (_) => _set(false),
-        child: AnimatedScale(
-          scale: widget.enabled && _pressed && !NexoMotion.reduced(context) ? .98 : 1,
-          duration: NexoMotion.duration(context, NexoMotion.press),
-          curve: Curves.easeOut,
-          child: widget.child,
-        ),
-      );
+    onPointerDown: widget.enabled ? (_) => _set(true) : null,
+    onPointerUp: (_) => _set(false),
+    onPointerCancel: (_) => _set(false),
+    child: AnimatedScale(
+      scale: widget.enabled && _pressed && !NexoMotion.reduced(context) ? .98 : 1,
+      duration: NexoMotion.duration(context, NexoMotion.press),
+      curve: Curves.easeOut,
+      child: widget.child,
+    ),
+  );
 }
 
 class NexoPageTransitions extends PageTransitionsBuilder {
@@ -103,15 +105,22 @@ class NexoPageTransitions extends PageTransitionsBuilder {
   @override
   Duration get transitionDuration => NexoMotion.enter;
   @override
-  Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation, Widget child) {
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
     if (NexoMotion.reduced(context)) return child;
     final curved = animation.drive(CurveTween(curve: Curves.easeOut));
     return FadeTransition(
-        opacity: curved.drive(Tween(begin: .4, end: 1)),
-        child: AnimatedBuilder(
-            animation: curved,
-            child: child,
-            builder: (_, child) => Transform.translate(offset: Offset(0, 8 * (1 - curved.value)), child: child)));
+      opacity: curved.drive(Tween(begin: .4, end: 1)),
+      child: AnimatedBuilder(
+        animation: curved,
+        child: child,
+        builder: (_, child) => Transform.translate(offset: Offset(0, 8 * (1 - curved.value)), child: child),
+      ),
+    );
   }
 }

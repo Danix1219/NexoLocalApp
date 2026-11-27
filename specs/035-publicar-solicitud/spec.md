@@ -92,3 +92,24 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## 2026-11-26 · solicitudes propias y gestión de publicaciones
+- FR-MYREQ-001: Tarjeta propia con categoría, zona, antigüedad, estado (Publicada, Con interesados, Con pedido, Resuelta), urgencia y fotos 16:10.
+- FR-MYREQ-002: En Mi perfil, selector Solicitudes/Experiencias y filtros Todas, Activas y Resueltas con conteo.
+- FR-PUBMGMT-001: Opciones con vista previa; edición con «Guardar cambios» fijo y errores visibles dentro de la hoja; eliminación con diálogo centrado, consecuencias, reintento y opción de conservar. Aplica también a trabajos (spec 036).
+- FR-IMG-001: Mientras carga una foto se ve un fondo neutro (o las iniciales), nunca el color de la categoría.
+
+## 2026-11-26 · publicar en una sola tarjeta
+FR-COMPOSE-CARD: el formulario de solicitud y experiencia vive en una sola tarjeta: autor y alcance, texto, fotos en tira (hasta 6), opciones y un pie con lo que falta o «listo». Se conserva el botón «Publicar» de la barra superior. Parte del diseño original; sustituye en trabajos la versión de cuatro pasos. Sin cambios de contrato ni validaciones.
+
+## 2026-11-26 · se restaura la vista de solicitudes
+FR-MYREQ-001 y FR-MYREQ-002 quedan **sin efecto** a petición del usuario: tarjetas, pestañas y lista de solicitudes vuelven al diseño anterior. Se mantienen FR-PUBMGMT-001 y FR-IMG-001.
+
+## 2026-11-26 · se restaura la experiencia de publicar
+FR-COMPOSE-CARD (sustituye la versión anterior de hoy): se recupera el diseño original y su orden de elementos, en una sola tarjeta **sin divisiones ni franja de estado**. Mejoras: esquinas y sombra suaves, texto con alto según la pantalla y un botón de fotos compacto con contador. Las opciones de solicitud y experiencia continúan dentro de la misma tarjeta.
+
+## 2026-11-26 · rediseño de opciones, edición y eliminación (FR-PUBMGMT-002)
+La maqueta no define estas pantallas.
+- Opciones: vista previa tal como se ve la publicación; «Editar» como acción principal y «Eliminar publicación» aparte.
+- Edición: una sola tarjeta; fotos en tira con la primera marcada como portada; «Guardar cambios» se activa solo si hay cambios y el pie lo indica; salir con cambios pide confirmar y la hoja no se cierra arrastrando.
+- Eliminación (sustituye el diálogo): hoja con la publicación, consecuencias en lista y confirmación **manteniendo presionado** 1.1 s; soltar cancela, incluso con un toque instantáneo. Con lector de pantalla, la activación confirma. El error se muestra dentro y permite reintentar.

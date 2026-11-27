@@ -1,4 +1,8 @@
+import 'cached_photo.dart';
 import 'dart:io';
+
+import 'content_skeleton.dart';
+export 'content_skeleton.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,9 +39,10 @@ String apiErrorMessage(Object e) {
     }
     if (e.code == 'upload.too_large') return 'La foto supera los 5 MB. Elige una más pequeña.';
     if (e.code == 'upload.content_type_invalid') return 'Elige una imagen JPEG, PNG o WebP.';
-    if (e.code == 'upload.dimensions_too_large') return 'La imagen supera la resoluci?n permitida. Elige otra foto.';
-    if (e.code == 'upload.processing_timeout')
+    if (e.code == 'upload.dimensions_too_large') return 'La imagen supera la resolución permitida. Elige otra foto.';
+    if (e.code == 'upload.processing_timeout') {
       return 'La foto sigue en revisión. Espera un momento antes de reintentar.';
+    }
     if (e.code == 'upload.rejected_by_moderation') {
       return 'Esa foto no cumple las reglas de la comunidad. Elige otra.';
     }
@@ -49,8 +54,15 @@ String apiErrorMessage(Object e) {
     }
     if (e.code == 'provider.not_found') return 'Todavía no tienes un perfil profesional.';
     if (e.code == 'content.images_limit') return 'Puedes subir hasta 6 fotos.';
+    // Pedidos (spec 039).
+    if (e.code == 'order.active_exists') {
+      return 'Ya tienes un pedido activo con este prestador. Revísalo en tus pedidos.';
+    }
+    if (e.code == 'order.request_already_assigned') return 'Esta solicitud ya tiene un prestador asignado.';
+    if (e.code == 'order.attention_not_supported') return 'Este prestador no atiende de esa forma. Elige otra opción.';
+    if (e.code == 'request.not_found') return 'La solicitud ya no está disponible.';
     if (e.code == kQueuedOffline) return 'Sin señal: lo guardamos y se publicará en cuanto vuelva la conexión.';
-    if (e.status == 401) return 'Tu sesi?n no es v?lida para este servidor. Vuelve a iniciar sesi?n.';
+    if (e.status == 401) return 'Tu sesión no es válida para este servidor. Vuelve a iniciar sesión.';
     if (e.status == 429) return 'Hiciste muchos intentos. Espera un momento.';
     if (e.detail != null && e.detail!.isNotEmpty) return e.detail!;
     if (e.status == 404) return 'Esto ya no existe.';
@@ -65,7 +77,10 @@ String apiErrorMessage(Object e) {
 /// Muestra una URL de la API, un archivo local (`file://`, fotos elegidas en
 /// modo de prueba) o una foto de ejemplo (`demo://categoria/n`).
 class NexoImage extends StatelessWidget {
-  const NexoImage(this.url, {super.key, this.fit = BoxFit.cover});
+  const NexoImage(this.url, {super.key, this.fit = BoxFit.cover, this.placeholder});
+
+  /// Lo que se ve hasta que la foto llega; por defecto un fondo neutro.
+  final Widget? placeholder;
   final String url;
   final BoxFit fit;
 
@@ -78,19 +93,24 @@ class NexoImage extends StatelessWidget {
     if (url.startsWith('file://')) {
       return Image.file(File(url.substring(7)), fit: fit, errorBuilder: (_, __, ___) => const _Broken());
     }
-    return Image.network(
-      url,
+    return Image(
+      image: NexoPhotoProvider(url),
       fit: fit,
-      errorBuilder: (_, __, ___) => const _Broken(),
-      loadingBuilder: (c, child, p) => p == null ? child : const ColoredBox(color: NexoColors.surface2),
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) => wasSynchronouslyLoaded || frame == null
-          ? child
-          : TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 180),
-              builder: (_, value, image) => Opacity(opacity: value, child: image),
-              child: child,
-            ),
+      // Al cambiar de foto se conserva la anterior hasta que llega la nueva.
+      gaplessPlayback: true,
+      errorBuilder: (_, __, ___) => placeholder ?? const _Broken(),
+      // Sin imagen todavía no se deja ver lo que haya detrás (el color de la categoría).
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return Stack(
+          fit: StackFit.passthrough,
+          alignment: Alignment.center,
+          children: [
+            if (frame == null) Positioned.fill(child: placeholder ?? const ColoredBox(color: NexoColors.surface2)),
+            AnimatedOpacity(opacity: frame == null ? 0 : 1, duration: const Duration(milliseconds: 90), child: child),
+          ],
+        );
+      },
     );
   }
 }
@@ -99,9 +119,9 @@ class _Broken extends StatelessWidget {
   const _Broken();
   @override
   Widget build(BuildContext context) => const ColoredBox(
-        color: NexoColors.surface2,
-        child: Center(child: NexoIcon('image', size: 28, color: NexoColors.muted)),
-      );
+    color: NexoColors.surface2,
+    child: Center(child: NexoIcon('image', size: 28, color: NexoColors.muted)),
+  );
 }
 
 /// Mosaico de color de la categoría (`.tile` sin foto).
@@ -128,8 +148,12 @@ class DemoPhoto extends StatelessWidget {
           child: AspectRatio(
             aspectRatio: 1,
             child: LayoutBuilder(
-              builder: (_, k) => NexoIcon(index % 2 == 0 ? c.icon : 'image',
-                  size: k.maxWidth, color: c2.withValues(alpha: .6), strokeWidth: 1.4),
+              builder: (_, k) => NexoIcon(
+                index % 2 == 0 ? c.icon : 'image',
+                size: k.maxWidth,
+                color: c2.withValues(alpha: .6),
+                strokeWidth: 1.4,
+              ),
             ),
           ),
         ),
@@ -149,6 +173,9 @@ class NexoAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fallback = icon != null
+        ? NexoIcon(icon!, size: size * .42, color: NexoColors.brand)
+        : Text(initialsOf(name), style: NexoText.display(size * .36, color: NexoColors.brand, letterSpacing: 0));
     return Container(
       width: size,
       height: size,
@@ -161,11 +188,15 @@ class NexoAvatar extends StatelessWidget {
       alignment: Alignment.center,
       child: url != null && url!.isNotEmpty
           ? SizedBox.expand(
-              child:
-                  NexoImage(url!.contains('/v1/discovery/media/') && !url!.endsWith('/thumb') ? '${url!}/thumb' : url!))
-          : icon != null
-              ? NexoIcon(icon!, size: size * .42, color: NexoColors.brand)
-              : Text(initialsOf(name), style: NexoText.display(size * .36, color: NexoColors.brand, letterSpacing: 0)),
+              child: NexoImage(
+                url!.contains('/v1/discovery/media/') && !url!.endsWith('/thumb') ? '${url!}/thumb' : url!,
+                placeholder: ColoredBox(
+                  color: NexoColors.brandSoft,
+                  child: Center(child: fallback),
+                ),
+              ),
+            )
+          : fallback,
     );
   }
 }
@@ -187,7 +218,10 @@ class AvatarPair extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           NexoAvatar(name: a.$1, url: a.$2, size: size, border: true),
-          Positioned(left: size * .7, child: NexoAvatar(name: b.$1, url: b.$2, size: size, border: true)),
+          Positioned(
+            left: size * .7,
+            child: NexoAvatar(name: b.$1, url: b.$2, size: size, border: true),
+          ),
           if (ok)
             Positioned(
               left: size * .55,
@@ -196,9 +230,10 @@ class AvatarPair extends StatelessWidget {
                 width: 22,
                 height: 22,
                 decoration: BoxDecoration(
-                    color: NexoColors.ok,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: NexoColors.surface, width: 2)),
+                  color: NexoColors.ok,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: NexoColors.surface, width: 2),
+                ),
                 child: const Center(child: NexoIcon('check', size: 13, color: Colors.white, strokeWidth: 2.6)),
               ),
             ),
@@ -212,10 +247,11 @@ class AvatarPair extends StatelessWidget {
 
 /// Barra de título de pantalla principal (`.topbar` + `.screen-title`).
 class ScreenTitleBar extends StatelessWidget {
-  const ScreenTitleBar(this.title, {super.key, this.trailing, this.border = true});
+  const ScreenTitleBar(this.title, {super.key, this.trailing, this.border = true, this.trailingBelow = false});
   final String title;
   final Widget? trailing;
   final bool border;
+  final bool trailingBelow;
 
   @override
   Widget build(BuildContext context) {
@@ -226,12 +262,30 @@ class ScreenTitleBar extends StatelessWidget {
         color: NexoColors.surface,
         border: border ? const Border(bottom: BorderSide(color: NexoColors.line)) : null,
       ),
-      child: Row(
-        children: [
-          Expanded(child: Semantics(header: true, child: Text(title, style: NexoText.display(22, height: 1.15)))),
-          if (trailing != null) trailing!,
-        ],
-      ),
+      child: trailingBelow
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: NexoText.display(22, height: 1.15),
+                  ),
+                ),
+                if (trailing != null) ...[const SizedBox(height: 8), trailing!],
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: Semantics(header: true, child: Text(title, style: NexoText.display(22, height: 1.15))),
+                ),
+                if (trailing != null) trailing!,
+              ],
+            ),
     );
   }
 }
@@ -254,15 +308,15 @@ class SubBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          NexoIconButton(
-            icon: 'back',
-            label: 'Volver',
-            onTap: onBack ?? () => Navigator.of(context).maybePop(),
-          ),
+          NexoIconButton(icon: 'back', label: 'Volver', onTap: onBack ?? () => Navigator.of(context).maybePop()),
           const SizedBox(width: 8),
           Expanded(
-              child:
-                  Text(title, style: NexoText.display(17, weight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
+            child: Text(
+              title,
+              style: NexoText.display(17, weight: FontWeight.w700),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
           ...actions,
         ],
       ),
@@ -287,8 +341,10 @@ class Sect extends StatelessWidget {
           Expanded(
             child: Semantics(
               header: true,
-              child:
-                  Text(title, style: NexoText.display(18, weight: FontWeight.w700, height: 1.15, letterSpacing: -.18)),
+              child: Text(
+                title,
+                style: NexoText.display(18, weight: FontWeight.w700, height: 1.15, letterSpacing: -.18),
+              ),
             ),
           ),
           if (trailing != null)
@@ -298,8 +354,10 @@ class Sect extends StatelessWidget {
                     onTap: onTrailing,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      child:
-                          Text(trailing!, style: NexoText.body(13, weight: FontWeight.w700, color: NexoColors.brand)),
+                      child: Text(
+                        trailing!,
+                        style: NexoText.body(13, weight: FontWeight.w700, color: NexoColors.brand),
+                      ),
                     ),
                   ),
         ],
@@ -310,15 +368,16 @@ class Sect extends StatelessWidget {
 
 /// `.empty`: aviso con borde punteado y acción opcional.
 class EmptyState extends StatelessWidget {
-  const EmptyState(
-      {super.key,
-      this.icon,
-      required this.title,
-      this.text,
-      this.action,
-      this.onAction,
-      this.secondary,
-      this.onSecondary});
+  const EmptyState({
+    super.key,
+    this.icon,
+    required this.title,
+    this.text,
+    this.action,
+    this.onAction,
+    this.secondary,
+    this.onSecondary,
+  });
   final String? icon;
   final String title;
   final String? text;
@@ -340,13 +399,20 @@ class EmptyState extends StatelessWidget {
       child: Column(
         children: [
           if (icon != null) ...[NexoIcon(icon!, size: 34, color: NexoColors.brand), const SizedBox(height: 10)],
-          Text(title, textAlign: TextAlign.center, style: NexoText.display(18, weight: FontWeight.w700)),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: NexoText.display(18, weight: FontWeight.w700),
+          ),
           if (text != null) ...[
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 280),
-              child: Text(text!,
-                  textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted, height: 1.45)),
+              child: Text(
+                text!,
+                textAlign: TextAlign.center,
+                style: NexoText.body(14, color: NexoColors.muted, height: 1.45),
+              ),
             ),
           ],
           if (action != null) ...[
@@ -393,16 +459,21 @@ class NBadge extends StatelessWidget {
           // Sin Flexible: la insignia también va en filas de ancho libre.
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 230),
-            child: Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: NexoText.body(12, weight: FontWeight.w600, color: fg)),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: NexoText.body(12, weight: FontWeight.w600, color: fg),
+            ),
           ),
         ],
       ),
     );
     if (onTap == null) return child;
-    return Semantics(button: true, child: GestureDetector(onTap: onTap, child: child));
+    return Semantics(
+      button: true,
+      child: GestureDetector(onTap: onTap, child: child),
+    );
   }
 }
 
@@ -423,10 +494,14 @@ class Facts extends StatelessWidget {
             children: [
               NexoIcon(it.$1, size: 15, color: it.$3 ? NexoColors.ok : NexoColors.muted),
               const SizedBox(width: 5),
-              Text(it.$2,
-                  style: NexoText.body(13,
-                      weight: it.$3 ? FontWeight.w700 : FontWeight.w400,
-                      color: it.$3 ? NexoColors.ok : NexoColors.muted)),
+              Text(
+                it.$2,
+                style: NexoText.body(
+                  13,
+                  weight: it.$3 ? FontWeight.w700 : FontWeight.w400,
+                  color: it.$3 ? NexoColors.ok : NexoColors.muted,
+                ),
+              ),
             ],
           ),
       ],
@@ -436,8 +511,13 @@ class Facts extends StatelessWidget {
 
 /// `.seg`: dos o más opciones exclusivas.
 class SegControl<T> extends StatelessWidget {
-  const SegControl(
-      {super.key, required this.options, required this.value, required this.onChanged, this.small = false});
+  const SegControl({
+    super.key,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    this.small = false,
+  });
   final List<(T, String)> options;
   final T value;
   final ValueChanged<T> onChanged;
@@ -473,10 +553,12 @@ class SegControl<T> extends StatelessWidget {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: NexoText.body(small ? 13 : 14,
-                          weight: FontWeight.w700,
-                          color: o.$1 == value ? (small ? NexoColors.brand : NexoColors.ink) : NexoColors.muted,
-                          height: 1.15),
+                      style: NexoText.body(
+                        small ? 13 : 14,
+                        weight: FontWeight.w700,
+                        color: o.$1 == value ? (small ? NexoColors.brand : NexoColors.ink) : NexoColors.muted,
+                        height: 1.15,
+                      ),
                     ),
                   ),
                 ),
@@ -515,7 +597,10 @@ class ToggleChip extends StatelessWidget {
               children: [
                 if (selected && icon == null) ...[NexoIcon('check', size: 15, color: fg), const SizedBox(width: 5)],
                 if (icon != null) ...[NexoIcon(icon!, size: 16, color: fg), const SizedBox(width: 6)],
-                Text(label, style: NexoText.body(13, weight: FontWeight.w700, color: fg)),
+                Text(
+                  label,
+                  style: NexoText.body(13, weight: FontWeight.w700, color: fg),
+                ),
               ],
             ),
           ),
@@ -527,15 +612,16 @@ class ToggleChip extends StatelessWidget {
 
 /// `.card` / `.box`: contenedor blanco con borde y sombra suave.
 class NexoCard extends StatelessWidget {
-  const NexoCard(
-      {super.key,
-      required this.child,
-      this.margin = const EdgeInsets.fromLTRB(12, 10, 12, 0),
-      this.padding = const EdgeInsets.all(14),
-      this.radius = 20,
-      this.elevated = true,
-      this.onTap,
-      this.title});
+  const NexoCard({
+    super.key,
+    required this.child,
+    this.margin = const EdgeInsets.fromLTRB(12, 10, 12, 0),
+    this.padding = const EdgeInsets.all(14),
+    this.radius = 20,
+    this.elevated = true,
+    this.onTap,
+    this.title,
+  });
   final Widget child;
   final double radius;
   final bool elevated;
@@ -560,7 +646,13 @@ class NexoCard extends StatelessWidget {
               ],
             ),
     );
-    if (onTap != null) body = InkWell(customBorder: RoundedRectangleBorder(borderRadius: r), onTap: onTap, child: body);
+    if (onTap != null) {
+      body = InkWell(
+        customBorder: RoundedRectangleBorder(borderRadius: r),
+        onTap: onTap,
+        child: body,
+      );
+    }
     return Container(
       margin: margin,
       decoration: BoxDecoration(
@@ -597,8 +689,11 @@ class StatsRow extends StatelessWidget {
                 children: [
                   Text(items[i].$1, style: NexoText.display(18), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
-                  Text(items[i].$2,
-                      textAlign: TextAlign.center, style: NexoText.body(12, color: NexoColors.muted, height: 1.2)),
+                  Text(
+                    items[i].$2,
+                    textAlign: TextAlign.center,
+                    style: NexoText.body(12, color: NexoColors.muted, height: 1.2),
+                  ),
                 ],
               ),
             ),
@@ -625,18 +720,27 @@ class InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text(label, style: NexoText.body(13, color: NexoColors.muted))),
+          SizedBox(
+            width: 120,
+            child: Text(label, style: NexoText.body(13, color: NexoColors.muted)),
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(value,
-                    textAlign: TextAlign.right,
-                    style: highlight
-                        ? NexoText.display(18, color: NexoColors.brandDeep)
-                        : NexoText.body(14, weight: FontWeight.w700, color: muted ? NexoColors.muted : NexoColors.ink)),
+                Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: highlight
+                      ? NexoText.display(18, color: NexoColors.brandDeep)
+                      : NexoText.body(14, weight: FontWeight.w700, color: muted ? NexoColors.muted : NexoColors.ink),
+                ),
                 if (sub != null)
-                  Text(sub!, textAlign: TextAlign.right, style: NexoText.body(12.5, color: NexoColors.muted)),
+                  Text(
+                    sub!,
+                    textAlign: TextAlign.right,
+                    style: NexoText.body(12.5, color: NexoColors.muted),
+                  ),
               ],
             ),
           ),
@@ -660,10 +764,12 @@ class StarsView extends StatelessWidget {
         for (var i = 1; i <= 5; i++)
           Padding(
             padding: const EdgeInsets.only(right: 2),
-            child: NexoIcon('star',
-                size: size,
-                color: i <= stars.round() ? NexoColors.accent2 : NexoColors.line,
-                fillColor: i <= stars.round() ? NexoColors.accent2 : null),
+            child: NexoIcon(
+              'star',
+              size: size,
+              color: i <= stars.round() ? NexoColors.accent2 : NexoColors.line,
+              fillColor: i <= stars.round() ? NexoColors.accent2 : null,
+            ),
           ),
       ],
     );
@@ -692,10 +798,12 @@ class StarPicker extends StatelessWidget {
               radius: size * .7,
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: NexoIcon('star',
-                    size: size,
-                    color: i <= value ? NexoColors.accent2 : NexoColors.muted,
-                    fillColor: i <= value ? NexoColors.accent2 : null),
+                child: NexoIcon(
+                  'star',
+                  size: size,
+                  color: i <= value ? NexoColors.accent2 : NexoColors.muted,
+                  fillColor: i <= value ? NexoColors.accent2 : null,
+                ),
               ),
             ),
           ),
@@ -728,7 +836,12 @@ class Notice extends StatelessWidget {
         children: [
           NexoIcon(icon, size: 18, color: fg),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: NexoText.body(13.5, weight: FontWeight.w600, color: fg, height: 1.4))),
+          Expanded(
+            child: Text(
+              text,
+              style: NexoText.body(13.5, weight: FontWeight.w600, color: fg, height: 1.4),
+            ),
+          ),
         ],
       ),
     );
@@ -742,12 +855,15 @@ class LoadingView extends StatelessWidget {
   final double padding;
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.all(padding),
-        child: const Center(
-          child: SizedBox(
-              width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.6, color: NexoColors.brand)),
-        ),
-      );
+    padding: EdgeInsets.all(padding),
+    child: const Center(
+      child: SizedBox(
+        width: 26,
+        height: 26,
+        child: CircularProgressIndicator(strokeWidth: 2.6, color: NexoColors.brand),
+      ),
+    ),
+  );
 }
 
 bool isPendingFeature(Object error) =>
@@ -761,9 +877,10 @@ class ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isPendingFeature(error)) {
       return const EmptyState(
-          icon: 'info',
-          title: 'Próximamente',
-          text: 'Estamos preparando esta sección. Estará disponible en una siguiente actualización.');
+        icon: 'info',
+        title: 'Próximamente',
+        text: 'Estamos preparando esta sección. Estará disponible en una siguiente actualización.',
+      );
     }
     return EmptyState(
       icon: 'info',
@@ -776,10 +893,16 @@ class ErrorView extends StatelessWidget {
 }
 
 /// Pinta un `AsyncValue` con carga y error con reintento.
-Widget asyncView<T>(AsyncValue<T> v, Widget Function(T data) data, {VoidCallback? onRetry, double loadingPad = 48}) {
+Widget asyncView<T>(
+  AsyncValue<T> v,
+  Widget Function(T data) data, {
+  VoidCallback? onRetry,
+  double loadingPad = 48,
+  Widget? loading,
+}) {
   return v.when(
     data: data,
-    loading: () => LoadingView(padding: loadingPad),
+    loading: () => loading ?? const ContentSkeleton(),
     error: (e, _) => ErrorView(e, onRetry: onRetry),
     skipLoadingOnRefresh: true,
     skipLoadingOnReload: true,
@@ -794,31 +917,50 @@ class NexoPage extends StatelessWidget {
   final Color background;
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: background,
-        body: SafeArea(bottom: bottom == null, child: child),
-        bottomNavigationBar: bottom,
-      );
+    backgroundColor: background,
+    body: SafeArea(bottom: bottom == null, child: child),
+    bottomNavigationBar: bottom,
+  );
 }
 
 /// The prototype keeps its title visible while the page content scrolls.
 class PinnedHeaderList extends StatelessWidget {
-  const PinnedHeaderList(
-      {super.key,
-      required this.children,
-      this.padding,
-      this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual});
+  const PinnedHeaderList({
+    super.key,
+    required this.children,
+    this.padding,
+    this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
+  });
   final List<Widget> children;
   final EdgeInsetsGeometry? padding;
   final ScrollViewKeyboardDismissBehavior keyboardDismissBehavior;
   @override
-  Widget build(BuildContext context) => Column(children: [
-        children.first,
-        Expanded(
-            child: ListView(
+  Widget build(BuildContext context) => Column(
+    children: [
+      children.first,
+      Expanded(
+        child: ListView(
           padding: padding,
           physics: const AlwaysScrollableScrollPhysics(),
           keyboardDismissBehavior: keyboardDismissBehavior,
           children: children.skip(1).toList(),
-        )),
-      ]);
+        ),
+      ),
+    ],
+  );
 }
+
+/// Select the layout while preserving asyncView refresh and error behavior.
+Widget skeletonView<T>(
+  NexoSkeletonKind kind,
+  AsyncValue<T> value,
+  Widget Function(T) data, {
+  VoidCallback? onRetry,
+  double loadingPad = 48,
+}) => asyncView(
+  value,
+  data,
+  onRetry: onRetry,
+  loadingPad: loadingPad,
+  loading: ContentSkeleton(kind: kind),
+);

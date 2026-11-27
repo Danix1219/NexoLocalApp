@@ -2,8 +2,8 @@ name: Flutter del proyecto
 description: Instala Flutter (versión fijada, con caché) y descarga dependencias de la app. Spec 047.
 inputs:
   flutter-version:
-    description: Versión de Flutter (la del equipo; Dart 3.7)
-    default: '3.29.3'
+    description: Versión de Flutter (Dart 3.10.9; E2EE)
+    default: '3.38.10'
   app-dir:
     description: Carpeta de la app
     default: src/mobile/nexo_app

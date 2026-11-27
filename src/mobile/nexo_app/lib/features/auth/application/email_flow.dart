@@ -47,18 +47,17 @@ class EmailFlowState {
     String? createdName,
     bool? locationSaved,
     String? nextStep,
-  }) =>
-      EmailFlowState(
-        email: email ?? this.email,
-        sentAt: sentAt ?? this.sentAt,
-        resendAfterSeconds: resendAfterSeconds ?? this.resendAfterSeconds,
-        ticket: clearTicket ? null : (ticket ?? this.ticket),
-        intent: intent ?? this.intent,
-        idempotencyKey: idempotencyKey ?? this.idempotencyKey,
-        createdName: createdName ?? this.createdName,
-        locationSaved: locationSaved ?? this.locationSaved,
-        nextStep: nextStep ?? this.nextStep,
-      );
+  }) => EmailFlowState(
+    email: email ?? this.email,
+    sentAt: sentAt ?? this.sentAt,
+    resendAfterSeconds: resendAfterSeconds ?? this.resendAfterSeconds,
+    ticket: clearTicket ? null : (ticket ?? this.ticket),
+    intent: intent ?? this.intent,
+    idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+    createdName: createdName ?? this.createdName,
+    locationSaved: locationSaved ?? this.locationSaved,
+    nextStep: nextStep ?? this.nextStep,
+  );
 }
 
 class EmailFlowController extends Notifier<EmailFlowState> {

@@ -17,13 +17,14 @@ import '../../data/api_provider.dart';
 import '../../data/models.dart';
 
 class LocationPickerArgs {
-  const LocationPickerArgs(
-      {this.title = '¿Dónde buscas el servicio?',
-      this.subtitle,
-      this.initial,
-      this.radiusKm = 10,
-      this.showRadius = true,
-      this.button = 'Usar esta ubicación'});
+  const LocationPickerArgs({
+    this.title = '¿Dónde buscas el servicio?',
+    this.subtitle,
+    this.initial,
+    this.radiusKm = 10,
+    this.showRadius = true,
+    this.button = 'Usar esta ubicación',
+  });
   final String title;
   final String? subtitle;
   final GeoPoint? initial;
@@ -152,8 +153,8 @@ class _LocationPickerPageState extends ConsumerState<LocationPickerPage> {
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 15)));
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 15)),
+      );
       if (!mounted) return;
       final point = GeoPoint(position.latitude, position.longitude);
       if (!_inMexico(point)) {
@@ -189,169 +190,229 @@ class _LocationPickerPageState extends ConsumerState<LocationPickerPage> {
 
   @override
   Widget build(BuildContext context) => NexoPage(
-      background: NexoColors.surface,
-      child: Column(children: [
+    background: NexoColors.surface,
+    child: Column(
+      children: [
         Padding(
-            padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
-            child: Column(children: [
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+          child: Column(
+            children: [
               Center(
-                  child: Container(
-                      width: 42,
-                      height: 5,
-                      decoration: BoxDecoration(color: NexoColors.line, borderRadius: BorderRadius.circular(9)))),
+                child: Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(color: NexoColors.line, borderRadius: BorderRadius.circular(9)),
+                ),
+              ),
               const SizedBox(height: 14),
-              Row(children: [
-                Expanded(child: Text(widget.args.title, style: NexoText.display(20))),
-                NexoIconButton(
+              Row(
+                children: [
+                  Expanded(child: Text(widget.args.title, style: NexoText.display(20))),
+                  NexoIconButton(
                     icon: 'close',
                     label: 'Cerrar ubicación',
                     size: 36,
                     circle: true,
-                    onTap: () => Navigator.of(context).pop())
-              ]),
-            ])),
+                    onTap: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
         Expanded(
-            child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  if (widget.args.subtitle != null) ...[
-                    Text(widget.args.subtitle!, style: NexoText.body(14, color: NexoColors.muted)),
-                    const SizedBox(height: 12)
-                  ],
-                  Row(children: [
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.args.subtitle != null) ...[
+                  Text(widget.args.subtitle!, style: NexoText.body(14, color: NexoColors.muted)),
+                  const SizedBox(height: 12),
+                ],
+                Row(
+                  children: [
                     Expanded(
-                        child: TextField(
-                            controller: _query,
-                            maxLength: 160,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: (_) => _search(),
-                            onChanged: (_) {
-                              _searchEpoch++;
-                              setState(() {
-                                _searching = false;
-                                _results = [];
-                                _searchError = null;
-                              });
-                            },
-                            style: NexoText.body(14),
-                            decoration: nexoInputDecoration(hint: 'Calle, colonia o ciudad')
-                                .copyWith(contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)))),
+                      child: TextField(
+                        controller: _query,
+                        maxLength: 160,
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: (_) => _search(),
+                        onChanged: (_) {
+                          _searchEpoch++;
+                          setState(() {
+                            _searching = false;
+                            _results = [];
+                            _searchError = null;
+                          });
+                        },
+                        style: NexoText.body(14),
+                        decoration: nexoInputDecoration(
+                          hint: 'Calle, colonia o ciudad',
+                        ).copyWith(contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     NexoButton(
-                        label: 'Buscar',
-                        small: true,
-                        block: false,
-                        loading: _searching,
-                        onPressed: _searching ? null : _search)
-                  ]),
-                  if (_searchError != null)
-                    Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(_searchError!, style: NexoText.body(13, color: NexoColors.muted))),
-                  for (final result in _results)
-                    ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const NexoIcon('pin', color: NexoColors.brand),
-                        title: Text(result.label, style: NexoText.body(14, weight: FontWeight.w700)),
-                        onTap: () => _pick(result)),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                      height: 230,
-                      child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: Stack(children: [
-                            FlutterMap(
-                                mapController: _map,
-                                options: MapOptions(
-                                    initialCenter: _center,
-                                    initialZoom: widget.args.showRadius ? zoomForRadius(_radius) : 16,
-                                    interactionOptions:
-                                        const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
-                                    onPositionChanged: (camera, gesture) {
-                                      if (!gesture) return;
-                                      _reverseTimer?.cancel();
-                                      _reverseEpoch++;
-                                      setState(() {
-                                        _center = camera.center;
-                                        _selected = true;
-                                        _source = 'map';
-                                        _place = null;
-                                        _reverseError = null;
-                                      });
-                                      if (_inMexico(gp(_center))) {
-                                        _reverseTimer = Timer(const Duration(milliseconds: 1200), _reverse);
-                                      }
-                                    }),
-                                children: [
-                                  nexoTiles(),
-                                  if (widget.args.showRadius && _selected)
-                                    CircleLayer(circles: [
-                                      CircleMarker(
-                                          point: _center,
-                                          radius: _radius * 1000.0,
-                                          useRadiusInMeter: true,
-                                          color: NexoColors.brand.withValues(alpha: .12),
-                                          borderColor: NexoColors.brand,
-                                          borderStrokeWidth: 2)
-                                    ])
-                                ]),
-                            const IgnorePointer(
-                                child: Center(
-                                    child: Padding(padding: EdgeInsets.only(bottom: 32), child: MapPin(size: 38)))),
-                          ]))),
-                  const SizedBox(height: 10),
-                  NexoButton(
-                      label: 'Usar mi ubicación',
-                      icon: 'locate',
-                      loading: _locating,
-                      variant: NexoButtonVariant.ghost,
-                      onPressed: _locating ? null : _locate),
-                  const SizedBox(height: 12),
-                  Text(
-                      _selected
-                          ? (_place?.label ?? _coordinates)
-                          : 'Busca una dirección, usa tu GPS o mueve el mapa para elegir tu zona.',
-                      style: NexoText.body(14, weight: FontWeight.w700)),
-                  if (_reverseError != null)
-                    Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(_reverseError!, style: NexoText.body(12.5, color: NexoColors.muted))),
-                  if (widget.args.showRadius) ...[
-                    const SizedBox(height: 14),
-                    Text('Buscar a menos de', style: NexoText.body(14, weight: FontWeight.w700)),
-                    const SizedBox(height: 8),
-                    SegControl<int>(
-                        small: true,
-                        options: const [(2, '2 km'), (5, '5 km'), (10, '10 km'), (20, '20 km')],
-                        value: _radius,
-                        onChanged: (radius) {
-                          setState(() => _radius = radius);
-                          _map.move(_center, zoomForRadius(radius));
-                        })
+                      label: 'Buscar',
+                      small: true,
+                      block: false,
+                      loading: _searching,
+                      onPressed: _searching ? null : _search,
+                    ),
                   ],
+                ),
+                if (_searchError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(_searchError!, style: NexoText.body(13, color: NexoColors.muted)),
+                  ),
+                for (final result in _results)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const NexoIcon('pin', color: NexoColors.brand),
+                    title: Text(result.label, style: NexoText.body(14, weight: FontWeight.w700)),
+                    onTap: () => _pick(result),
+                  ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 230,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Stack(
+                      children: [
+                        FlutterMap(
+                          mapController: _map,
+                          options: MapOptions(
+                            initialCenter: _center,
+                            initialZoom: widget.args.showRadius ? zoomForRadius(_radius) : 16,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                            ),
+                            onTap: (_, point) {
+                              _map.move(point, _map.camera.zoom);
+                              _reverseTimer?.cancel();
+                              _reverseEpoch++;
+                              setState(() {
+                                _center = point;
+                                _selected = true;
+                                _source = 'map';
+                                _place = null;
+                                _reverseError = null;
+                              });
+                              if (_inMexico(gp(point))) _reverse();
+                            },
+                            onPositionChanged: (camera, gesture) {
+                              if (!gesture) return;
+                              _reverseTimer?.cancel();
+                              _reverseEpoch++;
+                              setState(() {
+                                _center = camera.center;
+                                _selected = true;
+                                _source = 'map';
+                                _place = null;
+                                _reverseError = null;
+                              });
+                              if (_inMexico(gp(_center))) {
+                                _reverseTimer = Timer(const Duration(milliseconds: 1200), _reverse);
+                              }
+                            },
+                          ),
+                          children: [
+                            nexoTiles(),
+                            if (widget.args.showRadius && _selected)
+                              CircleLayer(
+                                circles: [
+                                  CircleMarker(
+                                    point: _center,
+                                    radius: _radius * 1000.0,
+                                    useRadiusInMeter: true,
+                                    color: NexoColors.brand.withValues(alpha: .12),
+                                    borderColor: NexoColors.brand,
+                                    borderStrokeWidth: 2,
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                        const IgnorePointer(
+                          child: Center(
+                            child: Padding(padding: EdgeInsets.only(bottom: 38), child: MapPin(size: 38)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                NexoButton(
+                  label: 'Usar mi ubicación',
+                  icon: 'locate',
+                  loading: _locating,
+                  variant: NexoButtonVariant.ghost,
+                  onPressed: _locating ? null : _locate,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _selected
+                      ? (_place?.label ?? _coordinates)
+                      : 'Busca una dirección, usa tu GPS o mueve el mapa para elegir tu zona.',
+                  style: NexoText.body(14, weight: FontWeight.w700),
+                ),
+                if (_reverseError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(_reverseError!, style: NexoText.body(12.5, color: NexoColors.muted)),
+                  ),
+                if (widget.args.showRadius) ...[
                   const SizedBox(height: 14),
-                  Text(
-                      'Tu punto exacto no se publica. La búsqueda de direcciones se procesa con Photon y datos de OpenStreetMap.',
-                      style: NexoText.body(12, color: NexoColors.muted, height: 1.4)),
-                  const SizedBox(height: 6),
-                  Text('Mapa © Esri · OpenStreetMap | Direcciones © OpenStreetMap contributors · Photon',
-                      style: NexoText.body(10.5, color: NexoColors.muted)),
-                ]))),
+                  Text('Buscar a menos de', style: NexoText.body(14, weight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  SegControl<int>(
+                    small: true,
+                    options: const [(2, '2 km'), (5, '5 km'), (10, '10 km'), (20, '20 km')],
+                    value: _radius,
+                    onChanged: (radius) {
+                      setState(() => _radius = radius);
+                      _map.move(_center, zoomForRadius(radius));
+                    },
+                  ),
+                ],
+                const SizedBox(height: 14),
+                Text(
+                  'Tu punto exacto no se publica. La búsqueda de direcciones se procesa con Photon y datos de OpenStreetMap.',
+                  style: NexoText.body(12, color: NexoColors.muted, height: 1.4),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Mapa © Esri · OpenStreetMap | Direcciones © OpenStreetMap contributors · Photon',
+                  style: NexoText.body(10.5, color: NexoColors.muted),
+                ),
+              ],
+            ),
+          ),
+        ),
         SafeArea(
-            top: false,
-            child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
-                child: NexoButton(
-                    label: widget.args.button,
-                    onPressed: !_selected
-                        ? null
-                        : () {
-                            if (!_inMexico(gp(_center))) {
-                              showNexoToast('Selecciona una ubicación dentro de México.');
-                              return;
-                            }
-                            Navigator.of(context).pop(LocationPick(gp(_center), _radius, _source,
-                                label: _place?.label, zoneLabel: _place?.zoneLabel));
-                          }))),
-      ]));
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+            child: NexoButton(
+              label: widget.args.button,
+              onPressed: !_selected
+                  ? null
+                  : () {
+                      if (!_inMexico(gp(_center))) {
+                        showNexoToast('Selecciona una ubicación dentro de México.');
+                        return;
+                      }
+                      Navigator.of(context).pop(
+                        LocationPick(gp(_center), _radius, _source, label: _place?.label, zoneLabel: _place?.zoneLabel),
+                      );
+                    },
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

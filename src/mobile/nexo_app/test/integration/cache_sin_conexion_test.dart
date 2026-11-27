@@ -33,14 +33,16 @@ void main() {
     online = 0;
     queued = 0;
     dio = testDio(a)
-      ..interceptors.add(OfflineCacheInterceptor(
-        store: () async => store,
-        account: () => account,
-        onOffline: offline.add,
-        onOnline: () => online++,
-        onQueued: () => queued++,
-        clock: () => now,
-      ));
+      ..interceptors.add(
+        OfflineCacheInterceptor(
+          store: () async => store,
+          account: () => account,
+          onOffline: offline.add,
+          onOnline: () => online++,
+          onQueued: () => queued++,
+          clock: () => now,
+        ),
+      );
   });
 
   test('solicitudes no muestran estado privado obsoleto sin señal', () async {
@@ -59,13 +61,20 @@ void main() {
     a.offline();
     account = 'acc_2';
     await expectLater(
-        HttpNexoApi(dio).myRequests(), throwsA(isA<ApiException>().having((e) => e.isNetwork, 'red', isTrue)));
+      HttpNexoApi(dio).myRequests(),
+      throwsA(isA<ApiException>().having((e) => e.isNetwork, 'red', isTrue)),
+    );
   });
 
   test('solicitudes no usan ETag de estado privado almacenado', () async {
-    a.on('GET', '/v1/discovery/requests/mine', Fx.page([Fx.request(mine: true)]), headers: {
-      'etag': ['"v7"'],
-    });
+    a.on(
+      'GET',
+      '/v1/discovery/requests/mine',
+      Fx.page([Fx.request(mine: true)]),
+      headers: {
+        'etag': ['"v7"'],
+      },
+    );
     final api = HttpNexoApi(dio);
     await api.myRequests();
     a.onRaw('GET', '/v1/discovery/requests/mine', (_) => ResponseBody.fromString('', 304));
@@ -76,7 +85,7 @@ void main() {
   test('perfil propio no se almacena y no aparece sin conexión', () async {
     a.on('GET', '/v1/discovery/providers/me', {
       ...Fx.provider(),
-      'location': {'lat': 20, 'lng': -99}
+      'location': {'lat': 20, 'lng': -99},
     });
     final api = HttpNexoApi(dio);
     expect((await api.myProvider())!.location!.lat, 20);

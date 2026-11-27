@@ -45,9 +45,11 @@ class LocationChip extends ConsumerWidget {
                   const SizedBox(width: 6),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 130),
-                    child: Text(text,
-                        overflow: TextOverflow.ellipsis,
-                        style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.brandDeep)),
+                    child: Text(
+                      text,
+                      overflow: TextOverflow.ellipsis,
+                      style: NexoText.body(12.5, weight: FontWeight.w600, color: NexoColors.brandDeep),
+                    ),
                   ),
                 ],
               ),
@@ -60,31 +62,40 @@ class LocationChip extends ConsumerWidget {
 }
 
 /// `zoneSheet` del solicitante: ¿dónde buscas el servicio?
-Future<void> openSearchLocation(BuildContext context, WidgetRef ref) async {
+/// Devuelve `true` si quedó guardada una zona. [intro]: primer paso de la guía
+/// de quien explora sin cuenta (textos de la maqueta).
+Future<bool> openSearchLocation(BuildContext context, WidgetRef ref, {bool intro = false}) async {
   final loc = ref.read(searchLocationProvider);
   final r = await context.push<LocationPick>(
     Routes.location,
     extra: LocationPickerArgs(
-      title: '¿Dónde buscas el servicio?',
-      subtitle: 'Cámbiala cuando busques para otro lugar, como la casa de un familiar o tu negocio.',
+      title: intro ? 'Primero, elige dónde buscas' : '¿Dónde buscas el servicio?',
+      subtitle: intro
+          ? 'Mueve el mapa o usa tu ubicación. Mostraremos prestadores que atienden esa zona; tu punto exacto no se publica.'
+          : 'Cámbiala cuando busques para otro lugar, como la casa de un familiar o tu negocio.',
       initial: loc.hasSelection ? loc.point : null,
       radiusKm: loc.radiusKm,
-      button: 'Buscar aquí',
+      button: intro ? 'Ver opciones cerca de aquí' : 'Buscar aquí',
     ),
   );
-  if (r == null) return;
+  if (r == null) return false;
   try {
     await ref.read(searchLocationProvider.notifier).set(r.point, r.radiusKm, source: r.source, zoneLabel: r.zoneLabel);
     showNexoToast('Resultados adaptados a ${ref.read(searchLocationProvider).zoneLabel}');
+    return true;
   } catch (e) {
     showNexoToast(apiErrorMessage(e));
+    return false;
   }
 }
 
 /// Barra superior de Inicio (`topHome`): logo, ubicación y campana.
 class HomeTopBar extends ConsumerWidget {
-  const HomeTopBar({super.key, this.zoneLabel, this.dot = false});
+  const HomeTopBar({super.key, this.zoneLabel, this.dot = false, this.locationKey});
   final String? zoneLabel;
+
+  /// Ancla de la guía de exploración.
+  final Key? locationKey;
   final bool dot;
 
   @override
@@ -101,7 +112,10 @@ class HomeTopBar extends ConsumerWidget {
         children: [
           const NexoLogo(),
           const Spacer(),
-          LocationChip(label: zoneLabel),
+          KeyedSubtree(
+            key: locationKey,
+            child: LocationChip(label: zoneLabel),
+          ),
           const SizedBox(width: 8),
           Stack(
             clipBehavior: Clip.none,
@@ -138,18 +152,18 @@ class NexoIconButtonPlain extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: label,
-        child: Material(
-          color: NexoColors.surface2,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: onTap,
-            child: SizedBox(width: 44, height: 44, child: Center(child: NexoIcon(icon, size: 20))),
-          ),
-        ),
-      );
+    button: true,
+    label: label,
+    child: Material(
+      color: NexoColors.surface2,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: SizedBox(width: 44, height: 44, child: Center(child: NexoIcon(icon, size: 20))),
+      ),
+    ),
+  );
 }
 
 /// `notifSheet`: centro de notificaciones.
@@ -159,17 +173,21 @@ Future<void> showNotifications(BuildContext context, WidgetRef ref) async {
     return;
   }
   final router = GoRouter.of(context);
-  await showNexoSheet<void>(context,
-      builder: (ctx) => _NotifList(onOpen: (link) {
-            Navigator.of(ctx).pop();
-            final path = Routes.fromDeepLink(link);
-            if (path != null) router.push(path);
-          }));
+  await showNexoSheet<void>(
+    context,
+    builder: (ctx) => _NotifList(
+      onOpen: (link) {
+        Navigator.of(ctx).pop();
+        final path = Routes.fromDeepLink(link);
+        if (path != null) router.push(path);
+      },
+    ),
+  );
   // Al cerrar, todo queda leído.
   final list = ref.read(notificationsProvider).asData?.value.$1 ?? const <NotificationItem>[];
   final ids = [
     for (final n in list)
-      if (!n.read) n.id
+      if (!n.read) n.id,
   ];
   if (ids.isNotEmpty) {
     try {
@@ -190,12 +208,15 @@ class _NotifList extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SheetHeader('Notificaciones'),
-        asyncView(v, (d) {
+        skeletonView(NexoSkeletonKind.notifications, v, (d) {
           if (d.$1.isEmpty) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text('No tienes avisos por ahora.',
-                  textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted)),
+              child: Text(
+                'No tienes avisos por ahora.',
+                textAlign: TextAlign.center,
+                style: NexoText.body(14, color: NexoColors.muted),
+              ),
             );
           }
           return Column(
@@ -213,18 +234,22 @@ class _NotifList extends ConsumerWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                              color: n.read ? NexoColors.surface2 : NexoColors.brandSoft,
-                              borderRadius: BorderRadius.circular(12)),
+                            color: n.read ? NexoColors.surface2 : NexoColors.brandSoft,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Center(
-                              child: NexoIcon(n.icon, size: 19, color: n.read ? NexoColors.muted : NexoColors.brand)),
+                            child: NexoIcon(n.icon, size: 19, color: n.read ? NexoColors.muted : NexoColors.brand),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(n.title,
-                                  style: NexoText.body(14.5, weight: n.read ? FontWeight.w600 : FontWeight.w800)),
+                              Text(
+                                n.title,
+                                style: NexoText.body(14.5, weight: n.read ? FontWeight.w600 : FontWeight.w800),
+                              ),
                               if (n.body.isNotEmpty)
                                 Text(n.body, style: NexoText.body(13, color: NexoColors.muted, height: 1.35)),
                               const SizedBox(height: 3),
@@ -233,8 +258,10 @@ class _NotifList extends ConsumerWidget {
                                   Text(n.ago, style: NexoText.body(12, color: NexoColors.muted)),
                                   if (n.actionLabel != null) ...[
                                     const SizedBox(width: 10),
-                                    Text(n.actionLabel!,
-                                        style: NexoText.body(12.5, weight: FontWeight.w800, color: NexoColors.brand)),
+                                    Text(
+                                      n.actionLabel!,
+                                      style: NexoText.body(12.5, weight: FontWeight.w800, color: NexoColors.brand),
+                                    ),
                                   ],
                                 ],
                               ),

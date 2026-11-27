@@ -18,7 +18,12 @@ GeoPoint gp(LatLng p) => GeoPoint(p.latitude, p.longitude);
 /// Zoom que deja ver el radio completo en un mapa de ~360 px.
 double zoomForRadius(num km) => km <= 0 ? 15.5 : (14.5 - math.log(km) / math.ln2).clamp(9.0, 16.0).toDouble();
 
-TileLayer nexoTiles() => TileLayer(urlTemplate: kTileUrl, userAgentPackageName: 'mx.nexolocal.nexo_app');
+TileLayer nexoTiles() => TileLayer(
+  urlTemplate: kTileUrl,
+  fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  maxNativeZoom: 19,
+  userAgentPackageName: 'mx.nexolocal.app',
+);
 
 /// Alfiler de la maqueta: gota ámbar con borde blanco.
 class MapPin extends StatelessWidget {
@@ -67,6 +72,7 @@ class MiniMap extends StatelessWidget {
               Positioned.fill(
                 child: IgnorePointer(
                   child: FlutterMap(
+                    key: ValueKey((point.lat, point.lng, radiusKm, approximate)),
                     options: MapOptions(
                       initialCenter: center,
                       initialZoom: approximate ? 14.2 : zoomForRadius(radiusKm),
@@ -75,25 +81,30 @@ class MiniMap extends StatelessWidget {
                     children: [
                       nexoTiles(),
                       if (radiusKm > 0 || approximate)
-                        CircleLayer(circles: [
-                          CircleMarker(
-                            point: center,
-                            radius: approximate ? 600 : radiusKm * 1000.0,
-                            useRadiusInMeter: true,
-                            color: NexoColors.brand.withValues(alpha: .14),
-                            borderColor: NexoColors.brand,
-                            borderStrokeWidth: 2,
-                          ),
-                        ]),
+                        CircleLayer(
+                          circles: [
+                            CircleMarker(
+                              point: center,
+                              radius: approximate ? 600 : radiusKm * 1000.0,
+                              useRadiusInMeter: true,
+                              color: NexoColors.brand.withValues(alpha: .14),
+                              borderColor: NexoColors.brand,
+                              borderStrokeWidth: 2,
+                            ),
+                          ],
+                        ),
                       if (!approximate)
-                        MarkerLayer(markers: [
-                          Marker(
+                        MarkerLayer(
+                          markers: [
+                            Marker(
                               point: center,
                               width: 38,
                               height: 38,
                               alignment: Alignment.topCenter,
-                              child: const MapPin()),
-                        ]),
+                              child: const MapPin(),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -103,6 +114,19 @@ class MiniMap extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: NexoColors.line, width: 1.5),
+                  ),
+                ),
+              ),
+              const Positioned(
+                top: 5,
+                right: 6,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(color: Color(0xCCFFFFFF)),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Text('Esri / OpenStreetMap', style: TextStyle(fontSize: 9, color: Colors.black87)),
+                    ),
                   ),
                 ),
               ),
@@ -121,7 +145,7 @@ class MiniMap extends StatelessWidget {
                               color: NexoColors.surface,
                               borderRadius: BorderRadius.circular(99),
                               boxShadow: const [
-                                BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 2))
+                                BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 2)),
                               ],
                             ),
                             child: Row(
@@ -130,9 +154,11 @@ class MiniMap extends StatelessWidget {
                                 const NexoIcon('pin', size: 15, color: NexoColors.brand),
                                 const SizedBox(width: 6),
                                 Flexible(
-                                  child: Text(label!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: NexoText.body(13, weight: FontWeight.w700)),
+                                  child: Text(
+                                    label!,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: NexoText.body(13, weight: FontWeight.w700),
+                                  ),
                                 ),
                               ],
                             ),
@@ -148,8 +174,10 @@ class MiniMap extends StatelessWidget {
                             onTap: onAction,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-                              child: Text(actionLabel!,
-                                  style: NexoText.body(13, weight: FontWeight.w700, color: Colors.white)),
+                              child: Text(
+                                actionLabel!,
+                                style: NexoText.body(13, weight: FontWeight.w700, color: Colors.white),
+                              ),
                             ),
                           ),
                         ),
@@ -166,13 +194,14 @@ class MiniMap extends StatelessWidget {
 
 /// Mapa con puntos (prestadores o solicitudes) y la zona de búsqueda.
 class PointsMap extends StatelessWidget {
-  const PointsMap(
-      {super.key,
-      required this.center,
-      required this.radiusKm,
-      required this.points,
-      this.onTapPoint,
-      this.height = 260});
+  const PointsMap({
+    super.key,
+    required this.center,
+    required this.radiusKm,
+    required this.points,
+    this.onTapPoint,
+    this.height = 260,
+  });
   final GeoPoint center;
   final num radiusKm;
   final List<MapPoint> points;
@@ -193,49 +222,53 @@ class PointsMap extends StatelessWidget {
           ),
           children: [
             nexoTiles(),
-            CircleLayer(circles: [
-              CircleMarker(
-                point: ll(center),
-                radius: radiusKm * 1000.0,
-                useRadiusInMeter: true,
-                color: NexoColors.brand.withValues(alpha: .08),
-                borderColor: NexoColors.brand.withValues(alpha: .6),
-                borderStrokeWidth: 1.5,
-              ),
-            ]),
-            MarkerLayer(markers: [
-              for (final p in points)
+            CircleLayer(
+              circles: [
+                CircleMarker(
+                  point: ll(center),
+                  radius: radiusKm * 1000.0,
+                  useRadiusInMeter: true,
+                  color: NexoColors.brand.withValues(alpha: .08),
+                  borderColor: NexoColors.brand.withValues(alpha: .6),
+                  borderStrokeWidth: 1.5,
+                ),
+              ],
+            ),
+            MarkerLayer(
+              markers: [
+                for (final p in points)
+                  Marker(
+                    point: ll(p.point),
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.topCenter,
+                    child: GestureDetector(
+                      onTap: onTapPoint == null ? null : () => onTapPoint!(p),
+                      child: MapPin(
+                        size: 34,
+                        color: p.state == 'open' || p.state == 'today'
+                            ? NexoColors.accent
+                            : p.state == 'closed'
+                            ? NexoColors.muted
+                            : NexoColors.brand,
+                      ),
+                    ),
+                  ),
                 Marker(
-                  point: ll(p.point),
-                  width: 34,
-                  height: 34,
-                  alignment: Alignment.topCenter,
-                  child: GestureDetector(
-                    onTap: onTapPoint == null ? null : () => onTapPoint!(p),
-                    child: MapPin(
-                      size: 34,
-                      color: p.state == 'open' || p.state == 'today'
-                          ? NexoColors.accent
-                          : p.state == 'closed'
-                              ? NexoColors.muted
-                              : NexoColors.brand,
+                  point: ll(center),
+                  width: 18,
+                  height: 18,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2B72D1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 6)],
                     ),
                   ),
                 ),
-              Marker(
-                point: ll(center),
-                width: 18,
-                height: 18,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2B72D1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 6)],
-                  ),
-                ),
-              ),
-            ]),
+              ],
+            ),
           ],
         ),
       ),

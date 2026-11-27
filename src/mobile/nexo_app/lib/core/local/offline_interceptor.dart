@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
 import '../network/api_exception.dart';
 import 'local_store.dart';
+import 'snapshot_cipher.dart';
 
 /// Cabecera que marca una respuesta servida desde el teléfono.
 const kCacheHeader = 'x-nexo-cache';
@@ -11,6 +13,8 @@ const kCacheHeader = 'x-nexo-cache';
 /// `Options.extra`: reintento desde la cola (no se vuelve a encolar).
 const kReplay = 'nexo.replay';
 const _kCached = 'nexo.cached';
+const _kOwner = 'nexo.owner';
+const _kSealed = 'sealed:';
 
 /// Caché del cliente (requisito 9: caché en frontend) y cola sin conexión.
 ///
@@ -26,8 +30,12 @@ class OfflineCacheInterceptor extends Interceptor {
     this.onOffline,
     this.onOnline,
     this.onQueued,
+    this.vault,
     DateTime Function()? clock,
   }) : _now = clock ?? DateTime.now;
+
+  /// Sin cifrador no se guarda copia de lo excluido de la caché.
+  final SnapshotCipher? vault;
 
   final Future<LocalStore> Function() store;
 
@@ -40,6 +48,8 @@ class OfflineCacheInterceptor extends Interceptor {
 
   /// Datos que nunca se guardan en el teléfono.
   static const _never = [
+    '/engagement/chat-keys',
+    '/engagement/conversations',
     '/identity/me',
     '/discovery/places',
     '/discovery/me/location',
@@ -55,7 +65,7 @@ class OfflineCacheInterceptor extends Interceptor {
     '/discovery/works',
     '/discovery/map',
     '/discovery/search',
-    '/reports'
+    '/reports',
   ];
 
   static const freshFor = {'/v1/discovery/categories': Duration(hours: 1)};
@@ -64,6 +74,47 @@ class OfflineCacheInterceptor extends Interceptor {
 
   static bool cacheable(RequestOptions o) =>
       o.method.toUpperCase() == 'GET' && o.uri.path.startsWith('/v1/') && !_never.any(o.uri.path.contains);
+
+  /// Lecturas que la caché sin cifrar excluye, pero que hacen falta para ver
+  /// la app sin señal. Solo se guardan cifradas, por cuenta, y solo se usan
+  /// cuando no hay respuesta. Contacto, domicilios buscados, subidas, claves,
+  /// hilos de chat y credenciales quedan fuera.
+  static final _offline = [
+    RegExp(r'^/v1/identity/me$'),
+    RegExp(r'^/v1/discovery/me/(location|cover)$'),
+    RegExp(r'^/v1/discovery/(providers|requests|works|search|map)(/|$)'),
+    RegExp(r'^/v1/engagement/conversations$'),
+  ];
+
+  static bool snapshotable(RequestOptions o) =>
+      o.method.toUpperCase() == 'GET' && !cacheable(o) && _offline.any((rule) => rule.hasMatch(o.uri.path));
+
+  Future<void> _saveSnapshot(RequestOptions o, Map<dynamic, dynamic> data) async {
+    final cipher = vault;
+    final owner = o.extra[_kOwner];
+    // Una respuesta que llega tras salir o cambiar de cuenta no se guarda.
+    if (cipher == null || owner is! String || owner == 'guest' || owner != account()) return;
+    try {
+      final name = '$_kSealed${await cipher.label(keyOf(o), owner)}';
+      final body = await cipher.seal(jsonEncode(data), '$owner|$name');
+      if (owner != account()) return;
+      await (await store()).write(owner, name, CachedResponse(body: body, savedAt: _now()));
+    } catch (_) {}
+  }
+
+  Future<CachedResponse?> _readSnapshot(RequestOptions o) async {
+    final cipher = vault;
+    final owner = account();
+    if (cipher == null || owner == 'guest') return null;
+    try {
+      final name = '$_kSealed${await cipher.label(keyOf(o), owner)}';
+      final stored = await (await store()).read(owner, name);
+      if (stored == null) return null;
+      return CachedResponse(body: await cipher.open(stored.body, '$owner|$name'), savedAt: stored.savedAt);
+    } catch (_) {
+      return null;
+    }
+  }
 
   static bool canQueue(RequestOptions o) =>
       queueable.contains('${o.method.toUpperCase()} ${o.uri.path}') && o.extra[kReplay] != true;
@@ -79,17 +130,19 @@ class OfflineCacheInterceptor extends Interceptor {
       e.response == null && e.type != DioExceptionType.cancel && e.type != DioExceptionType.badCertificate;
 
   Response<dynamic> _fromCache(RequestOptions o, CachedResponse c, String how) => Response<dynamic>(
-        requestOptions: o,
-        statusCode: 200,
-        data: jsonDecode(c.body),
-        headers: Headers.fromMap({
-          kCacheHeader: [how],
-          Headers.contentTypeHeader: [Headers.jsonContentType],
-        }),
-      );
+    requestOptions: o,
+    statusCode: 200,
+    data: jsonDecode(c.body),
+    headers: Headers.fromMap({
+      kCacheHeader: [how],
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    }),
+  );
 
   @override
-  void onRequest(RequestOptions o, RequestInterceptorHandler handler) async {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final o = options;
+    o.extra[_kOwner] = account();
     if (!cacheable(o)) return handler.next(o);
     try {
       final c = await (await store()).read(account(), keyOf(o));
@@ -108,9 +161,14 @@ class OfflineCacheInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> r, ResponseInterceptorHandler handler) async {
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) async {
+    final r = response;
     final o = r.requestOptions;
     if (r.headers.value(kCacheHeader) == null) onOnline?.call();
+    if (snapshotable(o) && r.statusCode == 200 && r.data is Map) {
+      // Sin esperar: la pantalla no se retrasa por guardar la copia.
+      unawaited(_saveSnapshot(o, r.data as Map));
+    }
     if (cacheable(o) && r.statusCode == 200 && r.data is Map && r.headers.value(kCacheHeader) == null) {
       try {
         await (await store()).write(
@@ -124,7 +182,8 @@ class OfflineCacheInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException e, ErrorInterceptorHandler handler) async {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final e = err;
     final o = e.requestOptions;
     final cached = o.extra[_kCached];
 
@@ -132,13 +191,23 @@ class OfflineCacheInterceptor extends Interceptor {
     if (e.response?.statusCode == 304 && cached is CachedResponse) {
       onOnline?.call();
       try {
-        await (await store())
-            .write(account(), keyOf(o), CachedResponse(body: cached.body, etag: cached.etag, savedAt: _now()));
+        await (await store()).write(
+          account(),
+          keyOf(o),
+          CachedResponse(body: cached.body, etag: cached.etag, savedAt: _now()),
+        );
       } catch (_) {}
       return handler.resolve(_fromCache(o, cached, 'revalidated'));
     }
 
     if (_noAnswer(e)) {
+      if (snapshotable(o)) {
+        final copy = await _readSnapshot(o);
+        if (copy != null) {
+          onOffline?.call(copy.savedAt);
+          return handler.resolve(_fromCache(o, copy, 'offline'));
+        }
+      }
       if (cached is CachedResponse) {
         onOffline?.call(cached.savedAt);
         return handler.resolve(_fromCache(o, cached, 'offline'));
@@ -147,23 +216,27 @@ class OfflineCacheInterceptor extends Interceptor {
         try {
           final idem = '${o.headers['Idempotency-Key'] ?? ''}';
           if (idem.isNotEmpty) {
-            await (await store()).enqueue(OutboxItem(
-              account: account(),
-              method: o.method.toUpperCase(),
-              path: o.uri.path,
-              body: jsonEncode(o.data),
-              idempotencyKey: idem,
-              createdAt: _now(),
-            ));
-            onQueued?.call();
-            return handler.reject(DioException(
-              requestOptions: o,
-              type: DioExceptionType.unknown,
-              error: const ApiException(
-                code: kQueuedOffline,
-                detail: 'Sin señal: lo guardamos y se publicará en cuanto vuelva la conexión.',
+            await (await store()).enqueue(
+              OutboxItem(
+                account: account(),
+                method: o.method.toUpperCase(),
+                path: o.uri.path,
+                body: jsonEncode(o.data),
+                idempotencyKey: idem,
+                createdAt: _now(),
               ),
-            ));
+            );
+            onQueued?.call();
+            return handler.reject(
+              DioException(
+                requestOptions: o,
+                type: DioExceptionType.unknown,
+                error: const ApiException(
+                  code: kQueuedOffline,
+                  detail: 'Sin señal: lo guardamos y se publicará en cuanto vuelva la conexión.',
+                ),
+              ),
+            );
           }
         } catch (_) {}
       }

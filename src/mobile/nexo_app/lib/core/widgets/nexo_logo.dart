@@ -6,11 +6,7 @@ import '../../app/theme/typography.dart';
 /// Los dos aros entrelazados del logo (viewBox 64×40 de la bienvenida).
 /// [t] va de 0 a 1: los aros se acercan desde los lados y aparecen.
 class NexoRingsPainter extends CustomPainter {
-  NexoRingsPainter({
-    this.t = 1,
-    this.left = Colors.white,
-    this.right = NexoColors.logoAmber,
-  });
+  NexoRingsPainter({this.t = 1, this.left = Colors.white, this.right = NexoColors.logoAmber});
 
   final double t;
   final Color left;
@@ -51,12 +47,7 @@ class _MarkPainter extends CustomPainter {
 
 /// "nexo" en negritas + "local" ligero, como en la maqueta.
 class NexoWordmark extends StatelessWidget {
-  const NexoWordmark({
-    super.key,
-    this.size = 19,
-    this.nexoColor = NexoColors.ink,
-    this.localColor = NexoColors.brand,
-  });
+  const NexoWordmark({super.key, this.size = 19, this.nexoColor = NexoColors.ink, this.localColor = NexoColors.brand});
 
   final double size;
   final Color nexoColor;
@@ -66,16 +57,18 @@ class NexoWordmark extends StatelessWidget {
   Widget build(BuildContext context) {
     final ls = -0.045 * size;
     return Text.rich(
-      TextSpan(children: [
-        TextSpan(
-          text: 'nexo',
-          style: NexoText.display(size, color: nexoColor, letterSpacing: ls),
-        ),
-        TextSpan(
-          text: 'local',
-          style: NexoText.display(size, weight: FontWeight.w500, color: localColor, letterSpacing: ls),
-        ),
-      ]),
+      TextSpan(
+        children: [
+          TextSpan(
+            text: 'nexo',
+            style: NexoText.display(size, color: nexoColor, letterSpacing: ls),
+          ),
+          TextSpan(
+            text: 'local',
+            style: NexoText.display(size, weight: FontWeight.w500, color: localColor, letterSpacing: ls),
+          ),
+        ],
+      ),
       semanticsLabel: 'Nexo Local',
     );
   }

@@ -46,3 +46,20 @@ Hoy: powershell -NoProfile -File scripts/check_sdd.ps1 desde la raíz correspond
 - [ ] T-410 →FR-410,NFR-002,NFR-003. Definir y atender R10 Logout. Acepta: AC-410: Revocar en backend y limpiar móvil; rechazo entre dos réplicas y WS; offline solo acredita cierre local mientras remoto siga pendiente. App entrega consumo/experiencia y enlaza evidencia del backend/web; no replica infraestructura ni lee bases remotas. Planear método de comprobación, entorno/responsable y evidencia; no aprobar mientras falten decisiones/contratos o ejecución real cuando corresponda. Evidencia real cuando corresponda; diseño solo no acredita aceptación. Depende de: T-002 y entradas/decisiones de la historia; trabajo documental previo no requiere código.
 
 - [ ] T-703 →FR-703,NFR-001,NFR-003. Corregir y comprobar H03: Aislamiento entre cuentas. Acepta: AC-703: Ana publica/guarda y sale; Carlos no recibe como propia autoría, borrador, cola o caché de Ana; IDs del token, nunca Tú/me. Reproducir negativo auditado y resultado corregido en superficie propia; backend prueba DTO/permiso, app vista/estado; no usar maqueta como integración productiva. Depende de: T-002 y contratos/capacidades implicados.
+
+- [ ] T-SPLASH-001: `splash_page.dart`, `router.dart` y recursos `res/` de Android. Estado: implementada; aceptación pendiente.
+- [ ] T-LOGIN-001: `login_page.dart`. Estado: implementada; aceptación pendiente.
+- [ ] T-SPLASH-002: revisión en dispositivo.
+
+- [ ] T-AUTH-LAYOUT-001: `ob_scaffold.dart`, `code_boxes.dart`, pantallas de acceso y registro, `splash_page.dart`. Estado: implementada; aceptación pendiente.
+- [ ] T-AUTH-LAYOUT-002: recorrido de registro, acceso y recuperación en Android.
+
+- [ ] T-AUTH-POLISH-001: `welcome_page.dart`, `ob_scaffold.dart`, `nexo_button.dart`, pantallas de acceso. Estado: implementada; aceptación pendiente.
+
+- [ ] T-SPLASH-003: `splash_page.dart`, `welcome_page.dart`, `router.dart`; posición final medida en prueba en tres tamaños. Estado: implementada; aceptación pendiente.
+- [ ] T-SPLASH-004: revisar la transición en el dispositivo.
+
+- [ ] T-WELCOME-001: `welcome_page.dart` restaurado; `splash_page.dart` ajustado. Estado: implementada; aceptación pendiente.
+
+- [ ] T-SPLASH-005: posición final comparada con el enrutador real en tres tamaños. Estado: implementada; aceptación pendiente.
+- [ ] T-SPLASH-006: confirmación visual en dispositivo.

@@ -4,7 +4,7 @@ publish_to: "none"
 version: 0.4.0+400
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.10.0
 
 dependencies:
   flutter:
@@ -25,6 +25,8 @@ dependencies:
   url_launcher: ^6.3.1
   # Push (spec 050). Sin google-services.json la app funciona sin push.
   firebase_core: ^3.13.0
+  flutter_local_notifications: 19.5.0
+  path_provider: ^2.1.5
   firebase_messaging: ^15.2.5
   # ML en el teléfono: categoría sugerida por foto (spec 049)
   google_mlkit_image_labeling: ^0.14.1
@@ -33,6 +35,10 @@ dependencies:
   path: ^1.9.1
   connectivity_plus: ^6.1.4
   signalr_netcore: ^1.4.4
+  # Signal protocol via native libsignal; pinned for security review.
+  libsignal: 9.0.1
+  record: 6.2.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

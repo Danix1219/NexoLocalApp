@@ -14,7 +14,7 @@ void main() {
       'descriptionExcerpt': 'Descripción real',
       'summaryText': 'Solicitud cerrada',
       'interestCount': 3,
-      'interestedPreview': []
+      'interestedPreview': [],
     }, mine: true);
     expect(r.closed, true);
     expect(r.description, 'Descripción real');
@@ -26,13 +26,13 @@ void main() {
     final phoneOnly = ProviderMini.fromJson({
       'providerId': 'p1',
       'name': 'Ana',
-      'badges': ['phoneVerified']
+      'badges': ['phoneVerified'],
     });
     expect(phoneOnly.emailVerified, isFalse);
     final verified = ProviderProfile.fromJson({
       'providerId': 'p1',
       'name': 'Ana',
-      'badges': ['emailVerified']
+      'badges': ['emailVerified'],
     });
     expect(verified.emailVerified, isTrue);
     expect(verified.mini.emailVerified, isTrue);
@@ -99,11 +99,7 @@ void main() {
   test('contraparte proveedor usa accountId del contrato de pedidos como providerId', () {
     final o = Order.fromJson({
       ...Fx.order(role: 'client'),
-      'counterpart': {
-        'accountId': 'provider-123',
-        'displayName': 'PlomerÃ­a Centro',
-        'kind': 'provider',
-      },
+      'counterpart': {'accountId': 'provider-123', 'displayName': 'PlomerÃ­a Centro', 'kind': 'provider'},
     });
     expect(o.counterpart.providerId, 'provider-123');
   });

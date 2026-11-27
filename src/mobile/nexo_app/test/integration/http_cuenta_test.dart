@@ -13,20 +13,22 @@ void main() {
     final adapter = MockAdapter();
     adapter.on('GET', '/v1/discovery/places/search', {
       'items': [
-        {'lat': 20.0489, 'lng': -99.3729, 'label': 'Tula de Allende', 'zoneLabel': 'Tula de Allende, Hidalgo'}
-      ]
+        {'lat': 20.0489, 'lng': -99.3729, 'label': 'Tula de Allende', 'zoneLabel': 'Tula de Allende, Hidalgo'},
+      ],
     });
     adapter.on('GET', '/v1/discovery/places/reverse', {
-      'place': {'lat': 20.0489, 'lng': -99.3729, 'label': 'Tula de Allende', 'zoneLabel': 'Tula de Allende, Hidalgo'}
+      'place': {'lat': 20.0489, 'lng': -99.3729, 'label': 'Tula de Allende', 'zoneLabel': 'Tula de Allende, Hidalgo'},
     });
     adapter.on('GET', '/v1/discovery/me/location', {
       'searchLocation': {'lat': 20.0489, 'lng': -99.3729},
       'zoneLabel': 'Tula de Allende, Hidalgo',
-      'radiusKm': 5
+      'radiusKm': 5,
     });
     final api = HttpNexoApi(testDio(adapter));
-    expect((await api.searchPlaces('Tula & Hidalgo', at: const GeoPoint(20.05, -99.34))).single.zoneLabel,
-        'Tula de Allende, Hidalgo');
+    expect(
+      (await api.searchPlaces('Tula & Hidalgo', at: const GeoPoint(20.05, -99.34))).single.zoneLabel,
+      'Tula de Allende, Hidalgo',
+    );
     expect(adapter.last('GET', '/v1/discovery/places/search').query['q'], 'Tula & Hidalgo');
     expect((await api.reversePlace(const GeoPoint(20.0489, -99.3729)))!.point.lng, -99.3729);
     final saved = await api.getLocation();
@@ -47,13 +49,14 @@ void main() {
       ..on('POST', '/v1/identity/accounts', {'name': 'Ana', 'nextStep': 'home'}, status: 201);
     final repository = AuthRepository(testDio(adapter));
     await repository.createAccount(
-        location: const GeoPoint(19.43, -99.13),
-        radiusKm: 2,
-        ticket: 'ticket',
-        name: 'Ana',
-        password: testPasswordForFixture(),
-        intent: 'client',
-        idempotencyKey: 'alta-1');
+      location: const GeoPoint(19.43, -99.13),
+      radiusKm: 2,
+      ticket: 'ticket',
+      name: 'Ana',
+      password: testPasswordForFixture(),
+      intent: 'client',
+      idempotencyKey: 'alta-1',
+    );
     final body = adapter.last('POST', '/v1/identity/accounts').body;
     expect(body['searchLocation'], {'lat': 19.43, 'lng': -99.13});
     expect(body['searchRadiusKm'], 2);

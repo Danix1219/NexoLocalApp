@@ -15,12 +15,7 @@ DioException _error(int status, Object data, {Map<String, List<String>>? headers
   final req = RequestOptions(path: '/x');
   return DioException(
     requestOptions: req,
-    response: Response(
-      requestOptions: req,
-      statusCode: status,
-      data: data,
-      headers: Headers.fromMap(headers ?? {}),
-    ),
+    response: Response(requestOptions: req, statusCode: status, data: data, headers: Headers.fromMap(headers ?? {})),
   );
 }
 
@@ -50,22 +45,21 @@ void main() {
       expect(e.status, 400);
     });
     test('cae a error OAuth y lee Retry-After', () {
-      final e = ApiException.fromDio(_error(
-        423,
-        {'error': 'auth.account_locked'},
-        headers: {
-          'retry-after': ['600']
-        },
-      ));
+      final e = ApiException.fromDio(
+        _error(
+          423,
+          {'error': 'auth.account_locked'},
+          headers: {
+            'retry-after': ['600'],
+          },
+        ),
+      );
       expect(e.code, 'auth.account_locked');
       expect(e.retryAfter, const Duration(minutes: 10));
       expect(authErrorMessage(e), contains('10 minutos'));
     });
     test('lee el código de Nexo en error_uri de /connect/token', () {
-      final e = ApiException.fromDio(_error(400, {
-        'error': 'invalid_grant',
-        'error_uri': 'nexo:auth.account_locked',
-      }));
+      final e = ApiException.fromDio(_error(400, {'error': 'invalid_grant', 'error_uri': 'nexo:auth.account_locked'}));
       expect(e.code, 'auth.account_locked');
     });
     test('sin respuesta es error de red', () {

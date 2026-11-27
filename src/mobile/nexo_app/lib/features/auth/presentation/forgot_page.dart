@@ -78,6 +78,7 @@ class _ForgotPageState extends ConsumerState<ForgotPage> {
       footer: [
         NexoButton(
           label: 'Enviar código',
+          tall: true,
           loading: _loading,
           onPressed: emailOk(_email.text) ? _submit : null,
         ),

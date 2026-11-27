@@ -21,3 +21,12 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-HOURS-001 →FR-HOURS-001…004; AC-HOURS. `hours_sheet.dart` con prueba de widget. Estado: implementada; aceptación pendiente.
+- [ ] T-HOURS-002 →FR-HOURS-004. Guardado real en dispositivo.
+
+- [ ] T-EDIT-001, T-PHOTO-001, T-QR-001: implementado con pruebas de widgets. Estado: implementada; aceptación pendiente.
+- [ ] T-QR-002: escanear el QR nuevo con un segundo teléfono.
+
+- [ ] T-PRICE-UI-001 →FR-PRICE-UI-001…002, FR-TERMS-UI-001…002: `edit_sheets.dart`; pruebas en `diseno_maqueta_test.dart`. Estado: implementada; aceptación pendiente.
+- [ ] T-PRICE-UI-002 Guardar precios y condiciones reales en Android.

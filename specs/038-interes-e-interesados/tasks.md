@@ -19,3 +19,7 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-050 →FR-004, FR-005, FR-006; AC-004. Rediseño de `interested_page.dart`; revisado con captura generada en prueba. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-051 →FR-007; AC-007. Corrección en `InterestService`. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-052 →FR-004, FR-005, FR-006, FR-007. Revisión humana en dispositivo con la API reiniciada. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.

@@ -4,15 +4,18 @@ import 'package:nexo_app/core/local/local_store.dart';
 /// Spec 051: caché y cola por cuenta, con límites.
 void main() {
   final t0 = DateTime(2026, 11, 8, 10);
-  CachedResponse r(String body, [int min = 0]) => CachedResponse(body: body, savedAt: t0.add(Duration(minutes: min)));
+  CachedResponse r(String body, [int min = 0]) => CachedResponse(
+    body: body,
+    savedAt: t0.add(Duration(minutes: min)),
+  );
   OutboxItem item(String account, String idem) => OutboxItem(
-        account: account,
-        method: 'POST',
-        path: '/v1/discovery/requests',
-        body: '{}',
-        idempotencyKey: idem,
-        createdAt: t0,
-      );
+    account: account,
+    method: 'POST',
+    path: '/v1/discovery/requests',
+    body: '{}',
+    idempotencyKey: idem,
+    createdAt: t0,
+  );
 
   test('cada cuenta ve solo lo suyo', () async {
     final s = MemoryLocalStore();

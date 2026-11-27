@@ -52,6 +52,10 @@ Fuera de alcance:
 | NFR-002 | T-003 | AC-902 | `test/integration/resiliencia_test.dart` |
 | NFR-003 | T-005 | AC-903 | Revisión en dispositivo (T-005) |
 | NFR-004 | T-002 | AC-904 | Pipeline `app-ci.yml` |
+| FR-005 | T-050, T-051 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-006 | T-050, T-051 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-007 | T-050, T-051 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-008 | T-050, T-051 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
 
 ## 5. Contratos (rutas, config, env)
 
@@ -93,3 +97,22 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## Incremento 2026-11-25 · composición por pasos del prestador
+
+- FR-005: Publicar un trabajo se organiza en identidad y cuatro pasos (servicio, descripción, fotos, etiqueta), cada uno con indicador de completado.
+- FR-006: Barra inferior fija con lo que falta y el botón «Publicar»; mismas reglas de habilitación (20+ caracteres y ubicación).
+- FR-007: Fotos en cuadrícula de 3 columnas, la primera marcada como portada; sin fotos la zona para agregar ocupa el ancho completo.
+- FR-008: Etiquetas sugeridas de un toque, además del texto libre (máx. 40). Sin cambios de contrato.
+
+## 2026-11-26 · publicar en una sola tarjeta
+FR-COMPOSE-CARD: el formulario de trabajo vive en una sola tarjeta: autor y alcance, texto, fotos en tira (hasta 6), opciones y un pie con lo que falta o «listo». Se conserva el botón «Publicar» de la barra superior. Parte del diseño original; sustituye en trabajos la versión de cuatro pasos. Sin cambios de contrato ni validaciones.
+
+## 2026-11-26 · se restaura la experiencia de publicar
+FR-COMPOSE-CARD (sustituye la versión anterior de hoy): se recupera el diseño original y su orden de elementos, en una sola tarjeta **sin divisiones ni franja de estado**. Mejoras: esquinas y sombra suaves, texto con alto según la pantalla y un botón de fotos compacto con contador. Las opciones de solicitud y experiencia continúan dentro de la misma tarjeta.
+
+## 2026-11-26 · rediseño de opciones, edición y eliminación (FR-PUBMGMT-002)
+La maqueta no define estas pantallas.
+- Opciones: vista previa tal como se ve la publicación; «Editar» como acción principal y «Eliminar publicación» aparte.
+- Edición: una sola tarjeta; fotos en tira con la primera marcada como portada; «Guardar cambios» se activa solo si hay cambios y el pie lo indica; salir con cambios pide confirmar y la hoja no se cierra arrastrando.
+- Eliminación (sustituye el diálogo): hoja con la publicación, consecuencias en lista y confirmación **manteniendo presionado** 1.1 s; soltar cancela, incluso con un toque instantáneo. Con lector de pantalla, la activación confirma. El error se muestra dentro y permite reintentar.

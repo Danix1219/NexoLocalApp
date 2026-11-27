@@ -10,17 +10,13 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/validation.dart';
 
 class CodeDelivery {
-  const CodeDelivery({
-    this.expiresInSeconds = 900,
-    this.resendAfterSeconds = 60,
-    this.codeLength = 6,
-  });
+  const CodeDelivery({this.expiresInSeconds = 900, this.resendAfterSeconds = 60, this.codeLength = 6});
 
   factory CodeDelivery.fromJson(Map<String, dynamic>? j) => CodeDelivery(
-        expiresInSeconds: (j?['expiresInSeconds'] as num?)?.toInt() ?? 900,
-        resendAfterSeconds: (j?['resendAfterSeconds'] as num?)?.toInt() ?? 60,
-        codeLength: (j?['codeLength'] as num?)?.toInt() ?? 6,
-      );
+    expiresInSeconds: (j?['expiresInSeconds'] as num?)?.toInt() ?? 900,
+    resendAfterSeconds: (j?['resendAfterSeconds'] as num?)?.toInt() ?? 60,
+    codeLength: (j?['codeLength'] as num?)?.toInt() ?? 6,
+  );
 
   final int expiresInSeconds;
   final int resendAfterSeconds;
@@ -34,17 +30,13 @@ class CodeConfirmation {
 }
 
 class CreatedAccount {
-  const CreatedAccount({
-    required this.name,
-    required this.nextStep,
-    required this.tokens,
-  });
+  const CreatedAccount({required this.name, required this.nextStep, required this.tokens});
 
   factory CreatedAccount.fromJson(Map<String, dynamic>? j) => CreatedAccount(
-        name: (j?['name'] as String?) ?? '',
-        nextStep: (j?['nextStep'] as String?) ?? 'home',
-        tokens: j == null ? null : AuthTokens.tryFromAccount(j),
-      );
+    name: (j?['name'] as String?) ?? '',
+    nextStep: (j?['nextStep'] as String?) ?? 'home',
+    tokens: j == null ? null : AuthTokens.tryFromAccount(j),
+  );
 
   final String name;
 
@@ -77,50 +69,47 @@ class AuthRepository {
 
   /// `POST /connect/token` (grant password). El usuario es el correo.
   Future<AuthTokens> login(String email, String password) => _call(() async {
-        final r = await _dio.post<Map<String, dynamic>>(
-          '/connect/token',
-          data: {
-            'grant_type': 'password',
-            'username': normalizeEmail(email),
-            'password': password,
-            'scope': Env.oauthScope,
-            if (Env.oauthClientId.isNotEmpty) 'client_id': Env.oauthClientId,
-          },
-          options: Options(contentType: Headers.formUrlEncodedContentType),
-        );
-        return AuthTokens.fromOAuth(r.data!);
-      });
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/connect/token',
+      data: {
+        'grant_type': 'password',
+        'username': normalizeEmail(email),
+        'password': password,
+        'scope': Env.oauthScope,
+        if (Env.oauthClientId.isNotEmpty) 'client_id': Env.oauthClientId,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+    return AuthTokens.fromOAuth(r.data!);
+  });
 
   /// `POST /v1/identity/email/verification` (purpose signup).
   Future<CodeDelivery> sendSignupCode(String email) => _call(() async {
-        final r = await _dio.post<Map<String, dynamic>>(
-          '/v1/identity/email/verification',
-          data: {'email': normalizeEmail(email), 'purpose': 'signup'},
-        );
-        return CodeDelivery.fromJson(r.data);
-      });
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/identity/email/verification',
+      data: {'email': normalizeEmail(email), 'purpose': 'signup'},
+    );
+    return CodeDelivery.fromJson(r.data);
+  });
 
   /// `POST /v1/identity/password/forgot`.
   Future<CodeDelivery> requestPasswordReset(String email) => _call(() async {
-        final r = await _dio.post<Map<String, dynamic>>(
-          '/v1/identity/password/forgot',
-          data: {'email': normalizeEmail(email)},
-        );
-        return CodeDelivery.fromJson(r.data);
-      });
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/identity/password/forgot',
+      data: {'email': normalizeEmail(email)},
+    );
+    return CodeDelivery.fromJson(r.data);
+  });
 
   /// `POST /v1/identity/email/verification/confirm`.
   Future<CodeConfirmation> confirmCode(String email, String code) => _call(() async {
-        final r = await _dio.post<Map<String, dynamic>>(
-          '/v1/identity/email/verification/confirm',
-          data: {'email': normalizeEmail(email), 'code': code},
-        );
-        final j = r.data!;
-        return CodeConfirmation(
-          ticket: j['verificationTicket'] as String,
-          accountExists: j['accountExists'] == true,
-        );
-      });
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/identity/email/verification/confirm',
+      data: {'email': normalizeEmail(email), 'code': code},
+    );
+    final j = r.data!;
+    return CodeConfirmation(ticket: j['verificationTicket'] as String, accountExists: j['accountExists'] == true);
+  });
 
   /// `POST /v1/identity/accounts`. La [idempotencyKey] se reutiliza en los
   /// reintentos del mismo envío para no crear la cuenta dos veces.
@@ -132,44 +121,37 @@ class AuthRepository {
     required String password,
     required String intent,
     required String idempotencyKey,
-  }) =>
-      _call(() async {
-        final r = await _dio.post<Map<String, dynamic>>(
-          '/v1/identity/accounts',
-          data: {
-            'verificationTicket': ticket,
-            'name': name.trim(),
-            'password': password,
-            'acceptedTerms': true,
-            'searchLocation': location.toJson(),
-            'searchZoneLabel': 'Ubicacion seleccionada',
-            'searchRadiusKm': radiusKm,
-            'intent': intent,
-          },
-          options: Options(headers: {'Idempotency-Key': idempotencyKey}),
-        );
-        if (kDebugMode) {
-          // Solo los nombres de los campos: nunca los valores (traen tokens).
-          debugPrint('[API] POST /v1/identity/accounts -> ${r.statusCode} campos: '
-              '${r.data?.keys.toList()}');
-        }
-        return CreatedAccount.fromJson(r.data);
-      });
+  }) => _call(() async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/identity/accounts',
+      data: {
+        'verificationTicket': ticket,
+        'name': name.trim(),
+        'password': password,
+        'acceptedTerms': true,
+        'searchLocation': location.toJson(),
+        'searchZoneLabel': 'Ubicacion seleccionada',
+        'searchRadiusKm': radiusKm,
+        'intent': intent,
+      },
+      options: Options(headers: {'Idempotency-Key': idempotencyKey}),
+    );
+    if (kDebugMode) {
+      // Solo los nombres de los campos: nunca los valores (traen tokens).
+      debugPrint(
+        '[API] POST /v1/identity/accounts -> ${r.statusCode} campos: '
+        '${r.data?.keys.toList()}',
+      );
+    }
+    return CreatedAccount.fromJson(r.data);
+  });
 
   /// `POST /v1/identity/password/reset` → 204.
-  Future<void> resetPassword({
-    required String ticket,
-    required String password,
-    required String confirm,
-  }) =>
+  Future<void> resetPassword({required String ticket, required String password, required String confirm}) =>
       _call(() async {
         await _dio.post<void>(
           '/v1/identity/password/reset',
-          data: {
-            'verificationTicket': ticket,
-            'password': password,
-            'passwordConfirm': confirm,
-          },
+          data: {'verificationTicket': ticket, 'password': password, 'passwordConfirm': confirm},
         );
       });
 

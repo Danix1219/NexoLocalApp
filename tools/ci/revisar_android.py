@@ -37,9 +37,27 @@ if "android.permission.POST_NOTIFICATIONS" not in m:
     fallas.append("Falta POST_NOTIFICATIONS: en Android 13+ no llegarían los avisos push (requisito 16).")
 if "<queries>" not in m:
     avisos.append("Falta <queries> para abrir mapas y enlaces (url_launcher en Android 11+).")
-for p in ("READ_CONTACTS", "READ_SMS", "RECORD_AUDIO", "READ_CALL_LOG", "ACCESS_BACKGROUND_LOCATION"):
+for p in ("READ_CONTACTS", "READ_SMS", "READ_CALL_LOG", "ACCESS_BACKGROUND_LOCATION"):
     if f"android.permission.{p}" in m:
         fallas.append(f"Permiso {p} no lo necesita la app (datos mínimos, constitución §2).")
+
+# Voice notes (spec 040): microphone is requested explicitly by the recording UI.
+# Every file using the recorder must await the permission before it starts capturing,
+# wherever that code lives.
+if 'android.permission.RECORD_AUDIO' in m:
+    recorders = [
+        (f, text)
+        for f in (app / 'lib').rglob('*.dart')
+        for text in [f.read_text(encoding='utf-8')]
+        if 'package:record/' in text
+    ]
+    if not recorders:
+        fallas.append('RECORD_AUDIO declarado sin ningun flujo de grabacion: quita el permiso.')
+    for f, text in recorders:
+        asked = re.search(r'await\s+\w+\.hasPermission\(\)', text)
+        started = re.search(r'await\s+\w+\.start(Stream)?\(', text)
+        if not asked or (started and started.start() < asked.start()):
+            fallas.append(f'RECORD_AUDIO requiere un flujo de grabacion con permiso explicito ({f.name}).')
 
 gradle = app / "android/app/build.gradle.kts"
 if gradle.exists():

@@ -10,6 +10,8 @@ import '../../core/auth/session_controller.dart';
 import '../../core/auth/token_storage.dart';
 import '../../core/network/api_client.dart';
 import '../../core/widgets/map_view.dart';
+import '../../core/widgets/photo_feedback.dart';
+import '../../core/widgets/pick_image.dart';
 import '../../core/widgets/nexo_button.dart';
 import '../../core/widgets/nexo_field.dart';
 import '../../core/widgets/nexo_icon.dart';
@@ -78,7 +80,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     ref.read(compareProvider.notifier).clear();
     await ref.read(sessionProvider.notifier).signOutLocal();
     showNexoToast(
-        remote ? 'Sesión cerrada' : 'Sesión cerrada en este teléfono. El cierre en el servidor queda pendiente.');
+      remote ? 'Sesión cerrada' : 'Sesión cerrada en este teléfono. El cierre en el servidor queda pendiente.',
+    );
   }
 
   @override
@@ -96,19 +99,23 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         padding: const EdgeInsets.only(bottom: 28),
         children: [
           const ScreenTitleBar('Cuenta'),
-          asyncView(v, (a) => a == null ? const SizedBox.shrink() : _body(s, a),
-              onRetry: () => ref.invalidate(accountProvider)),
+          skeletonView(
+            NexoSkeletonKind.account,
+            v,
+            (a) => a == null ? const SizedBox.shrink() : _body(s, a),
+            onRetry: () => ref.invalidate(accountProvider),
+          ),
           if (v.hasError)
             Padding(
               padding: const EdgeInsets.all(16),
               child: NexoButton(
-                label: 'Volver a iniciar sesi?n',
+                label: 'Volver a iniciar sesión',
                 variant: NexoButtonVariant.line,
                 onPressed: () async {
                   ref.read(compareProvider.notifier).clear();
                   await ref.read(sessionProvider.notifier).signOutLocal();
                   ref.invalidate(accountProvider);
-                  if (mounted) context.go(Routes.login);
+                  if (context.mounted) context.go(Routes.login);
                 },
               ),
             ),
@@ -118,91 +125,109 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   }
 
   Widget _guest() {
-    return PinnedHeaderList(children: [
-      const ScreenTitleBar('Cuenta'),
-      NexoCard(
-        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-        padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
-            child: const Center(child: NexoIcon('user', size: 30, color: NexoColors.brand)),
+    return PinnedHeaderList(
+      children: [
+        const ScreenTitleBar('Cuenta'),
+        NexoCard(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(color: NexoColors.brandSoft, shape: BoxShape.circle),
+                child: const Center(child: NexoIcon('user', size: 30, color: NexoColors.brand)),
+              ),
+              const SizedBox(height: 12),
+              Text('Tu espacio en Nexo', style: NexoText.display(20)),
+              const SizedBox(height: 4),
+              Text(
+                'Crea una cuenta cuando quieras conservar tu actividad.',
+                textAlign: TextAlign.center,
+                style: NexoText.body(14, color: NexoColors.muted),
+              ),
+              const SizedBox(height: 14),
+              const Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  NBadge('Guardados', icon: 'bookmark', tone: BadgeTone.brand),
+                  NBadge('Publicaciones', icon: 'plus', tone: BadgeTone.brand),
+                  NBadge('Recomendaciones', icon: 'thumb', tone: BadgeTone.brand),
+                ],
+              ),
+              const SizedBox(height: 16),
+              NexoButton(
+                label: 'Crear una cuenta',
+                onPressed: () {
+                  ref.read(sessionProvider.notifier).leaveGuest();
+                  context.go(Routes.registerEmail);
+                },
+              ),
+              const SizedBox(height: 8),
+              NexoButton(
+                label: 'Iniciar sesión',
+                variant: NexoButtonVariant.line,
+                onPressed: () {
+                  ref.read(sessionProvider.notifier).leaveGuest();
+                  context.go(Routes.login);
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text('Tu espacio en Nexo', style: NexoText.display(20)),
-          const SizedBox(height: 4),
-          Text('Crea una cuenta cuando quieras conservar tu actividad.',
-              textAlign: TextAlign.center, style: NexoText.body(14, color: NexoColors.muted)),
-          const SizedBox(height: 14),
-          const Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
-            NBadge('Guardados', icon: 'bookmark', tone: BadgeTone.brand),
-            NBadge('Publicaciones', icon: 'plus', tone: BadgeTone.brand),
-            NBadge('Recomendaciones', icon: 'thumb', tone: BadgeTone.brand),
-          ]),
-          const SizedBox(height: 16),
-          NexoButton(
-            label: 'Crear una cuenta',
-            onPressed: () {
-              ref.read(sessionProvider.notifier).leaveGuest();
-              context.go(Routes.registerEmail);
-            },
-          ),
-          const SizedBox(height: 8),
-          NexoButton(
-            label: 'Iniciar sesión',
-            variant: NexoButtonVariant.line,
-            onPressed: () {
-              ref.read(sessionProvider.notifier).leaveGuest();
-              context.go(Routes.login);
-            },
-          ),
-        ]),
-      ),
-      const SizedBox(height: 16),
-      Center(
-        child: TextButton(
-          onPressed: () => showPrivacySheet(context),
-          child:
-              Text('Aviso de privacidad', style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
         ),
-      ),
-    ]);
+        const SizedBox(height: 16),
+        Center(
+          child: TextButton(
+            onPressed: () => showPrivacySheet(context),
+            child: Text(
+              'Aviso de privacidad',
+              style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _box(String title, List<Widget> children) => NexoCard(
-        title: title,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-      );
+    title: title,
+    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+  );
 
   Widget _body(SessionState s, AccountScreen a) {
     if (s.recoveryOnly) {
       return NexoCard(
-          child: Column(children: [
-        const Text('Tu cuenta tiene una baja pendiente'),
-        const SizedBox(height: 12),
-        const Text('Puedes cancelar la baja dentro de los 30 días de gracia.'),
-        NexoButton(
-            label: 'Conservar mi cuenta',
-            onPressed: () async {
-              try {
-                await ref.read(apiProvider).cancelDeletion();
-                final stored = await ref.read(tokenStorageProvider).read();
-                final fresh = stored == null ? null : await refreshTokens(stored.refreshToken);
-                if (fresh == null) {
-                  await ref.read(sessionProvider.notifier).signOutLocal();
-                } else {
-                  await ref.read(sessionProvider.notifier).updateTokens(fresh);
-                  refreshActivity(ref);
-                  if (mounted) context.go(Routes.home);
+        child: Column(
+          children: [
+            const Text('Tu cuenta tiene una baja pendiente'),
+            const SizedBox(height: 12),
+            const Text('Puedes cancelar la baja dentro de los 30 días de gracia.'),
+            NexoButton(
+              label: 'Conservar mi cuenta',
+              onPressed: () async {
+                try {
+                  await ref.read(apiProvider).cancelDeletion();
+                  final stored = await ref.read(tokenStorageProvider).read();
+                  final fresh = stored == null ? null : await refreshTokens(stored.refreshToken);
+                  if (fresh == null) {
+                    await ref.read(sessionProvider.notifier).signOutLocal();
+                  } else {
+                    await ref.read(sessionProvider.notifier).updateTokens(fresh);
+                    refreshActivity(ref);
+                    if (mounted) context.go(Routes.home);
+                  }
+                } catch (e) {
+                  showNexoToast(apiErrorMessage(e));
                 }
-              } catch (e) {
-                showNexoToast(apiErrorMessage(e));
-              }
-            }),
-        NexoButton(label: 'Cerrar sesión', onPressed: _logout),
-      ]));
+              },
+            ),
+            NexoButton(label: 'Cerrar sesión', onPressed: _logout),
+          ],
+        ),
+      );
     }
     final push = ref.watch(pushProvider);
     final pro = s.isProviderMode;
@@ -218,63 +243,88 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: NexoColors.warnSoft, borderRadius: BorderRadius.circular(16)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text('Tu cuenta se eliminará pronto',
-                    style: NexoText.body(15, weight: FontWeight.w800, color: NexoColors.warn)),
-                const SizedBox(height: 4),
-                Text('Si cambiaste de opinión, puedes cancelarlo.', style: NexoText.body(13.5, color: NexoColors.warn)),
-                const SizedBox(height: 10),
-                NexoButton(
-                  label: 'Cancelar eliminación',
-                  small: true,
-                  variant: NexoButtonVariant.line,
-                  onPressed: () async {
-                    try {
-                      await ref.read(apiProvider).cancelDeletion();
-                      final stored = await ref.read(tokenStorageProvider).read();
-                      final fresh = stored == null ? null : await refreshTokens(stored.refreshToken);
-                      if (fresh == null) {
-                        await ref.read(sessionProvider.notifier).signOutLocal();
-                      } else {
-                        await ref.read(sessionProvider.notifier).updateTokens(fresh);
-                        refreshActivity(ref);
-                        if (mounted) context.go(Routes.home);
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Tu cuenta se eliminará pronto',
+                    style: NexoText.body(15, weight: FontWeight.w800, color: NexoColors.warn),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Si cambiaste de opinión, puedes cancelarlo.',
+                    style: NexoText.body(13.5, color: NexoColors.warn),
+                  ),
+                  const SizedBox(height: 10),
+                  NexoButton(
+                    label: 'Cancelar eliminación',
+                    small: true,
+                    variant: NexoButtonVariant.line,
+                    onPressed: () async {
+                      try {
+                        await ref.read(apiProvider).cancelDeletion();
+                        final stored = await ref.read(tokenStorageProvider).read();
+                        final fresh = stored == null ? null : await refreshTokens(stored.refreshToken);
+                        if (fresh == null) {
+                          await ref.read(sessionProvider.notifier).signOutLocal();
+                        } else {
+                          await ref.read(sessionProvider.notifier).updateTokens(fresh);
+                          refreshActivity(ref);
+                          if (mounted) context.go(Routes.home);
+                        }
+                        showNexoToast('Tu cuenta sigue activa');
+                      } catch (e) {
+                        showNexoToast(apiErrorMessage(e));
                       }
-                      showNexoToast('Tu cuenta sigue activa');
-                    } catch (e) {
-                      showNexoToast(apiErrorMessage(e));
-                    }
-                  },
-                ),
-              ]),
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         // ---- tarjeta propia (`selfcard`)
         NexoCard(
           onTap: () => pro && mp != null ? context.push(Routes.provider(mp.profile.id)) : _viewMe(a),
-          child: Row(children: [
-            NexoAvatar(name: a.name, url: (pro ? mp?.profile.photoUrl : null) ?? a.photoUrl, size: 50),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(pro && mp != null ? mp.profile.name : a.name, style: NexoText.body(16, weight: FontWeight.w800)),
-                const SizedBox(height: 2),
-                Row(children: [
-                  NexoIcon(a.emailVerified ? 'shield' : 'info',
-                      size: 14, color: a.emailVerified ? NexoColors.ok : NexoColors.muted),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                        '${a.emailVerified ? 'Correo verificado' : (a.email.isEmpty ? 'Cuenta' : a.email)} · ${pro && mp != null ? mp.profile.zoneLabel : loc.zoneLabel}',
-                        overflow: TextOverflow.ellipsis,
-                        style: NexoText.body(12.5, color: NexoColors.muted)),
-                  ),
-                ]),
-              ]),
-            ),
-            Text('Ver perfil', style: NexoText.body(13, weight: FontWeight.w800, color: NexoColors.brand)),
-            const NexoIcon('chevron', size: 16, color: NexoColors.brand),
-          ]),
+          child: Row(
+            children: [
+              NexoAvatar(name: a.name, url: (pro ? mp?.profile.photoUrl : null) ?? a.photoUrl, size: 50),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pro && mp != null ? mp.profile.name : a.name,
+                      style: NexoText.body(16, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        NexoIcon(
+                          a.emailVerified ? 'shield' : 'info',
+                          size: 14,
+                          color: a.emailVerified ? NexoColors.ok : NexoColors.muted,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '${a.emailVerified ? 'Correo verificado' : (a.email.isEmpty ? 'Cuenta' : a.email)} · ${pro && mp != null ? mp.profile.zoneLabel : loc.zoneLabel}',
+                            overflow: TextOverflow.ellipsis,
+                            style: NexoText.body(12.5, color: NexoColors.muted),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'Ver perfil',
+                style: NexoText.body(13, weight: FontWeight.w800, color: NexoColors.brand),
+              ),
+              const NexoIcon('chevron', size: 16, color: NexoColors.brand),
+            ],
+          ),
         ),
         // ---- modo (`roleBlock`)
         _box('Modo de uso', [
@@ -284,25 +334,34 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             onChanged: (m) => _setMode(m, a),
           ),
           if (_switching)
-            const Padding(padding: EdgeInsets.only(top: 8), child: LinearProgressIndicator(color: NexoColors.brand)),
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: LinearProgressIndicator(color: NexoColors.brand),
+            ),
           if (!a.hasProvider && mp == null) ...[
             const SizedBox(height: 8),
-            Text('¿Ofreces servicios? Elige Proveedor y crea tu perfil con esta misma cuenta.',
-                style: NexoText.body(12.5, color: NexoColors.muted)),
+            Text(
+              '¿Ofreces servicios? Elige Proveedor y crea tu perfil con esta misma cuenta.',
+              style: NexoText.body(12.5, color: NexoColors.muted),
+            ),
           ],
         ]),
         if (!pro) ...[
           _box('Tus intereses', [
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              const CatalogStatus(),
-              for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
-                ToggleChip(
-                  label: c.name,
-                  icon: c.icon,
-                  selected: interests.contains(c.id),
-                  onTap: () => ref.read(interestsProvider.notifier).toggle(c.id),
-                ),
-            ]),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                const CatalogStatus(),
+                for (final c in (ref.watch(catalogProvider).asData?.value ?? []))
+                  ToggleChip(
+                    label: c.name,
+                    icon: c.icon,
+                    selected: interests.contains(c.id),
+                    onTap: () => ref.read(interestsProvider.notifier).toggle(c.id),
+                  ),
+              ],
+            ),
           ]),
           _box('Tu ubicación', [
             if (!loc.hasSelection)
@@ -338,22 +397,30 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             ),
           ]),
           _box('Tu perfil', [
-            Row(children: [
-              Expanded(
-                  child: Text('Completo al ${mp.completeness}%', style: NexoText.body(14, weight: FontWeight.w700))),
-              if (a.nextTodo != null)
-                Flexible(
-                    child: Text('Sigue: ${a.nextTodo}',
-                        textAlign: TextAlign.right, style: NexoText.body(12.5, color: NexoColors.muted))),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Completo al ${mp.completeness}%', style: NexoText.body(14, weight: FontWeight.w700)),
+                ),
+                if (a.nextTodo != null)
+                  Flexible(
+                    child: Text(
+                      'Sigue: ${a.nextTodo}',
+                      textAlign: TextAlign.right,
+                      style: NexoText.body(12.5, color: NexoColors.muted),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(9),
               child: LinearProgressIndicator(
-                  value: mp.completeness / 100,
-                  minHeight: 7,
-                  color: NexoColors.brand,
-                  backgroundColor: NexoColors.surface2),
+                value: mp.completeness / 100,
+                minHeight: 7,
+                color: NexoColors.brand,
+                backgroundColor: NexoColors.surface2,
+              ),
             ),
             const SizedBox(height: 12),
             NexoButton(
@@ -365,11 +432,17 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           _box('Disponibilidad', [
             Text(mp.profile.updatedText, style: NexoText.body(13, color: NexoColors.muted)),
             const SizedBox(height: 4),
-            Notice(mp.profile.status.text,
-                icon: 'clock', tone: mp.profile.status.open ? BadgeTone.ok : BadgeTone.plain),
+            Notice(
+              mp.profile.status.text,
+              icon: 'clock',
+              tone: mp.profile.status.open ? BadgeTone.ok : BadgeTone.plain,
+            ),
             const SizedBox(height: 10),
             NexoButton(
-                label: 'Actualizar horario', icon: 'clock', onPressed: () => showHoursSheet(context, ref, mp.profile)),
+              label: 'Actualizar horario',
+              icon: 'clock',
+              onPressed: () => showHoursSheet(context, ref, mp.profile),
+            ),
           ]),
           _box('Cómo te contactan', [
             OptRow(icon: 'chat', label: 'Chat en Nexo · Activo', selected: true, onTap: () {}),
@@ -414,10 +487,11 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         ),
         _box('Privacidad y cuenta', [
           OptRow(
-              icon: 'shield',
-              label: 'Aviso de privacidad',
-              trailingChevron: true,
-              onTap: () => showPrivacySheet(context)),
+            icon: 'shield',
+            label: 'Aviso de privacidad',
+            trailingChevron: true,
+            onTap: () => showPrivacySheet(context),
+          ),
           const SizedBox(height: 8),
           OptRow(icon: 'info', label: 'Términos de uso', trailingChevron: true, onTap: () => showTermsSheet(context)),
           const SizedBox(height: 8),
@@ -429,12 +503,13 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               onTap: () async {
                 final n = ref.read(pushProvider.notifier);
                 if (push.enabled) {
-                  await n.disable();
+                  await n.disable(optOut: true);
                   showNexoToast('Avisos desactivados');
                 } else {
                   final ok = await n.enable();
                   showNexoToast(
-                      ok ? 'Avisos activados' : 'Activa las notificaciones de Nexo en los ajustes del teléfono.');
+                    ok ? 'Avisos activados' : 'Activa las notificaciones de Nexo en los ajustes del teléfono.',
+                  );
                 }
               },
             ),
@@ -459,8 +534,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   }
 }
 
-Future<void> showAccountEditSheet(BuildContext context, AccountScreen account) =>
-    showNexoSheet<void>(context, builder: (_) => _EditMeSheet(name: account.name, photo: account.photoUrl));
+Future<void> showAccountEditSheet(BuildContext context, AccountScreen account) => showNexoSheet<void>(
+  context,
+  builder: (_) => _EditMeSheet(name: account.name, photo: account.photoUrl),
+);
 
 class _EditMeSheet extends ConsumerStatefulWidget {
   const _EditMeSheet({required this.name, this.photo});
@@ -473,6 +550,28 @@ class _EditMeSheet extends ConsumerStatefulWidget {
 class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
   late final _name = TextEditingController(text: widget.name);
   bool _busy = false;
+  bool _photoBusy = false;
+  String? _photo;
+
+  Future<void> _changePhoto() async {
+    if (_photoBusy || _busy) return;
+    final image = await pickOneImage(context);
+    if (image == null || !mounted) return;
+    setState(() => _photoBusy = true);
+    try {
+      final api = ref.read(apiProvider);
+      final upload = await api.upload(image, purpose: 'avatar');
+      await api.updateMe(photoUploadId: upload);
+      ref.invalidate(accountProvider);
+      final account = await ref.read(accountProvider.future);
+      if (mounted) setState(() => _photo = account?.photoUrl);
+      showNexoToast('Foto actualizada');
+    } catch (error) {
+      showNexoToast(apiErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -485,39 +584,79 @@ class _EditMeSheetState extends ConsumerState<_EditMeSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SheetHeader('Tu cuenta', subtitle: 'Tu nombre y tu foto se muestran cuando publicas o escribes.'),
-        InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => showNexoToast(
-            'Fotos de perfil: próximamente. Estamos preparando la carga y revisión de imágenes.',
+        const SheetHeader('Editar perfil', subtitle: 'Tu nombre y tu foto se muestran cuando publicas o escribes.'),
+        Center(
+          child: Semantics(
+            button: true,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(22),
+              onTap: _photoBusy || _busy ? null : _changePhoto,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 96,
+                      height: 96,
+                      child: Stack(
+                        children: [
+                          NexoAvatar(name: widget.name, url: _photo ?? widget.photo, size: 96),
+                          if (_photoBusy) const Positioned.fill(child: PhotoProcessingOverlay(circular: true)),
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: NexoColors.brand,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: NexoColors.surface, width: 3),
+                              ),
+                              child: const NexoIcon('camera', size: 15, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _photoBusy
+                          ? 'Actualizando foto...'
+                          : (_photo ?? widget.photo) == null
+                          ? 'Agregar foto'
+                          : 'Cambiar foto',
+                      style: NexoText.body(14, weight: FontWeight.w800, color: NexoColors.brand),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          child: Row(children: [
-            NexoAvatar(name: widget.name, url: widget.photo, size: 72),
-            const SizedBox(width: 14),
-            Text(widget.photo == null ? 'Agregar foto' : 'Cambiar foto',
-                style: NexoText.body(15, weight: FontWeight.w700, color: NexoColors.brand)),
-          ]),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         NexoField(label: 'Tu nombre', controller: _name, maxLength: 80, capitalization: TextCapitalization.words),
         const SizedBox(height: 12),
         NexoButton(
           label: 'Guardar',
           loading: _busy,
-          onPressed: () async {
-            setState(() => _busy = true);
-            final nav = Navigator.of(context);
-            try {
-              await ref.read(apiProvider).updateMe(name: _name.text.trim());
-              await ref.read(sessionProvider.notifier).setName(_name.text.trim());
-              ref.invalidate(accountProvider);
-              nav.pop();
-              showNexoToast('Cuenta actualizada');
-            } catch (e) {
-              showNexoToast(apiErrorMessage(e));
-              if (mounted) setState(() => _busy = false);
-            }
-          },
+          onPressed: _photoBusy
+              ? null
+              : () async {
+                  setState(() => _busy = true);
+                  final nav = Navigator.of(context);
+                  try {
+                    await ref.read(apiProvider).updateMe(name: _name.text.trim());
+                    await ref.read(sessionProvider.notifier).setName(_name.text.trim());
+                    ref.invalidate(accountProvider);
+                    nav.pop();
+                    showNexoToast('Cuenta actualizada');
+                  } catch (e) {
+                    showNexoToast(apiErrorMessage(e));
+                    if (mounted) setState(() => _busy = false);
+                  }
+                },
         ),
       ],
     );
@@ -549,18 +688,29 @@ class _DeleteSheetState extends ConsumerState<_DeleteSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SheetHeader('Eliminar mi cuenta',
-            subtitle:
-                'Tu perfil, publicaciones y guardados dejarán de verse. Tienes 30 días para arrepentirte; después se borra de forma permanente.'),
+        const SheetHeader(
+          'Eliminar mi cuenta',
+          subtitle:
+              'Tu perfil y publicaciones dejarán de verse. Tienes 30 días para cancelar la baja; después se borra de forma permanente.',
+        ),
         if (Env.landingPage(LegalPages.deleteAccount) != null)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: () => openLanding(LegalPages.deleteAccount),
-              child: Text('Qué datos se borran y cuáles se conservan',
-                  style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
+              child: Text(
+                'Qué datos se borran y cuáles se conservan',
+                style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand),
+              ),
             ),
           ),
+        const OneNote(
+          icon: 'info',
+          text:
+              'Al confirmar, tus solicitudes abiertas se cierran y tus pedidos pendientes se cancelan. '
+              'Eso no se recupera aunque canceles la baja.',
+        ),
+        const SizedBox(height: 12),
         NexoPasswordField(label: 'Tu contraseña', controller: _pass, textInputAction: TextInputAction.next),
         const SizedBox(height: 12),
         TextField(
@@ -587,8 +737,12 @@ class _DeleteSheetState extends ConsumerState<_DeleteSheet> {
             });
             final nav = Navigator.of(context);
             try {
-              final msg = await ref.read(apiProvider).requestDeletion(
-                  password: _pass.text, reason: _reason.text.trim().isEmpty ? null : _reason.text.trim());
+              final msg = await ref
+                  .read(apiProvider)
+                  .requestDeletion(
+                    password: _pass.text,
+                    reason: _reason.text.trim().isEmpty ? null : _reason.text.trim(),
+                  );
               nav.pop();
               await ref.read(sessionProvider.notifier).signOutLocal();
               showNexoToast(msg);

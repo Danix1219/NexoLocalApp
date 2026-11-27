@@ -68,6 +68,20 @@ def flutter_steps(y, ind):
     y("  uses: ./.github/actions/flutter", ind)
 
 
+def android_steps(y, ind):
+    """Java y Gradle resistentes a los límites de descarga de los repositorios (spec 047)."""
+    y("- name: Java 17", ind)
+    y(f"  uses: {SHA['java']}", ind)
+    y("  with:", ind)
+    y("    distribution: temurin", ind)
+    y("    java-version: '17'", ind)
+    y("    cache: gradle", ind)
+    y("- name: Gradle usa el espejo de Maven Central", ind)
+    y("  run: |", ind)
+    y("    mkdir -p \"$HOME/.gradle/init.d\"", ind)
+    y("    cp \"$GITHUB_WORKSPACE/tools/ci/gradle-espejo.init.gradle.kts\" \"$HOME/.gradle/init.d/\"", ind)
+
+
 def job(y, jid, name, needs=None, cond=None, env_name=None, timeout=15, permissions=None):
     y(f"{jid}:", 1)
     y(f"name: {json.dumps(name, ensure_ascii=False)}", 2)
@@ -285,13 +299,10 @@ def build():
     y("working-directory: ${{ env.APP_DIR }}", 4)
     y("steps:", 2)
     flutter_steps(y, 3)
-    y("- name: Java 17", 3)
-    y(f"  uses: {SHA['java']}", 3)
-    y("  with:", 3)
-    y("    distribution: temurin", 3)
-    y("    java-version: '17'", 3)
+    android_steps(y, 3)
     y("- name: APK debug en modo auto (backend o datos de ejemplo)", 3)
     y("  run: >-", 3)
+    y("    python3 \"$GITHUB_WORKSPACE/tools/ci/reintentar_red.py\" --", 3)
     y("    flutter build apk --debug", 3)
     y("    --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}", 3)
     y("    --dart-define=LANDING_URL=${{ vars.LANDING_URL }}", 3)
@@ -328,11 +339,7 @@ def build():
     y("working-directory: ${{ env.APP_DIR }}", 4)
     y("steps:", 2)
     flutter_steps(y, 3)
-    y("- name: Java 17", 3)
-    y(f"  uses: {SHA['java']}", 3)
-    y("  with:", 3)
-    y("    distribution: temurin", 3)
-    y("    java-version: '17'", 3)
+    android_steps(y, 3)
     y("- name: La URL del backend de release es HTTPS", 3)
     y("  env:", 3)
     y("    URL: ${{ vars.API_BASE_URL }}", 3)
@@ -357,6 +364,7 @@ def build():
     y("  run: python3 ../../../tools/ci/preparar_firma.py android", 3)
     y("- name: AAB release", 3)
     y("  run: >-", 3)
+    y("    python3 \"$GITHUB_WORKSPACE/tools/ci/reintentar_red.py\" --", 3)
     y("    flutter build appbundle --release", 3)
     y("    --build-number=$(( ${{ github.run_number }} + ${{ vars.BUILD_NUMBER_OFFSET || 1000 }} ))", 3)
     y("    --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}", 3)

@@ -58,6 +58,10 @@ Fuera de alcance:
 | NFR-002 | T-003 | AC-902 | `test/integration/resiliencia_test.dart` |
 | NFR-003 | T-005 | AC-903 | Revisión en dispositivo (T-005) |
 | NFR-004 | T-002 | AC-904 | Pipeline `app-ci.yml` |
+| FR-006 | T-020 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-007 | T-020 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-008 | T-020 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-009 | T-020 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
 
 ## 5. Contratos (rutas, config, env)
 
@@ -99,3 +103,10 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.6.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## 2026-11-26 · ver contenido sin conexión
+- FR-006: Fotos publicadas se guardan en la carpeta de caché privada (tope 120 MB) y se muestran sin señal.
+- FR-007: Perfil propio, ubicación y portada propias, perfiles, solicitudes, trabajos, búsqueda, mapa y la lista de conversaciones se guardan **solo cifrados** (AES-256-GCM-SIV, llave en almacenamiento seguro), por cuenta, también el nombre de cada consulta. Se usan únicamente cuando no hay respuesta; no autorizan nada ni se revalidan. Sin copia para visitantes ni para respuestas que llegan tras salir.
+- FR-008: Siguen sin guardarse: contacto, domicilios buscados, subidas, claves e hilos de chat (el historial usa su bóveda cifrada), dispositivos, correo, contraseña y reportes. La caché sin cifrar conserva sus exclusiones.
+- FR-009: Al volver la señal se actualiza la actividad. Cerrar sesión borra caché, copia cifrada y archivos.
+- Riesgo: sin señal puede verse contenido que el servidor ya retiró, hasta la siguiente actualización; el aviso muestra la hora de lo guardado.

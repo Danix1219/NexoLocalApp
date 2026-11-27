@@ -15,8 +15,9 @@ Future<T?> showNexoSheet<T>(BuildContext context, {required WidgetBuilder builde
     isScrollControlled: true,
     useRootNavigator: true,
     sheetAnimationStyle: AnimationStyle(
-        duration: NexoMotion.duration(context, NexoMotion.enter),
-        reverseDuration: NexoMotion.duration(context, NexoMotion.enter)),
+      duration: NexoMotion.duration(context, NexoMotion.enter),
+      reverseDuration: NexoMotion.duration(context, NexoMotion.enter),
+    ),
     useSafeArea: true,
     backgroundColor: Colors.transparent,
     barrierColor: const Color(0x80141F1C),
@@ -39,9 +40,7 @@ class _SheetFrame extends StatelessWidget {
           decoration: const BoxDecoration(
             color: NexoColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(color: Color(0x33141F1C), blurRadius: 46, offset: Offset(0, -14)),
-            ],
+            boxShadow: [BoxShadow(color: Color(0x33141F1C), blurRadius: 46, offset: Offset(0, -14))],
           ),
           child: SafeArea(
             top: false,
@@ -57,10 +56,7 @@ class _SheetFrame extends StatelessWidget {
                         child: Container(
                           width: 42,
                           height: 5,
-                          decoration: BoxDecoration(
-                            color: NexoColors.line,
-                            borderRadius: BorderRadius.circular(9),
-                          ),
+                          decoration: BoxDecoration(color: NexoColors.line, borderRadius: BorderRadius.circular(9)),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -101,10 +97,7 @@ class SheetHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(
-            header: true,
-            child: Text(title, style: NexoText.display(20)),
-          ),
+          Semantics(header: true, child: Text(title, style: NexoText.display(20))),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
             Text(subtitle!, style: NexoText.body(14.5, color: NexoColors.muted, height: 1.45)),
@@ -117,13 +110,7 @@ class SheetHeader extends StatelessWidget {
 
 /// Tarjeta de opción grande (`.choice`).
 class ChoiceCard extends StatelessWidget {
-  const ChoiceCard({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+  const ChoiceCard({super.key, required this.icon, required this.title, required this.subtitle, required this.onTap});
 
   final String icon;
   final String title;
@@ -133,49 +120,48 @@ class ChoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = BorderRadius.circular(18);
-    return _pressFeedback(Semantics(
-      button: true,
-      child: Material(
-        color: NexoColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: r,
-          side: const BorderSide(color: NexoColors.line, width: 1.5),
-        ),
-        child: InkWell(
-          customBorder: RoundedRectangleBorder(borderRadius: r),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: NexoColors.brandSoft,
-                    borderRadius: BorderRadius.circular(14),
+    return _pressFeedback(
+      Semantics(
+        button: true,
+        child: Material(
+          color: NexoColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: r,
+            side: const BorderSide(color: NexoColors.line, width: 1.5),
+          ),
+          child: InkWell(
+            customBorder: RoundedRectangleBorder(borderRadius: r),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(color: NexoColors.brandSoft, borderRadius: BorderRadius.circular(14)),
+                    alignment: Alignment.center,
+                    child: NexoIcon(icon, color: NexoColors.brand),
                   ),
-                  alignment: Alignment.center,
-                  child: NexoIcon(icon, color: NexoColors.brand),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: NexoText.body(16, weight: FontWeight.w700)),
-                      const SizedBox(height: 2),
-                      Text(subtitle, style: NexoText.body(13.5, color: NexoColors.muted, height: 1.4)),
-                    ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: NexoText.body(16, weight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text(subtitle, style: NexoText.body(13.5, color: NexoColors.muted, height: 1.4)),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -206,47 +192,52 @@ class OptRow extends StatelessWidget {
     final fg = danger
         ? NexoColors.danger
         : on
-            ? NexoColors.brand
-            : NexoColors.ink;
+        ? NexoColors.brand
+        : NexoColors.ink;
     final r = BorderRadius.circular(14);
-    return _pressFeedback(Semantics(
-      button: selected == null,
-      checked: selected,
-      child: Material(
-        color: on ? NexoColors.brandSoft : NexoColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: r,
-          side: BorderSide(
-            color: on
-                ? NexoColors.brand
-                : danger
-                    ? NexoColors.danger.withValues(alpha: .4)
-                    : NexoColors.line,
-            width: 1.5,
+    return _pressFeedback(
+      Semantics(
+        button: selected == null,
+        checked: selected,
+        child: Material(
+          color: on ? NexoColors.brandSoft : NexoColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: r,
+            side: BorderSide(
+              color: on
+                  ? NexoColors.brand
+                  : danger
+                  ? NexoColors.danger.withValues(alpha: .4)
+                  : NexoColors.line,
+              width: 1.5,
+            ),
           ),
-        ),
-        child: InkWell(
-          customBorder: RoundedRectangleBorder(borderRadius: r),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 50),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              child: Row(
-                children: [
-                  NexoIcon(icon, size: 22, color: fg),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(label, style: NexoText.body(14, weight: FontWeight.w600, color: fg)),
-                  ),
-                  if (trailingChevron) const NexoIcon('chevron', size: 18, color: NexoColors.muted),
-                ],
+          child: InkWell(
+            customBorder: RoundedRectangleBorder(borderRadius: r),
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 50),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                child: Row(
+                  children: [
+                    NexoIcon(icon, size: 22, color: fg),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: NexoText.body(14, weight: FontWeight.w600, color: fg),
+                      ),
+                    ),
+                    if (trailingChevron) const NexoIcon('chevron', size: 18, color: NexoColors.muted),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -260,10 +251,7 @@ class OneNote extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: NexoColors.brandSoft,
-        borderRadius: BorderRadius.circular(14),
-      ),
+      decoration: BoxDecoration(color: NexoColors.brandSoft, borderRadius: BorderRadius.circular(14)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -273,8 +261,10 @@ class OneNote extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(text,
-                style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.brandDeep, height: 1.4)),
+            child: Text(
+              text,
+              style: NexoText.body(13.5, weight: FontWeight.w600, color: NexoColors.brandDeep, height: 1.4),
+            ),
           ),
         ],
       ),

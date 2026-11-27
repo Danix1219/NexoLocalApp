@@ -44,3 +44,6 @@ No copiar payloads en app: [inventario](../../../API_NexoLocal/docs/contracts/in
 ## Orden y frontera vigentes 0.4.0
 
 Cada operación/función/obligación desglosada tiene requisito, tarea y AC en la spec. T-003 espera también esas tareas, no solo el bloque base. La tarea concreta se refina con contrato/revisión, decisión bloqueante y rutas reales antes de ejecutar; no construir todas las historias de una fase de una vez. [Cobertura bilateral](../../../docs_nexo/SDD_COBERTURA_FUNCIONAL.md) indica primario, integración, opcional o superficie excluida.
+
+### Incremento 2026-11-25
+`BrandLockup` usa `assets/icon/icono.png`, declarado en `pubspec.yaml`. Sin dependencias nuevas.

@@ -1,3 +1,10 @@
+import '../core/local/file_cache.dart';
+import 'dart:async';
+import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
+import '../core/chat/chat_vault.dart';
+import '../core/chat/signal_chat_crypto.dart';
+import '../core/chat/encrypted_chat_transport.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -27,8 +34,8 @@ Map<ApiGroup, GroupMode> groupModes({String mode = Env.apiMode, String live = En
       g: (l.contains('all') || l.contains(g.name))
           ? GroupMode.live
           : (f.contains('all') || f.contains(g.name))
-              ? GroupMode.fake
-              : base,
+          ? GroupMode.fake
+          : base,
   };
 }
 
@@ -60,21 +67,113 @@ class ServerEvents extends Notifier<ServerEvent> {
 
 final serverEventsProvider = NotifierProvider<ServerEvents, ServerEvent>(ServerEvents.new);
 
+/// Local history is available without waiting for a network registration.
+final privateChatVaultProvider = FutureProvider<ChatVault>((ref) async {
+  final account = ref.watch(sessionProvider.select((s) => s.accountId));
+  if (account == null) throw StateError('Inicia sesion para abrir el chat privado');
+  final vault = await ChatVault.open(account);
+  if (!ref.mounted) {
+    await vault.close();
+    throw StateError('La sesion cambio');
+  }
+  ref.onDispose(() => unawaited(vault.close()));
+  return vault;
+});
+
+final privateChatProvider = FutureProvider<EncryptedChatTransport>((ref) async {
+  final account = ref.watch(sessionProvider.select((s) => s.accountId));
+  if (account == null) throw StateError('Inicia sesion para preparar el chat privado');
+  final vault = await ref.watch(privateChatVaultProvider.future);
+  var disposed = false;
+  ref.onDispose(() => disposed = true);
+  final dio = ref.read(dioProvider);
+  final savedDevice = await vault.transaction((state) async => state['device']);
+  int device;
+  if (savedDevice != null) {
+    device = int.parse(savedDevice);
+  } else {
+    final response = await dio.get<List<dynamic>>(
+      '${EncryptedChatTransport.root}/devices',
+      options: EncryptedChatTransport(dio, SignalChatCrypto(vault, account, 1)).options(),
+    );
+    final occupied = (response.data ?? []).cast<int>().toSet();
+    final available = [1, 2, 3, 4, 5].where((id) => !occupied.contains(id));
+    if (available.isEmpty) throw StateError('Revoca un dispositivo anterior para preparar este chat');
+    device = available.first;
+    await vault.transaction((state) async {
+      state['device'] = '$device';
+    });
+  }
+  if (disposed) throw StateError('La sesion cambio durante la preparacion');
+  final transport = EncryptedChatTransport(dio, SignalChatCrypto(vault, account, device), files: FileCache('chat'));
+  if (kDebugMode) debugPrint('[CHAT] registering device');
+  await transport.register();
+  if (kDebugMode) debugPrint('[CHAT] device registered');
+  return transport;
+});
+
+/// Security provisioning is automatic for every signed-in installation.
+final privateChatBootstrapProvider = Provider<void>((ref) {
+  final account = ref.watch(sessionProvider.select((s) => s.accountId));
+  if (!const bool.fromEnvironment('CHAT_E2EE', defaultValue: true) || account == null) return;
+  var running = false;
+  var disposed = false;
+  Timer? retry;
+  Future<void> prepare() async {
+    if (running || disposed) return;
+    running = true;
+    try {
+      await ref.read(privateChatProvider.future);
+      if (kDebugMode) debugPrint('[CHAT] security ready');
+      retry?.cancel();
+    } catch (e) {
+      if (kDebugMode) {
+        final reason = e is DioException
+            ? 'HTTP ${e.response?.statusCode}'
+            : e is PlatformException
+            ? e.code
+            : e is StateError
+            ? 'local state unavailable'
+            : e.runtimeType.toString();
+        debugPrint('[CHAT] security pending: $reason');
+      }
+      if (!disposed) ref.invalidate(privateChatProvider);
+    } finally {
+      running = false;
+    }
+  }
+
+  retry = Timer.periodic(const Duration(seconds: 20), (_) => unawaited(prepare()));
+  ref.onDispose(() {
+    disposed = true;
+    retry?.cancel();
+  });
+  Future.microtask(prepare);
+});
+
 final apiProvider = Provider<NexoApi>((ref) {
-  final fake = FakeNexoApi(FakeContext(
-    name: () => ref.read(sessionProvider).name ?? '',
-    mode: () => ref.read(sessionProvider).mode,
-    notify: (m) => ref.read(serverEventsProvider.notifier).push(m),
-    simulateCounterpart: !kReleaseMode || Env.apiMode == 'fake',
-  ));
+  final fake = FakeNexoApi(
+    FakeContext(
+      name: () => ref.read(sessionProvider).name ?? '',
+      mode: () => ref.read(sessionProvider).mode,
+      notify: (m) => ref.read(serverEventsProvider.notifier).push(m),
+      simulateCounterpart: !kReleaseMode || Env.apiMode == 'fake',
+    ),
+  );
   final modes = groupModes();
   final api = HybridNexoApi(
     modes: modes,
-    http: HttpNexoApi(ref.read(dioProvider), refreshToken: () async {
-      final tokens = await ref.read(tokenStorageProvider).read();
-      if (tokens == null) throw StateError('Se requiere iniciar sesión');
-      return tokens.refreshToken;
-    }),
+    http: HttpNexoApi(
+      ref.read(dioProvider),
+      encryptedChat: const bool.fromEnvironment('CHAT_E2EE', defaultValue: true)
+          ? () => ref.read(privateChatProvider.future)
+          : null,
+      refreshToken: () async {
+        final tokens = await ref.read(tokenStorageProvider).read();
+        if (tokens == null) throw StateError('Se requiere iniciar sesión');
+        return tokens.refreshToken;
+      },
+    ),
     fake: fake,
     // El asistente y el registro de push no muestran datos de ejemplo: no
     // cuentan para el aviso (spec 049/050).
@@ -119,28 +218,37 @@ class SearchLocationController extends Notifier<SearchLocation> {
           final point = GeoPoint((j['lat'] as num).toDouble(), (j['lng'] as num).toDouble());
           state = SearchLocation(point, j['label'] as String? ?? _coordinates(point), j['radius'] as int);
         }
-      } catch (_) {/* Corrupt cache cannot block the server read. */}
+      } catch (_) {
+        /* Corrupt cache cannot block the server read. */
+      }
       try {
         final saved = await ref.read(apiProvider).getLocation();
         if (saved != null && current()) {
           state = SearchLocation(saved.point, saved.zoneLabel, saved.radiusKm);
           await _cache(id, state);
         }
-      } catch (_) {/* Last real cached selection remains available offline. */}
+      } catch (_) {
+        /* Last real cached selection remains available offline. */
+      }
     });
-    return const SearchLocation(GeoPoint(Env.defaultLat, Env.defaultLng), 'Elige tu ubicación', Env.defaultRadiusKm,
-        hasSelection: false);
+    return const SearchLocation(
+      GeoPoint(Env.defaultLat, Env.defaultLng),
+      'Elige tu ubicación',
+      Env.defaultRadiusKm,
+      hasSelection: false,
+    );
   }
 
   static String _coordinates(GeoPoint p) => '${p.lat.toStringAsFixed(3)}, ${p.lng.toStringAsFixed(3)}';
   Future<void> _cache(String id, SearchLocation selected) => const FlutterSecureStorage().write(
-      key: 'nexo.location.$id',
-      value: jsonEncode({
-        'lat': selected.point.lat,
-        'lng': selected.point.lng,
-        'radius': selected.radiusKm,
-        'label': selected.zoneLabel
-      }));
+    key: 'nexo.location.$id',
+    value: jsonEncode({
+      'lat': selected.point.lat,
+      'lng': selected.point.lng,
+      'radius': selected.radiusKm,
+      'label': selected.zoneLabel,
+    }),
+  );
   Future<void> remember(GeoPoint p, int radiusKm, {String? zoneLabel}) async {
     _revision++;
     final id = ref.read(sessionProvider).accountId;
@@ -148,15 +256,18 @@ class SearchLocationController extends Notifier<SearchLocation> {
     if (id != null) {
       try {
         await _cache(id, state);
-      } catch (_) {/* The server is authoritative if secure storage is unavailable. */}
+      } catch (_) {
+        /* The server is authoritative if secure storage is unavailable. */
+      }
     }
   }
 
   Future<LocationResult?> set(GeoPoint p, int radiusKm, {String source = 'map', String? zoneLabel}) async {
     final accountId = ref.read(sessionProvider).accountId;
     LocationResult? result;
-    if (ref.read(sessionProvider).isSignedIn)
+    if (ref.read(sessionProvider).isSignedIn) {
       result = await ref.read(apiProvider).setLocation(p, radiusKm: radiusKm, source: source);
+    }
     if (!ref.mounted || ref.read(sessionProvider).accountId != accountId) return result;
     await remember(p, radiusKm, zoneLabel: result?.zoneLabel ?? zoneLabel);
     return result;
@@ -256,8 +367,9 @@ final inboxProvider = FutureProvider.family<(List<Conversation>, int), String>((
   return ref.watch(apiProvider).conversations(role: role);
 });
 
-final savedProvider =
-    FutureProvider.autoDispose<(List<SavedItem>, SavedCounts)>((ref) => ref.watch(apiProvider).saved());
+final savedProvider = FutureProvider.autoDispose<(List<SavedItem>, SavedCounts)>(
+  (ref) => ref.watch(apiProvider).saved(),
+);
 
 final notificationsProvider = FutureProvider<(List<NotificationItem>, int)>((ref) {
   if (!ref.watch(sessionProvider).isSignedIn) return Future.value((const <NotificationItem>[], 0));
@@ -269,26 +381,42 @@ final providerProfileProvider = FutureProvider.autoDispose.family<ProviderProfil
   return ref.watch(apiProvider).provider(id, at: loc.point);
 });
 
-final myCoverProvider = FutureProvider.autoDispose<String?>((ref) {
-  ref.watch(sessionProvider);
+/// Se conserva mientras la app está abierta: al volver al perfil la portada
+/// aparece de inmediato, sin el fondo de relleno.
+final myCoverProvider = FutureProvider<String?>((ref) {
+  ref.watch(sessionProvider.select((s) => s.accountId));
   return ref.watch(apiProvider).myCover();
 });
 
-final catalogProvider = FutureProvider<List<FCat>>((ref) async => (await ref.watch(apiProvider).categories())
-    .map((c) => FCat(
-        c.slug, c.name, c.c1, c.c2, c.icon, c.specialties.map((s) => s.name).toList(), c.businessLabel, c.tradeLabel))
-    .toList());
+final catalogProvider = FutureProvider<List<FCat>>(
+  (ref) async => (await ref.watch(apiProvider).categories())
+      .map(
+        (c) => FCat(
+          c.slug,
+          c.name,
+          c.c1,
+          c.c2,
+          c.icon,
+          c.specialties.map((s) => s.name).toList(),
+          c.businessLabel,
+          c.tradeLabel,
+        ),
+      )
+      .toList(),
+);
 
 final providerWorksProvider = FutureProvider.autoDispose.family<List<Work>, String>((ref, id) {
   ref.watch(sessionProvider);
   return ref.watch(apiProvider).providerWorks(id);
 });
 
-final reviewsProvider =
-    FutureProvider.autoDispose.family<ReviewsPage, String>((ref, id) => ref.watch(apiProvider).reviews(id));
+final reviewsProvider = FutureProvider.autoDispose.family<ReviewsPage, String>(
+  (ref, id) => ref.watch(apiProvider).reviews(id),
+);
 
-final interestedProvider = FutureProvider.autoDispose
-    .family<InterestedPage, (String, String)>((ref, a) => ref.watch(apiProvider).interested(a.$1, sort: a.$2));
+final interestedProvider = FutureProvider.autoDispose.family<InterestedPage, (String, String)>(
+  (ref, a) => ref.watch(apiProvider).interested(a.$1, sort: a.$2),
+);
 
 final searchResultsProvider = FutureProvider.autoDispose<SearchResult>((ref) {
   final f = ref.watch(searchFiltersProvider);
@@ -306,6 +434,7 @@ void refreshActivity(WidgetRef ref) {
   ref.invalidate(myRequestsProvider);
   ref.invalidate(opportunitiesProvider);
   ref.invalidate(ordersProvider);
+  ref.invalidate(interestedProvider);
   ref.invalidate(inboxProvider);
   ref.invalidate(notificationsProvider);
   ref.invalidate(accountProvider);

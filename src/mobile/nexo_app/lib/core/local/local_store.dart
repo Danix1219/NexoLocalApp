@@ -37,15 +37,15 @@ class OutboxItem {
   final int attempts;
 
   OutboxItem withId(int id) => OutboxItem(
-        id: id,
-        account: account,
-        method: method,
-        path: path,
-        body: body,
-        idempotencyKey: idempotencyKey,
-        createdAt: createdAt,
-        attempts: attempts,
-      );
+    id: id,
+    account: account,
+    method: method,
+    path: path,
+    body: body,
+    idempotencyKey: idempotencyKey,
+    createdAt: createdAt,
+    attempts: attempts,
+  );
 }
 
 abstract class LocalStore {
@@ -98,9 +98,9 @@ class MemoryLocalStore implements LocalStore {
 
   @override
   Future<List<OutboxItem>> pending(String account) async => [
-        for (final o in _outbox)
-          if (o.account == account) o,
-      ];
+    for (final o in _outbox)
+      if (o.account == account) o,
+  ];
 
   @override
   Future<void> removeOutbox(int id) async => _outbox.removeWhere((o) => o.id == id);

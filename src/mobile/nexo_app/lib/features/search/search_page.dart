@@ -57,6 +57,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   bool get _pro => ref.read(sessionProvider).isProviderMode;
 
   void _changed(String v) {
+    setState(() => _sugs = const []);
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 280), () async {
       if (_pro) {
@@ -70,7 +71,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       }
       try {
         final s = await ref.read(apiProvider).suggest(v, at: ref.read(searchLocationProvider).point);
-        if (mounted && _focus.hasFocus) setState(() => _sugs = s);
+        if (mounted && _focus.hasFocus && _q.text == v) setState(() => _sugs = s);
       } catch (_) {}
     });
   }
@@ -97,13 +98,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       return _providerSearch(mp.asData?.value);
     }
     return ColoredBox(
-        color: NexoColors.surface,
-        child: Stack(
-          children: [
-            Positioned.fill(child: _clientSearch()),
-            const Positioned(left: 0, right: 0, bottom: 0, child: CompareBar()),
-          ],
-        ));
+      color: NexoColors.surface,
+      child: Stack(
+        children: [
+          Positioned.fill(child: _clientSearch()),
+          const Positioned(left: 0, right: 0, bottom: 0, child: CompareBar()),
+        ],
+      ),
+    );
   }
 
   Widget _field(String hint, int filters, VoidCallback onFilters) {
@@ -123,10 +125,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 fillColor: NexoColors.surface,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: NexoColors.line)),
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: NexoColors.line),
+                ),
                 prefixIcon: const Padding(
-                    padding: EdgeInsets.only(left: 12, right: 8),
-                    child: NexoIcon('search', size: 20, color: NexoColors.muted)),
+                  padding: EdgeInsets.only(left: 12, right: 8),
+                  child: NexoIcon('search', size: 20, color: NexoColors.muted),
+                ),
                 prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                 suffixIcon: _q.text.isEmpty
                     ? null
@@ -150,14 +155,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   Widget _mapToggle() => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        child: SegControl<bool>(
-          small: true,
-          options: const [(false, 'Lista'), (true, 'Mapa')],
-          value: _map,
-          onChanged: (v) => setState(() => _map = v),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    child: SegControl<bool>(
+      small: true,
+      options: const [(false, 'Lista'), (true, 'Mapa')],
+      value: _map,
+      onChanged: (v) => setState(() => _map = v),
+    ),
+  );
 
   // ------------------------------------------------------------- cliente
   Widget _clientSearch() {
@@ -165,55 +170,65 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final res = ref.watch(searchResultsProvider);
     final loc = ref.watch(searchLocationProvider);
     return PinnedHeaderList(
-        padding: const EdgeInsets.only(bottom: 90),
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        children: [
-          const ScreenTitleBar('Buscar', trailing: LocationChip(), border: false),
-          _field('Fuga, chapa, pintar, closet…', f.count, () => showSearchFiltersSheet(context, ref)),
-          if (_sugs.isNotEmpty) _Suggestions(items: _sugs, query: _q.text, onPick: _pick),
-          _ActiveChips(f: f),
-          asyncView(res, (r) {
-            if (r.items.isEmpty) {
-              return EmptyState(
-                icon: 'search',
-                title: 'No encontramos prestadores',
-                text: 'Prueba con otra palabra, quita algún filtro o cambia la zona.',
-                action: f.count > 0 || f.q.isNotEmpty ? 'Quitar filtros' : 'Cambiar ubicación',
-                onAction: () {
-                  if (f.count > 0 || f.q.isNotEmpty) {
-                    _q.clear();
-                    ref.read(searchFiltersProvider.notifier).set(const SearchFilters());
-                  } else {
-                    openSearchLocation(context, ref);
-                  }
-                },
-              );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (r.notice != null)
-                  Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                      child: Notice(r.notice!, tone: BadgeTone.warn, icon: 'pin')),
-                Sect('${r.items.length} ${plural(r.items.length, 'prestador', 'prestadores')}',
-                    trailing: f.expanded ? 'Zona ampliada' : 'Atienden ${loc.zoneLabel}'),
-                for (final p in r.items) ProviderRow(p: p),
-                if (!f.expanded && !r.outOfZone)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Center(
-                      child: TextButton(
-                        onPressed: () => ref.read(searchFiltersProvider.notifier).set(f.copyWith(expanded: true)),
-                        child: Text('Ver también los que están cerca pero fuera de tu zona',
-                            style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand)),
+      padding: const EdgeInsets.only(bottom: 90),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      children: [
+        SearchHeader(
+          title: 'Buscar servicios',
+          location: loc.zoneLabel,
+          onLocation: () => openSearchLocation(context, ref),
+        ),
+        _field('Fuga, chapa, pintar, closet…', f.count, () => showSearchFiltersSheet(context, ref)),
+        if (_sugs.isNotEmpty) _Suggestions(items: _sugs, query: _q.text, onPick: _pick),
+        _ActiveChips(f: f),
+        skeletonView(NexoSkeletonKind.providers, res, (r) {
+          if (r.items.isEmpty) {
+            return EmptyState(
+              icon: 'search',
+              title: 'No encontramos prestadores',
+              text: 'Prueba con otra palabra, quita algún filtro o cambia la zona.',
+              action: f.count > 0 || f.q.isNotEmpty ? 'Quitar filtros' : 'Cambiar ubicación',
+              onAction: () {
+                if (f.count > 0 || f.q.isNotEmpty) {
+                  _q.clear();
+                  ref.read(searchFiltersProvider.notifier).set(const SearchFilters());
+                } else {
+                  openSearchLocation(context, ref);
+                }
+              },
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (r.notice != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  child: Notice(r.notice!, tone: BadgeTone.warn, icon: 'pin'),
+                ),
+              Sect(
+                '${r.items.length} ${plural(r.items.length, 'prestador', 'prestadores')}',
+                trailing: f.expanded ? 'Zona ampliada' : null,
+              ),
+              for (final p in r.items) ProviderRow(p: p),
+              if (!f.expanded && !r.outOfZone)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () => ref.read(searchFiltersProvider.notifier).set(f.copyWith(expanded: true)),
+                      child: Text(
+                        'Ver también los que están cerca pero fuera de tu zona',
+                        style: NexoText.body(13.5, weight: FontWeight.w700, color: NexoColors.brand),
                       ),
                     ),
                   ),
-              ],
-            );
-          }, onRetry: () => ref.invalidate(searchResultsProvider)),
-        ]);
+                ),
+            ],
+          );
+        }, onRetry: () => ref.invalidate(searchResultsProvider)),
+      ],
+    );
   }
 
   // ----------------------------------------------------------- prestador
@@ -225,19 +240,20 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       padding: const EdgeInsets.only(bottom: 24),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
-        ScreenTitleBar('Buscar solicitudes',
-            border: false,
-            trailing:
-                p == null ? null : NBadge('${p.zoneLabel} · ${p.radiusKm} km', icon: 'pin', tone: BadgeTone.brand)),
+        SearchHeader(
+          title: 'Buscar solicitudes',
+          location: p == null ? 'Tu zona de atención' : '${p.zoneLabel} · ${p.radiusKm} km',
+        ),
         _field('Fuga, boiler, pintar, chapa…', f.count, () => showOppFiltersSheet(context, ref)),
         _mapToggle(),
         if (_map && me != null)
           _NearbyMap(
-              kind: 'requests',
-              center: me.location ?? me.profile.zonePoint ?? ref.read(searchLocationProvider).point,
-              radiusKm: p!.radiusKm == 0 ? 10 : p.radiusKm)
+            kind: 'requests',
+            center: me.location ?? me.profile.zonePoint ?? ref.read(searchLocationProvider).point,
+            radiusKm: p!.radiusKm == 0 ? 10 : p.radiusKm,
+          )
         else
-          asyncView(res, (list) {
+          skeletonView(NexoSkeletonKind.providers, res, (list) {
             if (list.isEmpty) {
               return EmptyState(
                 icon: 'search',
@@ -250,10 +266,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 },
               );
             }
-            return Column(children: [
-              Sect('${list.length} ${plural(list.length, 'solicitud', 'solicitudes')}'),
-              for (final r in list) RequestCard(r: r),
-            ]);
+            return Column(
+              children: [
+                Sect('${list.length} ${plural(list.length, 'solicitud', 'solicitudes')}'),
+                for (final r in list) RequestCard(r: r),
+              ],
+            );
           }, onRetry: () => ref.invalidate(opportunitiesProvider)),
       ],
     );
@@ -283,13 +301,17 @@ class _Suggestions extends StatelessWidget {
               onTap: () => onPick(s),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                child: Row(children: [
-                  NexoIcon(s.kind == 'category' ? catInfo(s.slug).icon : 'search', size: 18, color: NexoColors.muted),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(s.label, style: NexoText.body(14.5, weight: FontWeight.w600))),
-                  if (s.kind != 'term' && s.slug.isNotEmpty)
-                    Text(catInfo(s.slug).name, style: NexoText.body(12, color: NexoColors.muted)),
-                ]),
+                child: Row(
+                  children: [
+                    NexoIcon(s.kind == 'category' ? catInfo(s.slug).icon : 'search', size: 18, color: NexoColors.muted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(s.label, style: NexoText.body(14.5, weight: FontWeight.w600)),
+                    ),
+                    if (s.kind != 'term' && s.slug.isNotEmpty)
+                      Text(catInfo(s.slug).name, style: NexoText.body(12, color: NexoColors.muted)),
+                  ],
+                ),
               ),
             ),
         ],
@@ -329,7 +351,10 @@ class _ActiveChips extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: InputChip(
-                label: Text(c.$1, style: NexoText.body(12.5, weight: FontWeight.w700, color: NexoColors.brandDeep)),
+                label: Text(
+                  c.$1,
+                  style: NexoText.body(12.5, weight: FontWeight.w700, color: NexoColors.brandDeep),
+                ),
                 backgroundColor: NexoColors.brandSoft,
                 side: BorderSide.none,
                 shape: const StadiumBorder(),
@@ -402,13 +427,15 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
       future: _f,
       builder: (context, snap) {
         if (snap.hasError) {
-          return ErrorView(snap.error!,
-              onRetry: () => setState(() {
-                    _sel = null;
-                    _f = _load();
-                  }));
+          return ErrorView(
+            snap.error!,
+            onRetry: () => setState(() {
+              _sel = null;
+              _f = _load();
+            }),
+          );
         }
-        if (!snap.hasData) return const LoadingView();
+        if (!snap.hasData) return const ContentSkeleton(kind: NexoSkeletonKind.providers);
         final m = snap.data!;
         return Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
@@ -428,20 +455,22 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
                 NexoCard(
                   margin: const EdgeInsets.only(top: 10),
                   onTap: widget.kind == 'providers' ? () => context.push(Routes.provider(_sel!.id)) : _openRequest,
-                  child: Row(children: [
-                    NexoIcon(widget.kind == 'providers' ? 'user' : 'search', size: 22, color: NexoColors.brand),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_sel!.title, style: NexoText.body(14.5, weight: FontWeight.w800)),
-                          Text(_sel!.subtitle, style: NexoText.body(12.5, color: NexoColors.muted)),
-                        ],
+                  child: Row(
+                    children: [
+                      NexoIcon(widget.kind == 'providers' ? 'user' : 'search', size: 22, color: NexoColors.brand),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_sel!.title, style: NexoText.body(14.5, weight: FontWeight.w800)),
+                            Text(_sel!.subtitle, style: NexoText.body(12.5, color: NexoColors.muted)),
+                          ],
+                        ),
                       ),
-                    ),
-                    if (widget.kind == 'providers') const NexoIcon('chevron', size: 18, color: NexoColors.muted),
-                  ]),
+                      if (widget.kind == 'providers') const NexoIcon('chevron', size: 18, color: NexoColors.muted),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -449,4 +478,63 @@ class _NearbyMapState extends ConsumerState<_NearbyMap> {
       },
     );
   }
+}
+
+/// Shared compact header for both search modes.
+class SearchHeader extends StatelessWidget {
+  const SearchHeader({super.key, required this.title, required this.location, this.onLocation});
+  final String title;
+  final String location;
+  final VoidCallback? onLocation;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    color: NexoColors.surface,
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 5,
+          child: Text(title, style: NexoText.body(20, weight: FontWeight.w800, height: 1.15)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 6,
+          child: Tooltip(
+            message: location,
+            child: Material(
+              color: NexoColors.brandSoft,
+              borderRadius: BorderRadius.circular(24),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: onLocation,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+                  child: Row(
+                    children: [
+                      const NexoIcon('pin', size: 16, color: NexoColors.brandDeep),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: NexoText.body(12, color: NexoColors.brandDeep),
+                        ),
+                      ),
+                      if (onLocation != null) ...[
+                        const SizedBox(width: 5),
+                        const Icon(Icons.expand_more_rounded, size: 20, color: NexoColors.brandDeep),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

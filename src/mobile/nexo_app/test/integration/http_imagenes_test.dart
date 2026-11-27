@@ -11,15 +11,22 @@ import '../support/mock_adapter.dart';
 void main() {
   test('foto rechazada nunca devuelve uploadId utilizable', () async {
     final a = MockAdapter()
-      ..on('POST', '/v1/discovery/uploads',
-          {'uploadId': 'u', 'uploadUrl': 'https://storage.nexo.test/u?sig=1', 'headers': {}})
+      ..on('POST', '/v1/discovery/uploads', {
+        'uploadId': 'u',
+        'uploadUrl': 'https://storage.nexo.test/u?sig=1',
+        'headers': {},
+      })
       ..on('POST', '/v1/discovery/uploads/u/complete', {'status': 'processing'})
       ..on('GET', '/v1/discovery/uploads/u', problem('upload.rejected_by_moderation', 403), status: 403);
     final blob = MockAdapter()..on('PUT', '/u', null, status: 201);
     final api = HttpNexoApi(testDio(a), uploadDio: Dio()..httpClientAdapter = blob);
     await expectLater(
-        api.upload(PickedImage(path: 'foto.png', bytes: Uint8List(20), contentType: 'image/png'), purpose: 'avatar'),
-        throwsA(isA<Exception>()));
+      api.upload(
+        PickedImage(path: 'foto.png', bytes: Uint8List(20), contentType: 'image/png'),
+        purpose: 'avatar',
+      ),
+      throwsA(isA<Exception>()),
+    );
     expect(a.calls.where((c) => c.path == '/v1/identity/me'), isEmpty);
   });
   test('portada personal usa rutas reales y devuelve URL aprobada', () async {
@@ -46,11 +53,12 @@ void main() {
     final api = HttpNexoApi(testDio(a), uploadDio: Dio()..httpClientAdapter = storage);
     final id = await api.upload(
       PickedImage(
-          path: '/tmp/foto.jpg',
-          bytes: Uint8List.fromList(List.filled(2048, 7)),
-          contentType: 'image/jpeg',
-          width: 800,
-          height: 600),
+        path: '/tmp/foto.jpg',
+        bytes: Uint8List.fromList(List.filled(2048, 7)),
+        contentType: 'image/jpeg',
+        width: 800,
+        height: 600,
+      ),
       purpose: 'work',
     );
     expect(id, 'upl_1');

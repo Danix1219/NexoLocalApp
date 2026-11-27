@@ -27,7 +27,8 @@ void showNexoToast(String message) {
       duration: const Duration(milliseconds: 2600),
     ),
     snackBarAnimationStyle: AnimationStyle(
-        duration: NexoMotion.duration(m.context, const Duration(milliseconds: 200)),
-        reverseDuration: NexoMotion.duration(m.context, const Duration(milliseconds: 200))),
+      duration: NexoMotion.duration(m.context, const Duration(milliseconds: 200)),
+      reverseDuration: NexoMotion.duration(m.context, const Duration(milliseconds: 200)),
+    ),
   );
 }

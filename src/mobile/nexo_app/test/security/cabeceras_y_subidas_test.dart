@@ -19,8 +19,12 @@ void main() {
     final blob = MockAdapter();
     final api = HttpNexoApi(testDio(a), uploadDio: Dio()..httpClientAdapter = blob);
     await expectLater(
-        api.upload(PickedImage(path: 'x.png', bytes: Uint8List(10), contentType: 'image/png'), purpose: 'avatar'),
-        throwsA(isA<Exception>()));
+      api.upload(
+        PickedImage(path: 'x.png', bytes: Uint8List(10), contentType: 'image/png'),
+        purpose: 'avatar',
+      ),
+      throwsA(isA<Exception>()),
+    );
     expect(blob.calls, isEmpty);
   });
 
@@ -31,10 +35,14 @@ void main() {
     a = MockAdapter()..fallback = (_) => jsonBody({'ok': true, 'orderId': 'ord_1', 'status': 'pending', 'version': 3});
     final dio = testDio(a);
     // Simula el AuthInterceptor: Bearer solo en peticiones marcadas.
-    dio.interceptors.add(InterceptorsWrapper(onRequest: (o, h) {
-      if (o.extra[kAuth] == true) o.headers['Authorization'] = 'Bearer token-de-prueba';
-      h.next(o);
-    }));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (o, h) {
+          if (o.extra[kAuth] == true) o.headers['Authorization'] = 'Bearer token-de-prueba';
+          h.next(o);
+        },
+      ),
+    );
     api = HttpNexoApi(dio, uploadDio: Dio()..httpClientAdapter = a);
   });
 
@@ -69,7 +77,10 @@ void main() {
       'headers': {'Content-Type': 'image/jpeg'},
     });
     a.on('POST', '/v1/discovery/uploads/upl_1/complete', {'status': 'approved'});
-    await api.upload(PickedImage(path: '/x.jpg', bytes: Uint8List(10), contentType: 'image/jpeg'), purpose: 'avatar');
+    await api.upload(
+      PickedImage(path: '/x.jpg', bytes: Uint8List(10), contentType: 'image/jpeg'),
+      purpose: 'avatar',
+    );
     final storage = a.calls.where((c) => c.host == 'storage.nexo.test').toList();
     final nexo = a.calls.where((c) => c.host == 'api.nexo.test').toList();
     expect(storage, hasLength(1));

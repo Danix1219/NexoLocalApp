@@ -21,3 +21,14 @@ Spec: [spec](spec.md). Plan: [plan](plan.md).
 
 ## Verificación
 No marcar hasta ejecutar el criterio y registrar evidencia en checklist/Memoria.
+
+- [ ] T-050 →FR-006, FR-007, FR-008, FR-009; AC-006, AC-008. Correcciones de envío en la app con pruebas locales. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-051 →FR-010; AC-010. Nombre de la contraparte en la API con pruebas unitarias. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-052 →FR-006, FR-007, FR-008, FR-009, FR-010. Recorrido real cliente y prestador con la API reiniciada. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.
+
+- [ ] T-053 →FR-011, FR-012, FR-013. Implementado; 54/54 pruebas Engagement. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-054 →FR-011. Confirmar un pedido real a domicilio con credencial de Azure válida o llave local de desarrollo. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.
+
+- [ ] T-055 →FR-014: `actions.dart`. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-ORD-056 Configuración local; con ella, cifrado y guardado en una base temporal funcionaron. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada. Estado: implementada; aceptación pendiente.
+- [ ] T-057 →FR-014. Enviar un pedido real desde el teléfono tras reiniciar la API. Acepta: el comportamiento de su requisito, comprobado con la evidencia indicada.

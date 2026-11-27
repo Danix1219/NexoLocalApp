@@ -51,6 +51,10 @@ Fuera de alcance:
 | NFR-002 | T-003 | AC-902 | `test/integration/resiliencia_test.dart` |
 | NFR-003 | T-005 | AC-903 | Revisión en dispositivo (T-005) |
 | NFR-004 | T-002 | AC-904 | Pipeline `app-ci.yml` |
+| FR-004 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-005 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-006 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-007 | T-051, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
 
 ## 5. Contratos (rutas, config, env)
 
@@ -73,6 +77,8 @@ Configuración: `API_BASE_URL` (HTTPS en release), `API_MODE` (`auto` por omisi�
 - [ ] AC-902 → NFR-002: Con el backend apagado la pantalla carga en modo auto sin mensaje de error y con el aviso de datos de ejemplo; un error con código de Nexo se muestra.
 - [ ] AC-903 → NFR-003: Revisión en Android: cada estado tiene mensaje y acción; TalkBack lee los botones de ícono.
 - [ ] AC-904 → NFR-004: Los jobs listados en el plan aparecen y pasan en el PR; la evidencia queda en el checklist.
+- [ ] AC-004: selección y comparación de dos prestadores sigue funcionando (`diseno_maqueta_test.dart`).
+- [ ] AC-007: `OrderRequestFlowRulesTests` en la API.
 
 ## 7. Riesgos y deudas documentadas
 
@@ -89,3 +95,13 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## Incremento 2026-11-25 · rediseño de Interesados
+
+- FR-004: Resumen de la solicitud con color corporativo (título, categoría, urgencia, zona y antigüedad) separado de la lista.
+- FR-005: Cada tarjeta muestra identidad, calificación y recomendaciones; horario, distancia y precio en bloque propio; propuesta del prestador; «Mensaje» y «Pedir servicio» como acciones principales y «Comparar prestador» al pie.
+- FR-006: Con pedido activo se muestra su estado en lugar de «Pedir servicio». Si `canMessage` es falso se explica junto a las acciones.
+- FR-007: (autoridad API) `canMessage` es verdadero para solicitudes con contacto `chat` o `chatCall`. Antes el servidor comparaba con `both`, que no existe en el contrato, y desactivaba «Mensaje».
+
+(AC-004 se registra en la sección 6.)
+(AC-007 se registra en la sección 6.)

@@ -55,6 +55,15 @@ Fuera de alcance:
 | NFR-002 | T-003 | AC-902 | `test/integration/resiliencia_test.dart` |
 | NFR-003 | T-005 | AC-903 | Revisión en dispositivo (T-005) |
 | NFR-004 | T-002 | AC-904 | Pipeline `app-ci.yml` |
+| FR-006 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-007 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-008 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-009 | T-050, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-010 | T-051, T-052 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-011 | T-053, T-054 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-012 | T-053 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-013 | T-053 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
+| FR-014 | T-055, T-057 | Aceptación pendiente | Evidencia en la tarea y la bitácora |
 
 ## 5. Contratos (rutas, config, env)
 
@@ -83,6 +92,8 @@ Configuración: `API_BASE_URL` (HTTPS en release), `API_MODE` (`auto` por omisi�
 - [ ] AC-902 → NFR-002: Con el backend apagado la pantalla carga en modo auto sin mensaje de error y con el aviso de datos de ejemplo; un error con código de Nexo se muestra.
 - [ ] AC-903 → NFR-003: Revisión en Android: cada estado tiene mensaje y acción; TalkBack lee los botones de ícono.
 - [ ] AC-904 → NFR-004: Los jobs listados en el plan aparecen y pasan en el PR; la evidencia queda en el checklist.
+- [ ] AC-008: los códigos de pedido producen mensajes propios (`diseno_maqueta_test.dart`).
+- [ ] AC-010: `OrderRequestFlowRulesTests` en la API.
 
 ## 7. Riesgos y deudas documentadas
 
@@ -99,3 +110,30 @@ Detalle: spec por pantalla/función derivada de la maqueta V1.00.002 aprobada y 
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 0.5.0 | 2026-11-08 | Asistente, sin firma humana | Spec, plan, tareas y checklist por pantalla/función con matriz de trazabilidad |
+
+## Incremento 2026-11-25 · envío correcto del pedido
+
+Revisión del recorrido app → `POST /v1/engagement/orders` → pedido `pending` → evento `order.created` → aviso al prestador. La lógica ya existía; se corrigieron las brechas encontradas.
+
+- FR-006: El envío incluye la categoría elegida (`category`); el servidor solo la conserva si el prestador la ofrece.
+- FR-007: La descripción admite 10–600 caracteres (contrato `post-orders.md`). La hoja dice qué falta mientras «Enviar pedido» está deshabilitado.
+- FR-008: `order.active_exists`, `order.request_already_assigned`, `order.attention_not_supported` y `request.not_found` se explican en español claro.
+- FR-009: Tras enviar se recargan pedidos e interesados, para mostrar el estado del pedido sin salir de la pantalla.
+- FR-010: (autoridad API) el cliente ve el nombre del prestador desde `pending`; el prestador ve el nombre corto del cliente («Ana L.») hasta aceptar.
+
+- AC-006: el cuerpo del POST lleva `category` (`http_pedidos_test.dart`).
+(AC-008 se registra en la sección 6.)
+(AC-010 se registra en la sección 6.)
+
+Pendiente: recorrido real con dos cuentas (enviar, recibir el aviso, aceptar) en dispositivos.
+
+## 2026-11-26 · respuesta visible del envío
+- FR-011: El resultado se muestra dentro de la hoja: enviando, confirmación con «Ver mi pedido» o error con «Reintentar envío». Un aviso flotante quedaba oculto detrás de la hoja.
+- FR-012: Reintentar conserva los datos y la misma `Idempotency-Key`.
+- FR-013: (autoridad API) la envoltura de la dirección en Key Vault se corta a los 8 s y responde dependencia no disponible, registrando solo el tipo de error.
+
+Hallazgo local: la colección `orders` tenía 0 documentos. Con `Orders__KeyVaultKeyId` definida y sin sesión de Azure comprobada en el equipo, el cifrado de la dirección es la causa probable; no se reprodujo con una petición autenticada.
+
+## 2026-11-26 · descripción libre y causa del fallo local
+- FR-014: «¿Qué necesitas?» empieza vacío, también al pedir desde una solicitud publicada; solo muestra el texto de ayuda.
+- Causa reproducida: con `Orders__KeyVaultKeyId` en un equipo sin credencial de Azure, envolver la llave agota los 8 s (`TaskCanceledException`) y el pedido no se crea. Solución de desarrollo: llave local en `.env`. Producción sigue usando Key Vault.

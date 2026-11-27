@@ -27,12 +27,48 @@ void main() {
     expect(counts.total, 2);
   });
 
+  test('saved publications keep author data, saved state and later pages', () async {
+    a.onRaw(
+      'GET',
+      '/v1/discovery/saved',
+      (o) => jsonBody({
+        'counts': {'work': 2},
+        'items': [
+          {
+            'kind': 'work',
+            'targetId': 'w',
+            'work': {
+              ...Fx.work(),
+              'provider': {'providerId': 'p', 'name': 'Autor real', 'photoUrl': 'https://media.test/avatar.webp'},
+            },
+          },
+        ],
+        'hasMore': o.queryParameters['cursor'] == null,
+        'nextCursor': o.queryParameters['cursor'] == null ? 'next' : null,
+      }),
+    );
+    final (items, counts) = await api.saved();
+    expect(items, hasLength(2));
+    expect(items.first.work!.provider.name, 'Autor real');
+    expect(items.first.work!.provider.photoUrl, 'https://media.test/avatar.webp');
+    expect(items.first.work!.saved, isTrue);
+    expect(counts.total, 2);
+  });
+
+  test('shared client profile uses a resolvable random id, not private account data', () async {
+    const id = 'a98cb637-4cc0-4ab5-bd27-c5bfa3cedb63';
+    a.on('POST', '/v1/identity/me/profile-share', {'shareId': id});
+    a.on('GET', '/v1/identity/profiles/$id', {'name': 'Solicitante', 'photoUrl': null});
+    expect(await api.shareProfile(), 'nexolocal://profile/$id');
+    expect((await api.sharedProfile(id))['name'], 'Solicitante');
+  });
+
   test('guardar y quitar con POST/DELETE /saved/{kind}/{id}', () async {
     a.on('POST', '/v1/discovery/saved/provider/prv_1', {
-      'savedCounts': {'provider': 1}
+      'savedCounts': {'provider': 1},
     });
     a.on('DELETE', '/v1/discovery/saved/provider/prv_1', {
-      'savedCounts': {'provider': 0}
+      'savedCounts': {'provider': 0},
     });
     expect((await api.setSaved('provider', 'prv_1', true)).provider, 1);
     expect((await api.setSaved('provider', 'prv_1', false)).provider, 0);
@@ -43,8 +79,12 @@ void main() {
     a.on('POST', '/v1/engagement/reports', {'message': 'Recibimos tu reporte.'}, status: 201);
     final r = await api.revealPhone(targetId: 'prv_1', targetType: 'provider', context: 'profile');
     expect(r.displayPhone, '771 555 0101');
-    final msg =
-        await api.report(targetType: 'work', targetId: 'wrk_1', category: 'scam', reason: 'Pide anticipo por fuera');
+    final msg = await api.report(
+      targetType: 'work',
+      targetId: 'wrk_1',
+      category: 'scam',
+      reason: 'Pide anticipo por fuera',
+    );
     expect(msg, 'Recibimos tu reporte.');
     final c = a.last('POST', '/v1/engagement/reports');
     expect(c.header('Idempotency-Key'), isNotEmpty);
@@ -64,7 +104,7 @@ void main() {
     expect(list.single.read, isFalse);
     await api.markNotificationsRead(['n1']);
     expect(a.last('POST', '/v1/engagement/notifications/read').body, {
-      'notificationIds': ['n1']
+      'notificationIds': ['n1'],
     });
   });
 }

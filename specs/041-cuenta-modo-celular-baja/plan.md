@@ -81,3 +81,9 @@ T-001 → T-010 → T-011 → T-012 → T-013 → T-014 → T-002 → T-003 → 
 ## Incremento de ubicacion/perfil 2026-11-09
 
 Registro y selector GPS/mapa: register_account_page.dart, location_picker_page.dart, auth_repository.dart. Persistencia: api_provider.dart y PUT /v1/discovery/me/location en backend. Mi perfil y edicion separada: account_page.dart. Proximamente: ui.dart, solo rutas sin implementacion. Fotos pendientes de Blob/moderacion confirmados por usuario. Evidencia de pruebas en docs/integracion-identity-cuenta.md; ninguna firma ni aceptacion humana agregada.
+
+Incremento FR-PROFILE-VIEW: visor compartido en photo_feedback.dart; qr_flutter genera QR en dispositivo sin servicio externo. Pruebas de propietario/visitante en diseno_maqueta_test.dart. Cliente sin perfil publico conserva solo visualizacion y edicion; no enlazar una cuenta privada mediante una ruta ficticia.
+
+
+### Ajuste 2026-11-17: QR y avisos leidos
+FR-010: reutilizar GET /v1/discovery/providers/{id} y la ruta provider existente. No requiere endpoint extra ni dominio para el esquema instalado. Perfil cliente publico permanece fuera del contrato actual.

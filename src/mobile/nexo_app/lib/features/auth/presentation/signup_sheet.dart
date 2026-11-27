@@ -29,10 +29,7 @@ Future<void> showSignupSheet(BuildContext context) {
           '¿Qué quieres hacer primero?',
           subtitle: 'Elige según lo que necesitas ahora. También puedes seguir explorando sin registrarte.',
         ),
-        const OneNote(
-          icon: 'user',
-          text: 'Con una sola cuenta podrás buscar y ofrecer servicios cuando quieras.',
-        ),
+        const OneNote(icon: 'user', text: 'Con una sola cuenta podrás buscar y ofrecer servicios cuando quieras.'),
         const SizedBox(height: 14),
         ChoiceCard(
           icon: 'search',
@@ -52,10 +49,13 @@ Future<void> showSignupSheet(BuildContext context) {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('¿Ya tienes cuenta?', style: NexoText.body(12.5, color: NexoColors.muted)),
-            NexoLink('Inicia sesión', onTap: () {
-              Navigator.of(ctx).pop();
-              router.push(Routes.login);
-            }),
+            NexoLink(
+              'Inicia sesión',
+              onTap: () {
+                Navigator.of(ctx).pop();
+                router.push(Routes.login);
+              },
+            ),
           ],
         ),
       ],

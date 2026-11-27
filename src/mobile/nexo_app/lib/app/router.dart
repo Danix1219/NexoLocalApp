@@ -1,3 +1,5 @@
+import '../features/account/shared_profile_page.dart';
+import '../features/common/shared_work_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -79,7 +81,7 @@ class Routes {
   };
 
   /// Secciones a las que puede llevar un aviso o enlace (spec 043/046).
-  static const deepLinkSections = {'orders', 'requests', 'chat', 'provider', 'saved'};
+  static const deepLinkSections = {'orders', 'requests', 'chat', 'provider', 'profile', 'saved'};
 
   /// `nexolocal://orders/123` → `/orders/123`. Solo acepta el esquema propio
   /// (o una ruta interna) hacia secciones conocidas; cualquier otra cosa
@@ -97,7 +99,13 @@ class Routes {
     final parts = path.substring(1).split('/');
     if (parts.isEmpty || !deepLinkSections.contains(parts.first)) return null;
     if (parts.any((p) => p.isEmpty || p == '.' || p == '..' || !RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(p))) return null;
-    return path;
+    final valid =
+        (parts.first == 'saved' && parts.length == 1) ||
+        (['orders', 'chat', 'provider', 'profile'].contains(parts.first) && parts.length == 2) ||
+        (parts.first == 'provider' && parts.length == 4 && parts[2] == 'work') ||
+        (parts.first == 'requests' &&
+            (parts.length == 2 || (parts.length == 3 && ['author', 'interested'].contains(parts[2]))));
+    return valid ? path : null;
   }
 }
 
@@ -106,6 +114,7 @@ class _SessionRefresh extends ChangeNotifier {
   _SessionRefresh(Ref ref) {
     ref.listen<SessionState>(sessionProvider, (_, __) => notifyListeners());
     ref.listen(signupFlowProvider.select((s) => s.createdName), (_, __) => notifyListeners());
+    ref.listen(splashDoneProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -115,6 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _SessionRefresh(ref);
   ref.onDispose(refresh.dispose);
 
+  String? pendingLink;
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: Routes.splash,
@@ -122,13 +132,29 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final status = ref.read(sessionProvider).status;
       final loc = state.matchedLocation;
+      final deep = Routes.fromDeepLink(state.uri.toString());
+      if (deep != null && ![SessionStatus.signedIn, SessionStatus.guest].contains(status)) pendingLink = deep;
 
       if (status == SessionStatus.unknown) {
         return loc == Routes.splash ? null : Routes.splash;
       }
       final signedIn = status == SessionStatus.signedIn;
       final guest = status == SessionStatus.guest;
-      if (loc == Routes.splash) return signedIn || guest ? Routes.home : Routes.welcome;
+      if (loc == Routes.splash) {
+        // La presentación se ve completa antes de salir.
+        if (!ref.read(splashDoneProvider)) return null;
+        if (signedIn || guest) {
+          final target = pendingLink;
+          pendingLink = null;
+          return target ?? Routes.home;
+        }
+        return Routes.welcome;
+      }
+      if (signedIn && Routes.authPaths.contains(loc) && pendingLink != null) {
+        final target = pendingLink;
+        pendingLink = null;
+        return target;
+      }
 
       if (signedIn) {
         if (ref.read(sessionProvider).recoveryOnly && loc != Routes.account) return Routes.account;
@@ -147,33 +173,77 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: Routes.splash, builder: (_, __) => const SplashPage()),
-      GoRoute(path: Routes.welcome, builder: (_, __) => const WelcomePage()),
-      GoRoute(path: Routes.login, builder: (_, s) => LoginPage(initialEmail: s.extra as String?)),
-      GoRoute(path: Routes.forgot, builder: (_, s) => ForgotPage(initialEmail: s.extra as String?)),
+      GoRoute(
+        path: Routes.welcome,
+        // Fundido: el logo del splash ya está en su sitio y no debe deslizarse.
+        pageBuilder: (context, s) => CustomTransitionPage<void>(
+          key: s.pageKey,
+          child: const WelcomePage(),
+          transitionDuration: const Duration(milliseconds: 480),
+          transitionsBuilder: (_, animation, __, child) => FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+            child: child,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.login,
+        builder: (_, s) => LoginPage(initialEmail: s.extra as String?),
+      ),
+      GoRoute(
+        path: Routes.forgot,
+        builder: (_, s) => ForgotPage(initialEmail: s.extra as String?),
+      ),
       GoRoute(
         path: Routes.forgotCode,
         builder: (_, __) => const CodePage(purpose: EmailPurpose.resetPassword),
       ),
       GoRoute(path: Routes.forgotNew, builder: (_, __) => const NewPasswordPage()),
-      GoRoute(path: Routes.forgotDone, builder: (_, s) => PasswordDonePage(email: s.extra as String?)),
+      GoRoute(
+        path: Routes.forgotDone,
+        builder: (_, s) => PasswordDonePage(email: s.extra as String?),
+      ),
       GoRoute(path: Routes.registerEmail, builder: (_, __) => const RegisterEmailPage()),
-      GoRoute(path: Routes.registerCode, builder: (_, __) => const CodePage(purpose: EmailPurpose.signup)),
+      GoRoute(
+        path: Routes.registerCode,
+        builder: (_, __) => const CodePage(purpose: EmailPurpose.signup),
+      ),
       GoRoute(path: Routes.registerAccount, builder: (_, __) => const RegisterAccountPage()),
       GoRoute(path: Routes.registerDone, builder: (_, __) => const RegisterDonePage()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => ShellPage(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [GoRoute(path: Routes.home, builder: (_, __) => const HomePage())]),
-          StatefulShellBranch(routes: [GoRoute(path: Routes.search, builder: (_, __) => const SearchPage())]),
-          StatefulShellBranch(routes: [GoRoute(path: Routes.publish, builder: (_, __) => const PublishPage())]),
-          StatefulShellBranch(routes: [GoRoute(path: Routes.inbox, builder: (_, __) => const InboxPage())]),
-          StatefulShellBranch(routes: [GoRoute(path: Routes.account, builder: (_, __) => const AccountPage())]),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.home, builder: (_, __) => const HomePage())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.search, builder: (_, __) => const SearchPage())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.publish, builder: (_, __) => const PublishPage())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.inbox, builder: (_, __) => const InboxPage())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.account, builder: (_, __) => const AccountPage())],
+          ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootKey,
+        path: '/profile/:id',
+        builder: (_, s) => SharedProfilePage(id: s.pathParameters['id']!),
       ),
       GoRoute(
         parentNavigatorKey: _rootKey,
         path: '/provider/:id',
         builder: (_, s) => ProviderPage(id: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootKey,
+        path: '/provider/:id/work/:workId',
+        builder: (_, s) => SharedWorkPage(providerId: s.pathParameters['id']!, workId: s.pathParameters['workId']!),
       ),
       GoRoute(parentNavigatorKey: _rootKey, path: Routes.compare, builder: (_, __) => const ComparePage()),
       GoRoute(
@@ -200,12 +270,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(parentNavigatorKey: _rootKey, path: Routes.saved, builder: (_, __) => const SavedPage()),
       GoRoute(
-          parentNavigatorKey: _rootKey,
-          path: Routes.myProfile,
-          builder: (context, state) => MyProfilePage(
-                initial: state.extra is AccountScreen ? state.extra as AccountScreen : const AccountScreen(name: ''),
-                onEdit: (account) => showAccountEditSheet(context, account),
-              )),
+        parentNavigatorKey: _rootKey,
+        path: Routes.myProfile,
+        builder: (context, state) => MyProfilePage(
+          initial: state.extra is AccountScreen ? state.extra as AccountScreen : const AccountScreen(name: ''),
+          onEdit: (account) => showAccountEditSheet(context, account),
+        ),
+      ),
       GoRoute(
         parentNavigatorKey: _rootKey,
         path: Routes.proOnboarding,
@@ -225,23 +296,27 @@ final routerProvider = Provider<GoRouter>((ref) {
           transitionsBuilder: (context, animation, secondaryAnimation, child) => MediaQuery.disableAnimationsOf(context)
               ? child
               : SlideTransition(
-                  position: Tween(begin: const Offset(0, 1), end: Offset.zero)
-                      .chain(CurveTween(curve: Curves.easeOutCubic))
-                      .animate(animation),
+                  position: Tween(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).chain(CurveTween(curve: Curves.easeOutCubic)).animate(animation),
                   child: child,
                 ),
           child: Align(
-              alignment: Alignment.bottomCenter,
-              child: FractionallySizedBox(
-                heightFactor: .86,
-                widthFactor: 1,
-                child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                    child: MediaQuery.removePadding(
-                        context: context,
-                        removeTop: true,
-                        child: LocationPickerPage(args: s.extra as LocationPickerArgs? ?? const LocationPickerArgs()))),
-              )),
+            alignment: Alignment.bottomCenter,
+            child: FractionallySizedBox(
+              heightFactor: .86,
+              widthFactor: 1,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: LocationPickerPage(args: s.extra as LocationPickerArgs? ?? const LocationPickerArgs()),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     ],

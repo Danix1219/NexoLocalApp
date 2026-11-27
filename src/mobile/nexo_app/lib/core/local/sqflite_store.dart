@@ -56,15 +56,20 @@ class SqfliteLocalStore implements LocalStore {
   @override
   Future<void> write(String account, String key, CachedResponse r) async {
     if (r.body.length > LocalStore.maxBodyBytes) return;
-    await _db.insert(
-      'http_cache',
-      {'account': account, 'key': key, 'body': r.body, 'etag': r.etag, 'saved_at': r.savedAt.millisecondsSinceEpoch},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    await _db.rawDelete('''
+    await _db.insert('http_cache', {
+      'account': account,
+      'key': key,
+      'body': r.body,
+      'etag': r.etag,
+      'saved_at': r.savedAt.millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db.rawDelete(
+      '''
       DELETE FROM http_cache WHERE account = ? AND key NOT IN (
         SELECT key FROM http_cache WHERE account = ? ORDER BY saved_at DESC LIMIT ?
-      )''', [account, account, LocalStore.maxEntries]);
+      )''',
+      [account, account, LocalStore.maxEntries],
+    );
   }
 
   @override

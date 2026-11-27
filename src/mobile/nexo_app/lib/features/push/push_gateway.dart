@@ -9,10 +9,10 @@ class PushMessage {
   final String? link;
 
   factory PushMessage.fromData(Map<String, dynamic> data, {String? title, String? body}) => PushMessage(
-        title: title ?? data['title']?.toString(),
-        body: body ?? data['body']?.toString(),
-        link: (data['deepLink'] ?? data['link'])?.toString(),
-      );
+    title: title ?? data['title']?.toString(),
+    body: body ?? data['body']?.toString(),
+    link: (data['deepLink'] ?? data['link'])?.toString(),
+  );
 }
 
 /// Frontera con el proveedor de push (Firebase Cloud Messaging). Permite
