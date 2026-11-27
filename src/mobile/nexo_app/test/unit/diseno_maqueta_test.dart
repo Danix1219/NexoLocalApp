@@ -127,6 +127,18 @@ class VisualSession extends SessionController {
   Future<void> setName(String name) async {}
 }
 
+class DeletingSession extends VisualSession {
+  static int signOuts = 0;
+  @override
+  Future<void> signOutLocal() async => signOuts++;
+}
+
+class RecoverySession extends VisualSession {
+  @override
+  SessionState build() =>
+      const SessionState(status: SessionStatus.signedIn, accountId: 'visual', name: 'Cuenta Real', recoveryOnly: true);
+}
+
 class GuestVisualSession extends SessionController {
   @override
   SessionState build() => const SessionState.guest();
@@ -2294,6 +2306,80 @@ void main() {
     expect(body['responseTime'], isNull);
     expect(body['payment'], ['card']);
     expect(tester.takeException(), isNull);
+  });
+
+  Future<MockAdapter> openAccount(WidgetTester tester, SessionController Function() session) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final adapter = MockAdapter();
+    adapter.on('POST', '/v1/identity/me/deletion', {'status': 'pendingDeletion', 'daysRemaining': 30}, status: 202);
+    adapter.on('DELETE', '/v1/identity/me/deletion', {'status': 'active'});
+    final container = ProviderContainer(
+      overrides: [
+        sessionProvider.overrideWith(session),
+        apiProvider.overrideWithValue(HttpNexoApi(testDio(adapter))),
+        pushProvider.overrideWith(VisualPush.new),
+        syncProvider.overrideWith(VisualSync.new),
+        accountProvider.overrideWith((ref) async => const AccountScreen(name: 'Cuenta Real', emailVerified: true)),
+        myProviderProvider.overrideWith((ref) async => null),
+        searchLocationProvider.overrideWith(TestLocation.new),
+        myRequestsProvider.overrideWith((ref) async => const <ServiceRequest>[]),
+        savedProvider.overrideWith((ref) async => throw const ApiException(code: 'http_404', status: 404)),
+        inboxProvider.overrideWith((ref, role) async => (const <Conversation>[], 0)),
+        notificationsProvider.overrideWith((ref) async => (const <NotificationItem>[], 0)),
+      ],
+    );
+    addTearDown(container.dispose);
+    final router = container.read(routerProvider)..go(Routes.account);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return adapter;
+  }
+
+  testWidgets('eliminar cuenta avisa lo irreversible, exige contraseña y cierra la sesión', (tester) async {
+    DeletingSession.signOuts = 0;
+    final adapter = await openAccount(tester, DeletingSession.new);
+    await tester.scrollUntilVisible(find.text('Eliminar mi cuenta'), 300, scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar mi cuenta'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Eso no se recupera aunque canceles la baja.'), findsOneWidget);
+
+    final confirm = find.byWidgetPredicate((w) => w is NexoButton && w.label == 'Eliminar mi cuenta');
+    await tester.ensureVisible(confirm);
+    await tester.tap(confirm);
+    await tester.pumpAndSettle();
+    expect(find.text('Escribe tu contraseña para confirmar.'), findsOneWidget);
+    expect(adapter.calls.where((c) => c.path == '/v1/identity/me/deletion'), isEmpty);
+    expect(DeletingSession.signOuts, 0);
+
+    await tester.enterText(find.byType(TextField).first, 'NoEsUnSecreto1');
+    await tester.ensureVisible(confirm);
+    await tester.tap(confirm);
+    await tester.pumpAndSettle();
+    expect((adapter.last('POST', '/v1/identity/me/deletion').body as Map)['password'], 'NoEsUnSecreto1');
+    expect(DeletingSession.signOuts, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('con la baja pendiente solo se puede conservar la cuenta o salir', (tester) async {
+    final adapter = await openAccount(tester, RecoverySession.new);
+    expect(find.text('Tu cuenta tiene una baja pendiente'), findsOneWidget);
+    expect(find.text('Cerrar sesión'), findsOneWidget);
+    expect(find.text('Eliminar mi cuenta'), findsNothing);
+    await tester.tap(find.text('Conservar mi cuenta'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(adapter.calls.map((c) => '${c.method} ${c.path}'), contains('DELETE /v1/identity/me/deletion'));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
   });
 
   group('guía de «Explorar sin cuenta» (maqueta)', () {

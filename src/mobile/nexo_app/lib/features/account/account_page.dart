@@ -109,7 +109,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: NexoButton(
-                label: 'Volver a iniciar sesi?n',
+                label: 'Volver a iniciar sesión',
                 variant: NexoButtonVariant.line,
                 onPressed: () async {
                   ref.read(compareProvider.notifier).clear();
@@ -691,7 +691,7 @@ class _DeleteSheetState extends ConsumerState<_DeleteSheet> {
         const SheetHeader(
           'Eliminar mi cuenta',
           subtitle:
-              'Tu perfil, publicaciones y guardados dejarán de verse. Tienes 30 días para arrepentirte; después se borra de forma permanente.',
+              'Tu perfil y publicaciones dejarán de verse. Tienes 30 días para cancelar la baja; después se borra de forma permanente.',
         ),
         if (Env.landingPage(LegalPages.deleteAccount) != null)
           Align(
@@ -704,6 +704,13 @@ class _DeleteSheetState extends ConsumerState<_DeleteSheet> {
               ),
             ),
           ),
+        const OneNote(
+          icon: 'info',
+          text:
+              'Al confirmar, tus solicitudes abiertas se cierran y tus pedidos pendientes se cancelan. '
+              'Eso no se recupera aunque canceles la baja.',
+        ),
+        const SizedBox(height: 12),
         NexoPasswordField(label: 'Tu contraseña', controller: _pass, textInputAction: TextInputAction.next),
         const SizedBox(height: 12),
         TextField(

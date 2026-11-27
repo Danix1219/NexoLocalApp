@@ -35,3 +35,6 @@ Registro y selector GPS/mapa: register_account_page.dart, location_picker_page.d
 - [ ] T-034 (FR-010/AC-010): tarjeta adaptable con identidad, QR sin superposiciones, compartir y copiar; Acepta: contenido, margen y layout verificados localmente; recorrido fisico pendiente.
 
 Implementacion y pruebas locales completadas; recorrido fisico del incremento pendiente.
+
+- [ ] T-DEL-APP-001 →FR-DEL-APP-001, FR-DEL-APP-002: `account_page.dart`; dos pruebas en `diseno_maqueta_test.dart`. Estado: implementada; aceptación pendiente.
+- [ ] T-DEL-APP-002 Pedir y cancelar una baja con una cuenta de prueba en el teléfono.

@@ -324,3 +324,7 @@ A evitar: subir sin ejecutar `tools/ci/revisar_android.py`.
 ## 2026-11-26 · APK en CI y límite de descargas
 Estado: «Construir · APK de prueba» falló porque Maven Central respondió HTTP 429 al runner. En CI, Gradle descarga ahora desde el espejo de Google, usa caché y la compilación se reintenta solo ante fallos de red (`tools/ci/`).
 Evidencia local: `assembleDebug` con caché de Gradle vacía y el espejo terminó en BUILD SUCCESSFUL (438 tareas), sin peticiones a Maven Central ni respuestas 429; reintento probado en cuatro casos. Resultado en GitHub pendiente.
+
+## 2026-11-26 · Eliminación de cuenta
+Estado: la hoja avisa lo que no se recupera; pruebas de la pantalla de solicitud y de recuperación; corregidos cuatro textos sin tilde. El borrado entre módulos se implementó en la API.
+Evidencia local: 358 pruebas y análisis sin observaciones. Falta el recorrido en el teléfono.

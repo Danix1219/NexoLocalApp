@@ -39,7 +39,7 @@ String apiErrorMessage(Object e) {
     }
     if (e.code == 'upload.too_large') return 'La foto supera los 5 MB. Elige una más pequeña.';
     if (e.code == 'upload.content_type_invalid') return 'Elige una imagen JPEG, PNG o WebP.';
-    if (e.code == 'upload.dimensions_too_large') return 'La imagen supera la resoluci?n permitida. Elige otra foto.';
+    if (e.code == 'upload.dimensions_too_large') return 'La imagen supera la resolución permitida. Elige otra foto.';
     if (e.code == 'upload.processing_timeout') {
       return 'La foto sigue en revisión. Espera un momento antes de reintentar.';
     }
@@ -62,7 +62,7 @@ String apiErrorMessage(Object e) {
     if (e.code == 'order.attention_not_supported') return 'Este prestador no atiende de esa forma. Elige otra opción.';
     if (e.code == 'request.not_found') return 'La solicitud ya no está disponible.';
     if (e.code == kQueuedOffline) return 'Sin señal: lo guardamos y se publicará en cuanto vuelva la conexión.';
-    if (e.status == 401) return 'Tu sesi?n no es v?lida para este servidor. Vuelve a iniciar sesi?n.';
+    if (e.status == 401) return 'Tu sesión no es válida para este servidor. Vuelve a iniciar sesión.';
     if (e.status == 429) return 'Hiciste muchos intentos. Espera un momento.';
     if (e.detail != null && e.detail!.isNotEmpty) return e.detail!;
     if (e.status == 404) return 'Esto ya no existe.';

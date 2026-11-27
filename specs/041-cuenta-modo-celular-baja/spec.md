@@ -121,3 +121,8 @@ La edición de cuenta conserva la foto ya entregada por la API, pero no inicia u
 
 ### Ajuste 2026-11-17: QR y avisos leidos
 - FR-010: tarjeta QR accesible y adaptable, identidad del perfil fuera del codigo, contraste alto y margen de silencio; el contenido es exactamente la ruta publica validada. No codifica credenciales ni datos de contacto privados. AC-010: verificar contenido, margen y layout estrecho; escaneo fisico pendiente.
+
+## 2026-11-26 · aviso y recuperación de la baja
+- FR-DEL-APP-001: Antes de confirmar, la hoja dice que las solicitudes abiertas se cierran y los pedidos pendientes se cancelan, y que no se recuperan al cancelar la baja.
+- FR-DEL-APP-002: Con la baja pendiente solo se puede conservar la cuenta o cerrar sesión.
+- Corrección: cuatro mensajes mostraban «?» en lugar de la tilde.

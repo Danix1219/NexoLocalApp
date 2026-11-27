@@ -48,7 +48,7 @@ Future<PickedImage?> pickOneImage(BuildContext context) async {
   try {
     return await _toPicked(await _picker.pickImage(source: src, maxWidth: 1600, maxHeight: 1600, imageQuality: 85));
   } catch (e) {
-    showNexoToast(e is StateError ? e.message.toString() : 'No pudimos abrir la foto. Int?ntalo de nuevo.');
+    showNexoToast(e is StateError ? e.message.toString() : 'No pudimos abrir la foto. Inténtalo de nuevo.');
     return null;
   }
 }
