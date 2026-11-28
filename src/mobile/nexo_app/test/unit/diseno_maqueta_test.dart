@@ -1403,21 +1403,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ML: al agregar una foto sin categoría, Publicar sugiere la categoría (spec 049, FR-001)',
-      (tester) async {
+  testWidgets('ML: al agregar una foto sin categoría, Publicar sugiere la categoría (spec 049, FR-001)', (
+    tester,
+  ) async {
     ImagePickerPlatform.instance = _OnePhotoPicker();
     final adapter = MockAdapter()
       ..on('GET', '/v1/discovery/categories', {
         'categories': [
-          {'slug': 'plomeria', 'name': 'Plomería', 'icon': 'drop'}
-        ]
+          {'slug': 'plomeria', 'name': 'Plomería', 'icon': 'drop'},
+        ],
       });
-    await tester.pumpWidget(ProviderScope(overrides: [
-      sessionProvider.overrideWith(VisualSession.new),
-      searchLocationProvider.overrideWith(TestLocation.new),
-      apiProvider.overrideWithValue(HttpNexoApi(testDio(adapter))),
-      categorySuggesterProvider.overrideWithValue(_PlumbingSuggester()),
-    ], child: MaterialApp(scaffoldMessengerKey: rootMessengerKey, home: const Scaffold(body: PublishPage()))));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sessionProvider.overrideWith(VisualSession.new),
+          searchLocationProvider.overrideWith(TestLocation.new),
+          apiProvider.overrideWithValue(HttpNexoApi(testDio(adapter))),
+          categorySuggesterProvider.overrideWithValue(_PlumbingSuggester()),
+        ],
+        child: MaterialApp(
+          scaffoldMessengerKey: rootMessengerKey,
+          home: const Scaffold(body: PublishPage()),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.textContaining('Por la foto parece'), findsNothing);
     await tester.ensureVisible(find.textContaining('Agregar fotos'));
@@ -2620,11 +2629,11 @@ void main() {
 
 class _OnePhotoPicker extends ImagePickerPlatform {
   @override
-  Future<List<XFile>> getMultiImageWithOptions(
-          {MultiImagePickerOptions options = const MultiImagePickerOptions()}) async =>
-      [
-        XFile.fromData(Uint8List.fromList([0xFF, 0xD8, 0xFF]), path: 'lavabo.jpg', mimeType: 'image/jpeg')
-      ];
+  Future<List<XFile>> getMultiImageWithOptions({
+    MultiImagePickerOptions options = const MultiImagePickerOptions(),
+  }) async => [
+    XFile.fromData(Uint8List.fromList([0xFF, 0xD8, 0xFF]), path: 'lavabo.jpg', mimeType: 'image/jpeg'),
+  ];
 }
 
 class _PlumbingSuggester implements CategorySuggester {
