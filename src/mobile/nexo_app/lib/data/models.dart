@@ -1240,11 +1240,15 @@ class OppFilters {
 const Object _keep = Object();
 
 class SearchResult {
-  const SearchResult({required this.items, this.total = 0, this.outOfZone = false, this.notice});
+  const SearchResult({required this.items, this.total = 0, this.outOfZone = false, this.notice, this.interpretedLabel});
   final List<ProviderProfile> items;
   final int total;
   final bool outOfZone;
   final String? notice;
+
+  /// Categoría que la API dedujo del texto cuando las palabras no encontraron a nadie
+  /// ("se me tapó el baño" → "Plomería"). Null si se buscó el texto tal cual.
+  final String? interpretedLabel;
 }
 
 /// Real geocoding result returned by Discovery, never seeded from demo data.
