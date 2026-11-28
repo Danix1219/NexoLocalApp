@@ -23,6 +23,7 @@ import '../../core/widgets/pick_image.dart';
 import '../../data/nexo_api.dart';
 import '../intelligence/assist_sheet.dart';
 import '../intelligence/category_suggester.dart';
+import '../intelligence/ml_kit_suggester.dart';
 import '../location/location_picker_page.dart';
 import '../shell/gate.dart';
 import 'publish_option_row.dart';
@@ -409,6 +410,11 @@ class _RequestComposerState extends ConsumerState<_RequestComposer> {
               onTap: () async {
                 final images = await pickImages(max: 6 - _imgs.length);
                 if (mounted) setState(() => _imgs.addAll(images));
+                // ML en el teléfono (spec 049, FR-001): sugiere la categoría solo si aún no hay una elegida.
+                if (images.isNotEmpty && _cat == null) {
+                  final guess = await ref.read(categorySuggesterProvider).suggest(images.first.path);
+                  if (mounted && guess != null && _cat == null) setState(() => _guess = guess);
+                }
               },
             ),
             if (_guess != null && _cat == null)
