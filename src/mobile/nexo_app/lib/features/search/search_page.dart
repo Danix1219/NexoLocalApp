@@ -201,6 +201,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (r.interpretedLabel != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  child: Notice('Mostrando ${r.interpretedLabel} para «${f.q}»', tone: BadgeTone.brand, icon: 'search'),
+                ),
               if (r.notice != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),

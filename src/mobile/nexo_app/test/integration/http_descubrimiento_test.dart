@@ -82,6 +82,16 @@ void main() {
     final r = await api.searchProviders(const SearchFilters(), at: at, radiusKm: 10);
     expect(r.outOfZone, isTrue);
     expect(r.notice, 'Nadie atiende tu zona');
+    expect(r.interpretedLabel, isNull);
+  });
+
+  test('categoría deducida del texto', () async {
+    a.on('GET', '/v1/discovery/search/providers', {
+      ...Fx.page([Fx.provider()]),
+      'interpreted': {'category': 'plomeria', 'label': 'Plomería', 'source': 'ml'},
+    });
+    final r = await api.searchProviders(const SearchFilters(q: 'se me tapó el baño'), at: at, radiusKm: 10);
+    expect(r.interpretedLabel, 'Plomería');
   });
 
   test('sugerencias, categorías y mapa', () async {
